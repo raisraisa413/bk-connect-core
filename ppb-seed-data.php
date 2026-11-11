@@ -841,6 +841,12 @@ foreach ($berita_items as $b) {
 }
 echo "Seeded " . count($berita_items) . " Berita & Pengumuman posts.\n";
 
+// 6. Seed / Sync Mega Menu to WordPress primary-menu
+if (function_exists('ppb_sync_default_mega_menu_to_wp')) {
+    ppb_sync_default_mega_menu_to_wp();
+    echo "Seeded complete Mega Menu to primary-menu.\n";
+}
+
 update_option('ppb_portal_initial_seeded_v2', 'yes');
 update_option('ppb_content_synced_version', '9.7');
 

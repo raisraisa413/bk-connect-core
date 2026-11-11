@@ -378,6 +378,7 @@ function ppb_render_portal_hub_dashboard() {
                     </div>
                 </div>
                 <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-mega-menu-manager'); ?>" class="ppb-btn ppb-btn-gold">✨ Kelola Mega Menu</a>
                     <a href="<?php echo admin_url('nav-menus.php'); ?>" class="ppb-btn ppb-btn-primary">⚙️ Atur Menu Navbar</a>
                 </div>
             </div>
