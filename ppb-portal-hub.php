@@ -124,7 +124,17 @@ function ppb_register_portal_hub_menu() {
         'ppb_render_layanan_settings_page'
     );
 
-    // 9. Dokumen Mutu (Link Google Drive)
+    // 9. E-Library & Repositori Modul (Katalog ELB-xx & Kurasi Naskah)
+    add_submenu_page(
+        'ppb-portal-hub',
+        'E-Library & Kurasi Modul BK',
+        '📚 E-Library & Modul',
+        'edit_posts',
+        'ppb-elibrary-manager',
+        'ppb_render_elibrary_admin_page'
+    );
+
+    // 10. Dokumen Mutu (Link Google Drive)
     add_submenu_page(
         'ppb-portal-hub',
         'Dokumen Mutu (Google Drive)',
@@ -133,7 +143,7 @@ function ppb_register_portal_hub_menu() {
         'edit.php?post_type=ppb_dokumen'
     );
 
-    // 10. Navigasi Menu Navbar
+    // 11. Navigasi Menu Navbar (4 Pilar)
     add_submenu_page(
         'ppb-portal-hub',
         'Kelola Navigasi Navbar',
@@ -151,6 +161,7 @@ add_action('admin_menu', function() {
     remove_menu_page('bk-pengaturan-beranda');
     remove_menu_page('ppb-spotlight-beranda');
     remove_menu_page('bk-direktori-dosen');
+    remove_menu_page('ppb-elibrary-manager');
     remove_menu_page('edit.php?post_type=dosen');
     remove_menu_page('edit.php?post_type=ppb_dosen');
     remove_menu_page('edit.php?post_type=ppb_dokumen');
@@ -172,6 +183,17 @@ function ppb_render_portal_hub_dashboard() {
     $count_dokumen = wp_count_posts('ppb_dokumen')->publish ?: 8;
     $count_jadwal  = wp_count_posts('ppb_jadwal')->publish ?: 5;
     $count_berita  = wp_count_posts('post')->publish ?: 2;
+    $elib_items    = function_exists('ppb_get_elibrary_items') ? ppb_get_elibrary_items() : array();
+    $count_elib    = is_array($elib_items) && !empty($elib_items) ? count($elib_items) : 6;
+    $elib_subs     = function_exists('ppb_get_elibrary_submissions') ? ppb_get_elibrary_submissions() : array();
+    $pending_elib  = 0;
+    if (is_array($elib_subs)) {
+        foreach ($elib_subs as $sub) {
+            if (empty($sub['status']) || $sub['status'] === 'pending') {
+                $pending_elib++;
+            }
+        }
+    }
     ?>
     <div class="wrap ppb-hub-wrap">
         <style>
@@ -227,7 +249,7 @@ function ppb_render_portal_hub_dashboard() {
             <span class="ppb-header-badge">⭐ Jurusan PPB / Prodi BK FIP UNM</span>
             <h1 class="ppb-header-title">Pusat Kendali Portal Web PPB</h1>
             <p class="ppb-header-subtitle">
-                Selamat datang di pusat pengelolaan mandiri website. Seluruh data dosen, tautan berkas Google Drive, jadwal ujian, dan tata letak menu dapat Anda atur langsung melalui tombol di bawah ini tanpa perlu memahami kode pemrograman.
+                Selamat datang di pusat pengelolaan mandiri website. Seluruh data dosen, tautan berkas Google Drive, jadwal ujian, e-library modul, dan tata letak menu dapat Anda atur langsung melalui tombol di bawah ini tanpa perlu memahami kode pemrograman.
             </p>
         </div>
 
@@ -239,6 +261,13 @@ function ppb_render_portal_hub_dashboard() {
                     <strong><?php echo esc_html($count_dosen); ?></strong>
                 </div>
                 <div class="ppb-metric-icon">👥</div>
+            </div>
+            <div class="ppb-metric-card">
+                <div class="ppb-metric-info">
+                    <span>Modul E-Library</span>
+                    <strong><?php echo esc_html($count_elib); ?></strong>
+                </div>
+                <div class="ppb-metric-icon">📚</div>
             </div>
             <div class="ppb-metric-card">
                 <div class="ppb-metric-info">
@@ -273,12 +302,13 @@ function ppb_render_portal_hub_dashboard() {
                         <div class="ppb-card-icon dark">🌟</div>
                         <div class="ppb-card-text">
                             <h3>Spotlight &amp; Media Beranda</h3>
-                            <p>Atur video profil YouTube/Drive, foto kegiatan, dan link pengumuman pada panggung utama (hero) beranda.</p>
+                            <p>Atur video profil YouTube/Drive, kartu akreditasi LAMDIK, foto kegiatan, dan pengumuman pada panggung utama 100vh beranda.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
                     <a href="<?php echo admin_url('admin.php?page=ppb-spotlight-beranda'); ?>" class="ppb-btn ppb-btn-primary">🎬 Kelola Slide Spotlight</a>
+                    <a href="<?php echo admin_url('admin.php?page=bk-pengaturan-beranda'); ?>" class="ppb-btn ppb-btn-secondary">⚙️ Teks &amp; Seksi Beranda</a>
                 </div>
             </div>
 
@@ -289,16 +319,33 @@ function ppb_render_portal_hub_dashboard() {
                         <div class="ppb-card-icon green">👥</div>
                         <div class="ppb-card-text">
                             <h3>Data Dosen & Pengajar</h3>
-                            <p>Kelola profil dosen, gelar, NIP, pangkat akademik (Guru Besar, Lektor Kepala, dll.), foto, dan profil SINTA.</p>
+                            <p>Kelola profil dosen, gelar, NIP, pangkat akademik (Guru Besar, Lektor Kepala, dll.), foto potret 4:5, dan profil SINTA.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
-                    <a href="<?php echo admin_url('admin.php?page=bk-direktori-dosen'); ?>" class="ppb-btn ppb-btn-primary">👨‍🏫 Kelola Data &amp; Direktori Dosen (25)</a>
+                    <a href="<?php echo admin_url('admin.php?page=bk-direktori-dosen'); ?>" class="ppb-btn ppb-btn-primary">👨‍🏫 Kelola Data &amp; Direktori Dosen (<?php echo esc_html($count_dosen); ?>)</a>
                 </div>
             </div>
 
-            <!-- 2. Dokumen Mutu (Google Drive) -->
+            <!-- 2. E-Library & Kurasi Naskah -->
+            <div class="ppb-action-card">
+                <div>
+                    <div class="ppb-card-top">
+                        <div class="ppb-card-icon gold">📚</div>
+                        <div class="ppb-card-text">
+                            <h3>E-Library &amp; Kurasi Naskah</h3>
+                            <p>Kelola katalog modul praktikum (ELB-01..ELB-xx), buku pedoman PPL/Skripsi, tautan jurnal JKBK/PJEC, dan antrean usulan unggah modul dosen.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-elibrary-manager'); ?>" class="ppb-btn ppb-btn-gold">📚 Kelola Katalog E-Library (<?php echo esc_html($count_elib); ?>)<?php echo $pending_elib > 0 ? ' · ' . esc_html($pending_elib) . ' Usulan Baru' : ''; ?></a>
+                    <a href="<?php echo esc_url(home_url('/e-library/')); ?>" target="_blank" class="ppb-btn ppb-btn-secondary">↗ Lihat Halaman</a>
+                </div>
+            </div>
+
+            <!-- 3. Dokumen Mutu (Google Drive) -->
             <div class="ppb-action-card">
                 <div>
                     <div class="ppb-card-top">
@@ -315,7 +362,7 @@ function ppb_render_portal_hub_dashboard() {
                 </div>
             </div>
 
-            <!-- 3. Jadwal Seminar & Ujian -->
+            <!-- 4. Jadwal Seminar & Ujian -->
             <div class="ppb-action-card">
                 <div>
                     <div class="ppb-card-top">
@@ -332,7 +379,7 @@ function ppb_render_portal_hub_dashboard() {
                 </div>
             </div>
 
-            <!-- 4. Kemahasiswaan -->
+            <!-- 5. Kemahasiswaan -->
             <div class="ppb-action-card">
                 <div>
                     <div class="ppb-card-top">
@@ -349,7 +396,7 @@ function ppb_render_portal_hub_dashboard() {
                 </div>
             </div>
 
-            <!-- 5. Layanan & SOP -->
+            <!-- 6. Layanan & SOP -->
             <div class="ppb-action-card">
                 <div>
                     <div class="ppb-card-top">
@@ -366,19 +413,19 @@ function ppb_render_portal_hub_dashboard() {
                 </div>
             </div>
 
-            <!-- 6. Navbar & Menu (Drag-and-Drop) -->
+            <!-- 7. Navbar & Menu (4 Pilar Mega Menu) -->
             <div class="ppb-action-card">
                 <div>
                     <div class="ppb-card-top">
                         <div class="ppb-card-icon dark">🧭</div>
                         <div class="ppb-card-text">
-                            <h3>Navigasi Navbar (Menu)</h3>
-                            <p>Atur susunan menu dan dropdown navbar tema secara drag-and-drop. Tambah submenu tinggal geser ke kanan!</p>
+                            <h3>Navigasi Navbar (4 Pilar)</h3>
+                            <p>Atur susunan 4 Pilar Mega Menu (Beranda, Profil &amp; Mutu, Akademik, Layanan &amp; Warta) beserta kartu sorotan samping.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
-                    <a href="<?php echo admin_url('admin.php?page=ppb-mega-menu-manager'); ?>" class="ppb-btn ppb-btn-gold">✨ Kelola Mega Menu</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-mega-menu-manager'); ?>" class="ppb-btn ppb-btn-gold">✨ Kelola Mega Menu (4 Pilar)</a>
                     <a href="<?php echo admin_url('nav-menus.php'); ?>" class="ppb-btn ppb-btn-primary">⚙️ Atur Menu Navbar</a>
                 </div>
             </div>

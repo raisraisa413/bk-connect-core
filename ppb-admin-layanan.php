@@ -457,7 +457,7 @@ if (!function_exists('ppb_shortcode_layanan_persuratan')) {
 function ppb_shortcode_layanan_persuratan($atts = []) {
     ob_start();
     ?>
-    <section class="ppb-persuratan-wrapper" style="font-family:'Poppins',sans-serif;color:#1F2937;margin:30px 0;">
+    <section class="ppb-persuratan-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
         
         <!-- Header & Aturan Kode Nomor Surat Resmi -->
         <div style="background:#0D3B22;color:#ffffff;border-radius:20px;padding:30px;margin-bottom:35px;box-shadow:0 10px 25px rgba(13,59,34,0.15);position:relative;overflow:hidden;">
@@ -797,3 +797,603 @@ function ppb_shortcode_lab_lomba($atts = []) {
 }
 }
 add_shortcode('ppb_lab_lomba', 'ppb_shortcode_lab_lomba');
+
+/* ========================================================================== */
+/* 7. E-LIBRARY & REPOSITORI MODUL BK (CRUD, PORTAL LINKS, & KURASI NASKAH)   */
+/* ========================================================================== */
+if (!function_exists('ppb_get_elibrary_default_portal_links')) {
+function ppb_get_elibrary_default_portal_links() {
+    return array(
+        array(
+            'badge' => 'OJS · SINTA 2',
+            'title' => 'Jurnal JKBK UNM',
+            'sub'   => 'Jurnal Kajian Bimbingan & Konseling · E-ISSN 2549-8517',
+            'cta'   => 'Portal OJS JKBK ↗',
+            'href'  => 'https://journal.unm.ac.id/index.php/JKBK',
+        ),
+        array(
+            'badge' => 'OJS · SINTA 4',
+            'title' => 'Jurnal PJEC UNM',
+            'sub'   => 'Pinisi Journal of Education & Counseling · E-ISSN 2809-5480',
+            'cta'   => 'Portal OJS PJEC ↗',
+            'href'  => 'https://ojs.unm.ac.id/PJEC',
+        ),
+        array(
+            'badge' => '172 BUKU',
+            'title' => 'Katalog Buku & Karya Dosen',
+            'sub'   => 'Monograf ber-ISBN & publikasi SINTA 25 dosen PPB',
+            'cta'   => 'Buka Direktori Dosen →',
+            'href'  => home_url('/profil/dosen/'),
+        ),
+    );
+}
+}
+
+if (!function_exists('ppb_get_elibrary_portal_links')) {
+function ppb_get_elibrary_portal_links() {
+    $saved = get_option('ppb_elibrary_portal_links', array());
+    if (!is_array($saved) || empty($saved)) {
+        return ppb_get_elibrary_default_portal_links();
+    }
+    return array_values($saved);
+}
+}
+
+if (!function_exists('ppb_get_elibrary_default_items')) {
+function ppb_get_elibrary_default_items() {
+    return array(
+        array(
+            'id'        => 1,
+            'kode'      => 'ELB-01',
+            'category'  => 'modul',
+            'cat_label' => 'Modul Praktikum',
+            'authors'   => 'Tim Dosen Laboratorium BK FIP UNM',
+            'year'      => '2025',
+            'meta'      => '64 Hlm · PDF 3.2 MB',
+            'pages'     => '64 Hlm',
+            'size'      => '3.2 MB',
+            'format'    => 'PDF',
+            'title'     => 'Modul Praktikum Konseling Individual Berbasis Kognitif-Perilaku (CBT)',
+            'desc'      => 'Panduan terstruktur praktikum microcounseling dan penerapan cognitive restructuring bagi mahasiswa sarjana.',
+            'file_url'  => '#',
+        ),
+        array(
+            'id'        => 2,
+            'kode'      => 'ELB-02',
+            'category'  => 'buku',
+            'cat_label' => 'Pedoman Akademik',
+            'authors'   => 'Program Studi BK FIP UNM',
+            'year'      => '2025',
+            'meta'      => '88 Hlm · PDF 4.1 MB',
+            'pages'     => '88 Hlm',
+            'size'      => '4.1 MB',
+            'format'    => 'PDF',
+            'title'     => 'Buku Pedoman Praktik Pengalaman Lapangan (PPL) BK Sekolah',
+            'desc'      => 'Ketentuan teknis, format laporan, instrumen penilaian, dan tata tertib pelaksanaan PPL BK di SMP/SMA/SMK mitra.',
+            'file_url'  => '#',
+        ),
+        array(
+            'id'        => 3,
+            'kode'      => 'ELB-03',
+            'category'  => 'asesmen',
+            'cat_label' => 'Instrumen Asesmen',
+            'authors'   => 'Laboratorium BK FIP UNM',
+            'year'      => '2024',
+            'meta'      => '76 Hlm · PDF 2.8 MB',
+            'pages'     => '76 Hlm',
+            'size'      => '2.8 MB',
+            'format'    => 'PDF',
+            'title'     => 'Modul Asesmen Psikologis Non-Tes: Angket, Sosiometri & AUM',
+            'desc'      => 'Petunjuk administrasi, skoring, tabulasi, dan interpretasi profil kebutuhan konseli menggunakan AUM dan Sosiometri.',
+            'file_url'  => '#',
+        ),
+        array(
+            'id'        => 4,
+            'kode'      => 'ELB-04',
+            'category'  => 'artikel',
+            'cat_label' => 'Artikel Ilmiah',
+            'authors'   => 'Sivitas Akademika BK FIP UNM',
+            'year'      => '2024',
+            'meta'      => '14 Hlm · PDF 850 KB',
+            'pages'     => '14 Hlm',
+            'size'      => '850 KB',
+            'format'    => 'PDF',
+            'title'     => 'Pengembangan Model Bimbingan Karir Berorientasi Industri 4.0',
+            'desc'      => 'Kajian empiris efektivitas model bimbingan karir kontekstual dalam meningkatkan career readiness siswa menengah.',
+            'file_url'  => '#',
+        ),
+        array(
+            'id'        => 5,
+            'kode'      => 'ELB-05',
+            'category'  => 'modul',
+            'cat_label' => 'Modul Pembelajaran',
+            'authors'   => 'Pengampu MK Konseling Kelompok',
+            'year'      => '2024',
+            'meta'      => '92 Hlm · PDF 3.6 MB',
+            'pages'     => '92 Hlm',
+            'size'      => '3.6 MB',
+            'format'    => 'PDF',
+            'title'     => 'Diktat Dinamika Konseling Kelompok & Manajemen Konflik Remaja',
+            'desc'      => 'Konsep tahapan pembentukan, peralihan, kegiatan, dan pengakhiran dalam kelompok serta teknik manajemen resistensi.',
+            'file_url'  => '#',
+        ),
+        array(
+            'id'        => 6,
+            'kode'      => 'ELB-06',
+            'category'  => 'buku',
+            'cat_label' => 'Pedoman Akademik',
+            'authors'   => 'GPM Program Studi BK UNM',
+            'year'      => '2025',
+            'meta'      => '110 Hlm · PDF 5.2 MB',
+            'pages'     => '110 Hlm',
+            'size'      => '5.2 MB',
+            'format'    => 'PDF',
+            'title'     => 'Panduan Penulisan Skripsi & Tugas Akhir Bimbingan dan Konseling',
+            'desc'      => 'Standar format proposal, laporan hasil, artikel jurnal syarat yudisium, kode etik sitasi APA 7th, dan uji Turnitin.',
+            'file_url'  => '#',
+        ),
+    );
+}
+}
+
+if (!function_exists('ppb_get_elibrary_items')) {
+function ppb_get_elibrary_items() {
+    $saved = get_option('ppb_elibrary_items', array());
+    if (!is_array($saved) || empty($saved)) {
+        return ppb_get_elibrary_default_items();
+    }
+    $normalized = array();
+    foreach (array_values($saved) as $idx => $it) {
+        $id = isset($it['id']) ? (int) $it['id'] : ($idx + 1);
+        $kode = !empty($it['kode']) ? $it['kode'] : sprintf('ELB-%02d', $idx + 1);
+        $cat = !empty($it['category']) ? $it['category'] : (!empty($it['cat']) ? $it['cat'] : 'modul');
+        $cat_label = !empty($it['cat_label']) ? $it['cat_label'] : (!empty($it['catLabel']) ? $it['catLabel'] : 'Modul Praktikum');
+        $format = !empty($it['format']) ? $it['format'] : 'PDF';
+        $meta = !empty($it['meta']) ? $it['meta'] : trim((isset($it['pages']) ? $it['pages'] : '60 Hlm') . ' · ' . $format . ' ' . (isset($it['size']) ? $it['size'] : '2.5 MB'));
+        $normalized[] = array(
+            'id'        => $id,
+            'kode'      => $kode,
+            'category'  => $cat,
+            'cat_label' => $cat_label,
+            'authors'   => !empty($it['authors']) ? $it['authors'] : 'Tim Dosen BK FIP UNM',
+            'year'      => !empty($it['year']) ? $it['year'] : date('Y'),
+            'meta'      => $meta,
+            'format'    => $format,
+            'title'     => !empty($it['title']) ? $it['title'] : 'Modul Bimbingan dan Konseling',
+            'desc'      => !empty($it['desc']) ? $it['desc'] : '',
+            'file_url'  => !empty($it['file_url']) ? $it['file_url'] : '#',
+        );
+    }
+    return $normalized;
+}
+}
+
+if (!function_exists('ppb_get_elibrary_submissions')) {
+function ppb_get_elibrary_submissions() {
+    $subs = get_option('ppb_elibrary_submissions', array());
+    return is_array($subs) ? $subs : array();
+}
+}
+
+if (!function_exists('ppb_ajax_submit_elibrary')) {
+function ppb_ajax_submit_elibrary() {
+    check_ajax_referer('ppb_elibrary_submit_nonce', 'nonce');
+
+    $title    = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
+    $category = isset($_POST['category']) ? sanitize_text_field(wp_unslash($_POST['category'])) : 'Modul Praktikum';
+    $author   = isset($_POST['author']) ? sanitize_text_field(wp_unslash($_POST['author'])) : '';
+    $file_url = isset($_POST['file_url']) ? esc_url_raw(wp_unslash($_POST['file_url'])) : '';
+    $notes    = isset($_POST['notes']) ? sanitize_textarea_field(wp_unslash($_POST['notes'])) : '';
+
+    if (empty($title) || empty($author) || empty($file_url)) {
+        wp_send_json_error(array('message' => 'Mohon lengkapi judul, pengusul, dan tautan naskah.'));
+    }
+
+    $ticket = 'ELB-' . substr((string) round(microtime(true) * 1000), -4);
+    $subs   = ppb_get_elibrary_submissions();
+
+    $entry = array(
+        'ticket'       => $ticket,
+        'title'        => $title,
+        'category'     => $category,
+        'author'       => $author,
+        'file_url'     => $file_url,
+        'notes'        => $notes,
+        'status'       => 'pending',
+        'submitted_at' => current_time('mysql'),
+    );
+
+    array_unshift($subs, $entry);
+    update_option('ppb_elibrary_submissions', array_slice($subs, 0, 100), false);
+
+    wp_send_json_success(array(
+        'ticket'  => $ticket,
+        'entry'   => $entry,
+        'message' => 'Pengajuan naskah ' . $ticket . ' tercatat untuk kurasi repositori.',
+    ));
+}
+}
+add_action('wp_ajax_ppb_submit_elibrary', 'ppb_ajax_submit_elibrary');
+add_action('wp_ajax_nopriv_ppb_submit_elibrary', 'ppb_ajax_submit_elibrary');
+
+if (!function_exists('ppb_render_elibrary_admin_page')) {
+function ppb_render_elibrary_admin_page() {
+    if (!current_user_can('edit_posts')) {
+        wp_die('Anda tidak memiliki izin mengakses halaman ini.');
+    }
+    if (function_exists('wp_enqueue_media')) {
+        wp_enqueue_media();
+    }
+
+    $notice = '';
+
+    // 1. Handle Moderation Actions (Approve / Reject Submission)
+    if (isset($_POST['ppb_elib_mod_action']) && check_admin_referer('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce')) {
+        $act    = sanitize_text_field(wp_unslash($_POST['ppb_elib_mod_action']));
+        $ticket = isset($_POST['sub_ticket']) ? sanitize_text_field(wp_unslash($_POST['sub_ticket'])) : '';
+        $subs   = ppb_get_elibrary_submissions();
+        $items  = ppb_get_elibrary_items();
+
+        foreach ($subs as $k => $sub) {
+            if (isset($sub['ticket']) && $sub['ticket'] === $ticket) {
+                if ($act === 'approve') {
+                    $next_num = count($items) + 1;
+                    $kode = sprintf('ELB-%02d', $next_num);
+                    $cat_map = array(
+                        'Modul Praktikum'   => 'modul',
+                        'Pedoman Akademik'  => 'buku',
+                        'Instrumen Asesmen' => 'asesmen',
+                        'Artikel Ilmiah'    => 'artikel',
+                    );
+                    $cat_slug = isset($cat_map[$sub['category']]) ? $cat_map[$sub['category']] : 'modul';
+                    $items[] = array(
+                        'id'        => time() + $next_num,
+                        'kode'      => $kode,
+                        'category'  => $cat_slug,
+                        'cat_label' => $sub['category'],
+                        'authors'   => $sub['author'],
+                        'year'      => date('Y'),
+                        'meta'      => 'Dokumen Kurasi · PDF',
+                        'format'    => 'PDF',
+                        'title'     => $sub['title'],
+                        'desc'      => !empty($sub['notes']) ? $sub['notes'] : 'Karya terkurasi melalui pengajuan repositori E-Library Prodi BK FIP UNM.',
+                        'file_url'  => $sub['file_url'],
+                    );
+                    update_option('ppb_elibrary_items', array_values($items), false);
+                    $subs[$k]['status'] = 'approved';
+                    $subs[$k]['published_kode'] = $kode;
+                    update_option('ppb_elibrary_submissions', array_values($subs), false);
+                    $notice = 'Usulan naskah <strong>' . esc_html($ticket) . '</strong> berhasil disetujui dan diterbitkan ke katalog E-Library sebagai <strong>' . esc_html($kode) . '</strong>.';
+                } elseif ($act === 'delete') {
+                    unset($subs[$k]);
+                    update_option('ppb_elibrary_submissions', array_values($subs), false);
+                    $notice = 'Usulan naskah <strong>' . esc_html($ticket) . '</strong> dihapus dari antrean.';
+                }
+                break;
+            }
+        }
+    }
+
+    // 2. Handle Save Portal Links (3 Top Cards)
+    if (isset($_POST['ppb_save_elib_links']) && check_admin_referer('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce')) {
+        $raw_links = isset($_POST['elib_links']) && is_array($_POST['elib_links']) ? wp_unslash($_POST['elib_links']) : array();
+        $clean_links = array();
+        foreach ($raw_links as $lk) {
+            if (empty($lk['title'])) continue;
+            $clean_links[] = array(
+                'badge' => sanitize_text_field($lk['badge'] ?? 'REPOSITORI'),
+                'title' => sanitize_text_field($lk['title'] ?? ''),
+                'sub'   => sanitize_text_field($lk['sub'] ?? ''),
+                'cta'   => sanitize_text_field($lk['cta'] ?? 'Buka Tautan ↗'),
+                'href'  => esc_url_raw($lk['href'] ?? '#'),
+            );
+        }
+        if (!empty($clean_links)) {
+            update_option('ppb_elibrary_portal_links', $clean_links, false);
+            $notice = 'Kartu tautan portal & jurnal E-Library berhasil diperbarui.';
+        }
+    }
+
+    // 3. Handle Reset Catalog & Links to Default
+    if (isset($_POST['ppb_reset_elib_defaults']) && check_admin_referer('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce')) {
+        delete_option('ppb_elibrary_items');
+        delete_option('ppb_elibrary_portal_links');
+        $notice = 'Katalog E-Library dan kartu tautan jurnal telah dikembalikan ke pengaturan awal (ELB-01 s.d. ELB-06).';
+    }
+
+    // 4. Handle Save Catalog Items + Optional New Item
+    if (isset($_POST['ppb_save_elib_catalog']) && check_admin_referer('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce')) {
+        $raw_items = isset($_POST['elib_items']) && is_array($_POST['elib_items']) ? wp_unslash($_POST['elib_items']) : array();
+        $new_items = array();
+        $cat_labels = array(
+            'modul'   => 'Modul Praktikum',
+            'buku'    => 'Pedoman Akademik',
+            'asesmen' => 'Instrumen Asesmen',
+            'artikel' => 'Artikel Ilmiah',
+        );
+
+        foreach ($raw_items as $idx => $it) {
+            if (!empty($it['delete']) || empty($it['title'])) continue;
+            $cat = sanitize_text_field($it['category'] ?? 'modul');
+            $cat_lbl = !empty($it['cat_label']) ? sanitize_text_field($it['cat_label']) : ($cat_labels[$cat] ?? 'Modul Praktikum');
+            $new_items[] = array(
+                'id'        => !empty($it['id']) ? (int) $it['id'] : ($idx + 1),
+                'kode'      => !empty($it['kode']) ? sanitize_text_field($it['kode']) : sprintf('ELB-%02d', count($new_items) + 1),
+                'category'  => $cat,
+                'cat_label' => $cat_lbl,
+                'authors'   => sanitize_text_field($it['authors'] ?? 'Tim Dosen BK FIP UNM'),
+                'year'      => sanitize_text_field($it['year'] ?? date('Y')),
+                'meta'      => sanitize_text_field($it['meta'] ?? '64 Hlm · PDF 3.0 MB'),
+                'format'    => sanitize_text_field($it['format'] ?? 'PDF'),
+                'title'     => sanitize_text_field($it['title']),
+                'desc'      => sanitize_textarea_field($it['desc'] ?? ''),
+                'file_url'  => !empty($it['file_url']) ? esc_url_raw($it['file_url']) : '#',
+            );
+        }
+
+        // Optional New Item row
+        if (!empty($_POST['new_item']['title'])) {
+            $ni = wp_unslash($_POST['new_item']);
+            $cat = sanitize_text_field($ni['category'] ?? 'modul');
+            $cat_lbl = !empty($ni['cat_label']) ? sanitize_text_field($ni['cat_label']) : ($cat_labels[$cat] ?? 'Modul Praktikum');
+            $next_idx = count($new_items) + 1;
+            $new_items[] = array(
+                'id'        => time(),
+                'kode'      => !empty($ni['kode']) ? sanitize_text_field($ni['kode']) : sprintf('ELB-%02d', $next_idx),
+                'category'  => $cat,
+                'cat_label' => $cat_lbl,
+                'authors'   => sanitize_text_field($ni['authors'] ?? 'Tim Dosen BK FIP UNM'),
+                'year'      => sanitize_text_field($ni['year'] ?? date('Y')),
+                'meta'      => sanitize_text_field($ni['meta'] ?? '64 Hlm · PDF 2.5 MB'),
+                'format'    => sanitize_text_field($ni['format'] ?? 'PDF'),
+                'title'     => sanitize_text_field($ni['title']),
+                'desc'      => sanitize_textarea_field($ni['desc'] ?? ''),
+                'file_url'  => !empty($ni['file_url']) ? esc_url_raw($ni['file_url']) : '#',
+            );
+        }
+
+        update_option('ppb_elibrary_items', array_values($new_items), false);
+        $notice = 'Katalog E-Library (' . count($new_items) . ' koleksi) berhasil disimpan!';
+    }
+
+    $items = ppb_get_elibrary_items();
+    $links = ppb_get_elibrary_portal_links();
+    $subs  = ppb_get_elibrary_submissions();
+    ?>
+    <div class="wrap" style="max-width:1220px;margin:20px auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+        <div style="background:linear-gradient(135deg,#0D3B22,#185333);color:#fff;padding:26px 30px;border-radius:14px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+            <div>
+                <span style="display:inline-block;background:rgba(245,184,46,0.2);color:#F5B82E;border:1px solid rgba(245,184,46,0.4);padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Repositori Digital Prodi BK</span>
+                <h1 style="color:#fff;margin:0 0 6px;font-size:24px;font-weight:700;">📚 Pengelolaan E-Library, Modul &amp; Kurasi Naskah</h1>
+                <p style="margin:0;color:rgba(255,255,255,0.84);font-size:13.5px;">Kelola katalog modul praktikum (ELB-01..ELB-xx), tautan jurnal SINTA (JKBK &amp; PJEC), serta moderasi usulan unggah modul dari sivitas akademika.</p>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <a href="<?php echo esc_url(home_url('/e-library/')); ?>" target="_blank" class="button" style="background:#F5B82E;color:#0D3B22;border:none;font-weight:700;padding:6px 14px;border-radius:8px;">↗ Lihat Halaman E-Library</a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-portal-hub')); ?>" class="button" style="border-radius:8px;">← Pusat Kendali</a>
+            </div>
+        </div>
+
+        <?php if ($notice) : ?>
+            <div class="notice notice-success is-dismissible" style="padding:12px 16px;border-radius:8px;margin-bottom:20px;"><p style="margin:0;"><?php echo wp_kses_post($notice); ?></p></div>
+        <?php endif; ?>
+
+        <!-- 1. ANTREAN USULAN UNGGAH MODUL (KURASI NASKAH) -->
+        <div style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+            <h2 style="margin:0 0 6px;color:#0D3B22;font-size:18px;">📥 Antrean Kurasi Usulan Naskah Dosen &amp; Sivitas (<?php echo count($subs); ?>)</h2>
+            <p style="margin:0 0 16px;color:#64748b;font-size:13px;">Usulan modul yang dikirim melalui laci <em>"Ajukan Unggah Modul"</em> di halaman E-Library masuk ke tabel ini untuk ditinjau Admin &amp; GPM sebelum terbit di katalog.</p>
+            <?php if (empty($subs)) : ?>
+                <div style="padding:18px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;font-size:13px;text-align:center;">Belum ada pengajuan unggah modul baru dari formulir frontend.</div>
+            <?php else : ?>
+                <table class="widefat striped" style="border-radius:8px;overflow:hidden;">
+                    <thead>
+                        <tr>
+                            <th>Tiket &amp; Waktu</th>
+                            <th>Judul Naskah &amp; Ringkasan</th>
+                            <th>Kategori</th>
+                            <th>Pengusul</th>
+                            <th>Tautan Berkas</th>
+                            <th>Status / Aksi Kurasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($subs as $sub) : 
+                            $st = $sub['status'] ?? 'pending';
+                        ?>
+                        <tr>
+                            <td>
+                                <strong style="font-family:monospace;color:#0D3B22;"><?php echo esc_html($sub['ticket'] ?? '-'); ?></strong><br>
+                                <span style="font-size:11.5px;color:#64748b;"><?php echo esc_html($sub['submitted_at'] ?? ''); ?></span>
+                            </td>
+                            <td>
+                                <strong><?php echo esc_html($sub['title'] ?? ''); ?></strong>
+                                <?php if (!empty($sub['notes'])) : ?>
+                                    <div style="font-size:12px;color:#475569;margin-top:4px;"><?php echo esc_html($sub['notes']); ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td><span style="background:#E8F0EA;color:#0D3B22;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;"><?php echo esc_html($sub['category'] ?? ''); ?></span></td>
+                            <td><?php echo esc_html($sub['author'] ?? ''); ?></td>
+                            <td>
+                                <?php if (!empty($sub['file_url'])) : ?>
+                                    <a href="<?php echo esc_url($sub['file_url']); ?>" target="_blank" rel="noopener">Buka Berkas ↗</a>
+                                <?php else : ?>
+                                    -
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <form method="post" style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                    <?php wp_nonce_field('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce'); ?>
+                                    <input type="hidden" name="sub_ticket" value="<?php echo esc_attr($sub['ticket'] ?? ''); ?>">
+                                    <?php if ($st === 'approved') : ?>
+                                        <span style="background:#dcfce7;color:#166534;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">✓ Terbit (<?php echo esc_html($sub['published_kode'] ?? 'ELB'); ?>)</span>
+                                    <?php else : ?>
+                                        <button type="submit" name="ppb_elib_mod_action" value="approve" class="button button-primary button-small" style="background:#0D3B22;border-color:#0D3B22;">✓ Setujui &amp; Terbitkan</button>
+                                    <?php endif; ?>
+                                    <button type="submit" name="ppb_elib_mod_action" value="delete" class="button button-small" style="color:#b91c1c;border-color:#fecaca;" onclick="return confirm('Hapus usulan naskah ini?');">Hapus</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <!-- 2. KARTU TAUTAN PORTAL JURNAL & REPOSITORI (3 KARTU ATAS) -->
+        <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+            <?php wp_nonce_field('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce'); ?>
+            <h2 style="margin:0 0 6px;color:#0D3B22;font-size:18px;">🔗 Kartu Tautan Jurnal &amp; Repositori (Bagian Atas E-Library)</h2>
+            <p style="margin:0 0 16px;color:#64748b;font-size:13px;">Tiga kartu pintasan di bagian atas halaman E-Library (Jurnal JKBK SINTA 2, Jurnal PJEC SINTA 4, dan Katalog Buku Dosen).</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px;">
+                <?php foreach ($links as $i => $lk) : ?>
+                    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+                        <strong style="display:block;color:#0D3B22;margin-bottom:8px;">Kartu Pintasan #<?php echo ($i + 1); ?></strong>
+                        <p style="margin:0 0 8px;">
+                            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Badge Label</label>
+                            <input type="text" name="elib_links[<?php echo $i; ?>][badge]" value="<?php echo esc_attr($lk['badge']); ?>" class="widefat">
+                        </p>
+                        <p style="margin:0 0 8px;">
+                            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Judul Kartu</label>
+                            <input type="text" name="elib_links[<?php echo $i; ?>][title]" value="<?php echo esc_attr($lk['title']); ?>" class="widefat">
+                        </p>
+                        <p style="margin:0 0 8px;">
+                            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Subjudul / ISSN</label>
+                            <input type="text" name="elib_links[<?php echo $i; ?>][sub]" value="<?php echo esc_attr($lk['sub']); ?>" class="widefat">
+                        </p>
+                        <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:8px;">
+                            <div>
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Teks CTA</label>
+                                <input type="text" name="elib_links[<?php echo $i; ?>][cta]" value="<?php echo esc_attr($lk['cta']); ?>" class="widefat">
+                            </div>
+                            <div>
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">URL Tautan</label>
+                                <input type="text" name="elib_links[<?php echo $i; ?>][href]" value="<?php echo esc_attr($lk['href']); ?>" class="widefat">
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="submit" name="ppb_save_elib_links" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan Kartu Tautan Jurnal</button>
+        </form>
+
+        <!-- 3. KATALOG KOLEKSI E-LIBRARY (ELB-01..ELB-xx) -->
+        <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+            <?php wp_nonce_field('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce'); ?>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+                <div>
+                    <h2 style="margin:0 0 4px;color:#0D3B22;font-size:18px;">📖 Katalog Koleksi E-Library &amp; Modul (<?php echo count($items); ?> Koleksi)</h2>
+                    <p style="margin:0;color:#64748b;font-size:13px;">Setiap item memiliki tombol Detail (membuka laci abstrak &amp; sitasi otomatis APA 7th) serta tombol Unduh PDF.</p>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button type="submit" name="ppb_save_elib_catalog" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan Seluruh Katalog</button>
+                    <button type="submit" name="ppb_reset_elib_defaults" class="button" onclick="return confirm('Reset katalog E-Library ke 6 koleksi bawaan (ELB-01..ELB-06)?');">↺ Reset ke Default</button>
+                </div>
+            </div>
+
+            <div style="display:grid;gap:14px;margin-bottom:24px;">
+                <?php foreach ($items as $idx => $it) : ?>
+                    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;background:#fcfdfd;">
+                        <input type="hidden" name="elib_items[<?php echo $idx; ?>][id]" value="<?php echo esc_attr($it['id']); ?>">
+                        <div style="display:grid;grid-template-columns:110px 160px 170px 1fr 90px 180px;gap:10px;margin-bottom:10px;align-items:end;">
+                            <div>
+                                <label style="font-size:11.5px;font-weight:700;color:#0D3B22;display:block;margin-bottom:3px;">Kode</label>
+                                <input type="text" name="elib_items[<?php echo $idx; ?>][kode]" value="<?php echo esc_attr($it['kode']); ?>" class="widefat" style="font-family:monospace;font-weight:700;">
+                            </div>
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:3px;">Filter Kategori</label>
+                                <select name="elib_items[<?php echo $idx; ?>][category]" class="widefat">
+                                    <option value="modul" <?php selected($it['category'], 'modul'); ?>>Modul (modul)</option>
+                                    <option value="buku" <?php selected($it['category'], 'buku'); ?>>Pedoman (buku)</option>
+                                    <option value="asesmen" <?php selected($it['category'], 'asesmen'); ?>>Asesmen (asesmen)</option>
+                                    <option value="artikel" <?php selected($it['category'], 'artikel'); ?>>Artikel (artikel)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:3px;">Label Badge</label>
+                                <input type="text" name="elib_items[<?php echo $idx; ?>][cat_label]" value="<?php echo esc_attr($it['cat_label']); ?>" class="widefat">
+                            </div>
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:3px;">Penyusun / Penulis (Sitasi APA)</label>
+                                <input type="text" name="elib_items[<?php echo $idx; ?>][authors]" value="<?php echo esc_attr($it['authors']); ?>" class="widefat">
+                            </div>
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:3px;">Tahun</label>
+                                <input type="text" name="elib_items[<?php echo $idx; ?>][year]" value="<?php echo esc_attr($it['year']); ?>" class="widefat">
+                            </div>
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:3px;">Spesifikasi Berkas</label>
+                                <input type="text" name="elib_items[<?php echo $idx; ?>][meta]" value="<?php echo esc_attr($it['meta']); ?>" class="widefat" placeholder="64 Hlm · PDF 3.2 MB">
+                                <input type="hidden" name="elib_items[<?php echo $idx; ?>][format]" value="<?php echo esc_attr($it['format'] ?? 'PDF'); ?>">
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:3px;">Judul Lengkap Modul / Pedoman / Artikel</label>
+                                <input type="text" name="elib_items[<?php echo $idx; ?>][title]" value="<?php echo esc_attr($it['title']); ?>" class="widefat" style="font-weight:600;">
+                            </div>
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;display:block;margin-bottom:3px;">URL Berkas PDF (Google Drive / Pustaka Media)</label>
+                                <div style="display:flex;gap:6px;">
+                                    <input type="text" id="elib_file_<?php echo $idx; ?>" name="elib_items[<?php echo $idx; ?>][file_url]" value="<?php echo esc_attr($it['file_url']); ?>" class="widefat" placeholder="https://drive.google.com/... atau #">
+                                    <button type="button" class="button ppb-elib-media-btn" data-target="#elib_file_<?php echo $idx; ?>">Media</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;">
+                            <div style="flex:1;">
+                                <input type="text" name="elib_items[<?php echo $idx; ?>][desc]" value="<?php echo esc_attr($it['desc']); ?>" class="widefat" placeholder="Abstrak / ringkasan materi...">
+                            </div>
+                            <label style="color:#b91c1c;font-size:12px;font-weight:600;white-space:nowrap;">
+                                <input type="checkbox" name="elib_items[<?php echo $idx; ?>][delete]" value="1"> Hapus Koleksi Ini
+                            </label>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Tambah Koleksi Baru -->
+            <div style="background:#f0fdf4;border:1.5px dashed #166534;border-radius:10px;padding:18px;margin-bottom:18px;">
+                <h3 style="margin:0 0 10px;color:#0D3B22;font-size:15px;">➕ Tambah Koleksi Modul / Buku Baru ke E-Library</h3>
+                <div style="display:grid;grid-template-columns:110px 160px 170px 1fr 90px 180px;gap:10px;margin-bottom:10px;">
+                    <input type="text" name="new_item[kode]" placeholder="<?php echo esc_attr(sprintf('ELB-%02d', count($items) + 1)); ?>" class="widefat">
+                    <select name="new_item[category]" class="widefat">
+                        <option value="modul">Modul (modul)</option>
+                        <option value="buku">Pedoman (buku)</option>
+                        <option value="asesmen">Asesmen (asesmen)</option>
+                        <option value="artikel">Artikel (artikel)</option>
+                    </select>
+                    <input type="text" name="new_item[cat_label]" placeholder="Modul Praktikum" class="widefat">
+                    <input type="text" name="new_item[authors]" placeholder="Nama Dosen / Tim Penyusun" class="widefat">
+                    <input type="text" name="new_item[year]" value="<?php echo esc_attr(date('Y')); ?>" class="widefat">
+                    <input type="text" name="new_item[meta]" placeholder="72 Hlm · PDF 2.4 MB" class="widefat">
+                </div>
+                <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:10px;margin-bottom:10px;">
+                    <input type="text" name="new_item[title]" placeholder="Judul Modul / Buku / Instrumen Baru (Isi untuk menambahkan)..." class="widefat">
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" id="elib_file_new" name="new_item[file_url]" placeholder="https://drive.google.com/file/d/... atau pilih PDF" class="widefat">
+                        <button type="button" class="button ppb-elib-media-btn" data-target="#elib_file_new">Pilih PDF</button>
+                    </div>
+                </div>
+                <input type="text" name="new_item[desc]" placeholder="Ringkasan materi / abstrak singkat untuk ditampilkan di kartu dan laci detail..." class="widefat">
+            </div>
+
+            <button type="submit" name="ppb_save_elib_catalog" class="button button-primary button-hero" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan Perubahan &amp; Koleksi Baru</button>
+        </form>
+    </div>
+    <script>
+    jQuery(function($){
+        $('.ppb-elib-media-btn').on('click', function(e){
+            e.preventDefault();
+            var target = $(this).data('target');
+            var frame = wp.media({ title: 'Pilih Berkas PDF / Dokumen E-Library', button: { text: 'Gunakan Berkas Ini' }, multiple: false });
+            frame.on('select', function(){
+                var att = frame.state().get('selection').first().toJSON();
+                if (att && att.url) { $(target).val(att.url); }
+            });
+            frame.open();
+        });
+    });
+    </script>
+    <?php
+}
+}
+

@@ -719,7 +719,7 @@ function ppb_shortcode_prestasi_list() {
 
     ob_start();
     ?>
-    <section class="ppb-prestasi-wrapper" style="font-family:'Poppins',sans-serif;color:#1e293b;width:100%;max-width:1200px;margin:0 auto;">
+    <section class="ppb-prestasi-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1e293b;width:100%;max-width:var(--max-w, 1160px);margin:0 auto;">
 
         <!-- Filter & Search Toolbar (Sleek Capsule Toolbar) -->
         <div class="ppb-toolbar-wrap">
@@ -963,7 +963,7 @@ function ppb_shortcode_karya_list() {
 
     ob_start();
     ?>
-    <section class="ppb-karya-wrapper" style="font-family:'Poppins',sans-serif;color:#1e293b;width:100%;max-width:1200px;margin:0 auto;">
+    <section class="ppb-karya-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1e293b;width:100%;max-width:var(--max-w, 1160px);margin:0 auto;">
 
         <!-- Filter & Search Toolbar (Sleek Capsule Toolbar) -->
         <div class="ppb-toolbar-wrap">
@@ -1176,7 +1176,7 @@ function ppb_shortcode_tracer_study_view() {
 
     ob_start();
     ?>
-    <section class="ppb-tracer-wrapper" style="font-family:'Poppins',sans-serif;color:#1e293b;width:100%;max-width:1200px;margin:0 auto;">
+    <section class="ppb-tracer-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1e293b;width:100%;max-width:var(--max-w, 1160px);margin:0 auto;">
         
         <!-- 4 Key Metrics Cards -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:20px;margin-bottom:32px;">
@@ -1421,7 +1421,7 @@ function ppb_shortcode_maba_statistik($atts = []) {
         ['tahun' => '2020', 'daya_tampung' => 105, 'peminat_snbp' => 370, 'peminat_snbt' => 880, 'peminat_mandiri' => 230, 'total_peminat' => 1480, 'keketatan' => '1 : 14']
     ];
     ?>
-    <section class="ppb-maba-wrapper" style="font-family:'Poppins',sans-serif;color:#1F2937;margin:30px 0;">
+    <section class="ppb-maba-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
         
         <!-- Header & Pendaftaran Banner -->
         <div style="background:#0D3B22;color:#ffffff;border-radius:20px;padding:30px;margin-bottom:30px;box-shadow:0 8px 25px rgba(13,59,34,0.15);">
@@ -1517,7 +1517,7 @@ if (!function_exists('ppb_shortcode_mbkm_kemanusiaan')) {
 function ppb_shortcode_mbkm_kemanusiaan($atts = []) {
     ob_start();
     ?>
-    <section class="ppb-mbkm-wrapper" style="font-family:'Poppins',sans-serif;color:#1F2937;margin:30px 0;">
+    <section class="ppb-mbkm-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
         
         <div style="background:#0D3B22;color:#ffffff;border-radius:20px;padding:30px;margin-bottom:30px;box-shadow:0 8px 25px rgba(13,59,34,0.15);">
             <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,184,46,0.2);color:#F5B82E;padding:4px 14px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:12px;border:1px solid rgba(245,184,46,0.35);">

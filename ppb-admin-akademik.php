@@ -369,7 +369,7 @@ function ppb_akademik_render_settings_page() {
     $link_pedoman   = get_option('ppb_link_pedoman_penilaian', 'https://drive.google.com/file/d/1_Panduan_Penilaian_OBE_BK/view?usp=sharing');
     $link_skripsi   = get_option('ppb_link_pedoman_skripsi', 'https://drive.google.com/drive/folders/1_Pedoman_Skripsi_BK_UNM?usp=sharing');
     ?>
-    <div class="wrap" style="max-width:850px;font-family:'Poppins',sans-serif;">
+    <div class="wrap" style="max-width:850px;font-family:'Plus Jakarta Sans',sans-serif;">
         <h1 style="font-family:'Fraunces',Georgia,serif;color:#0D3B22;font-size:26px;margin-bottom:8px;">Pengaturan Tautan Google Drive Dokumen Akademik</h1>
         <p style="color:#64748b;font-size:13px;margin-bottom:24px;">Admin dapat memperbarui link Google Drive untuk Buku Kurikulum OBE, SK Senat, dan Pedoman Penilaian yang tampil di seluruh tombol website.</p>
 
@@ -471,7 +471,7 @@ function ppb_shortcode_jadwal_ujian_list() {
     ob_start();
     $items_json = wp_json_encode($items);
     ?>
-    <section class="ppb-jadwal-wrapper" style="font-family:'Poppins',sans-serif;color:#1e293b;width:100%;max-width:1200px;margin:0 auto;">
+    <section class="ppb-jadwal-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1e293b;width:100%;max-width:var(--max-w, 1160px);margin:0 auto;">
         
         <!-- Quick Counter Pills -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;margin-bottom:24px;">
@@ -1131,7 +1131,7 @@ if (!function_exists('ppb_shortcode_kurikulum_rps_sap')) {
 function ppb_shortcode_kurikulum_rps_sap($atts = []) {
     ob_start();
     ?>
-    <section class="ppb-kurikulum-suite" style="font-family:'Poppins',sans-serif;color:#1F2937;margin:30px 0;">
+    <section class="ppb-kurikulum-suite" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
         
         <!-- Tab Navigation Bar -->
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:25px;border-bottom:2px solid #E5E7EB;padding-bottom:12px;">
@@ -1409,7 +1409,7 @@ if (!function_exists('ppb_shortcode_mis_pnbp')) {
 function ppb_shortcode_mis_pnbp($atts = []) {
     ob_start();
     ?>
-    <section class="ppb-mis-pnbp-wrapper" style="font-family:'Poppins',sans-serif;color:#1F2937;margin:30px 0;">
+    <section class="ppb-mis-pnbp-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
         
         <!-- Header Banner MIS PNBP -->
         <div style="background:#0D3B22;color:#ffffff;border-radius:20px;padding:30px;margin-bottom:30px;box-shadow:0 8px 25px rgba(13,59,34,0.15);">
@@ -1576,7 +1576,7 @@ if (!function_exists('ppb_shortcode_jurnal_bk')) {
 function ppb_shortcode_jurnal_bk($atts = []) {
     ob_start();
     ?>
-    <section class="ppb-jurnal-wrapper" style="font-family:'Poppins',sans-serif;color:#1F2937;margin:30px 0;">
+    <section class="ppb-jurnal-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
         
         <div style="background:#0D3B22;color:#ffffff;border-radius:20px;padding:30px;margin-bottom:30px;box-shadow:0 8px 25px rgba(13,59,34,0.15);">
             <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,184,46,0.2);color:#F5B82E;padding:4px 14px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:12px;border:1px solid rgba(245,184,46,0.35);">

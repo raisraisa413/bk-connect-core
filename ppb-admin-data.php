@@ -116,8 +116,12 @@ function ppb_dosen_render_meta_box($post) {
     $kategori    = get_post_meta($post->ID, '_ppb_dosen_kategori', true) ?: 'LEKTOR';
     $jabatan     = get_post_meta($post->ID, '_ppb_dosen_jabatan', true);
     $inisial     = get_post_meta($post->ID, '_ppb_dosen_inisial', true);
+    $foto_link   = get_post_meta($post->ID, '_ppb_dosen_foto_link', true) ?: get_post_meta($post->ID, '_dosen_foto_link', true);
     $kepakaran   = get_post_meta($post->ID, '_ppb_dosen_kepakaran', true);
     $sinta_url   = get_post_meta($post->ID, '_ppb_dosen_sinta_url', true) ?: 'https://sinta.kemdiktisaintek.go.id/';
+    if (function_exists('wp_enqueue_media')) {
+        wp_enqueue_media();
+    }
     ?>
     <style>
         .ppb-form-row { margin-bottom: 18px; }
@@ -159,8 +163,32 @@ function ppb_dosen_render_meta_box($post) {
     <div class="ppb-form-row">
         <label for="ppb_dosen_inisial">Inisial Avatar (2 Huruf):</label>
         <input type="text" id="ppb_dosen_inisial" name="ppb_dosen_inisial" value="<?php echo esc_attr($inisial); ?>" placeholder="Contoh: AS (Biarkan kosong untuk otomatis dari nama)">
-        <span class="ppb-form-hint">Inisial huruf pada lingkaran emas avatar dosen.</span>
+        <span class="ppb-form-hint">Inisial huruf pada lingkaran emas avatar dosen (fallback jika foto tidak tersedia).</span>
     </div>
+
+    <div class="ppb-form-row">
+        <label for="ppb_dosen_foto_link">Foto Potret Dosen (URL / Path Aset Tema):</label>
+        <div style="display:flex;gap:8px;max-width:700px;align-items:center;">
+            <input type="text" id="ppb_dosen_foto_link" name="ppb_dosen_foto_link" value="<?php echo esc_attr($foto_link); ?>" placeholder="Contoh: assets/img/dosen-abid.jpg atau https://...">
+            <button type="button" class="button" id="ppb_dosen_foto_picker">Pilih Media</button>
+        </div>
+        <span class="ppb-form-hint">Mendukung URL dari Pustaka Media atau path relatif aset tema (mis. <code>assets/img/dosen-abid.jpg</code>). Ditampilkan 4:5 &amp; avatar bulat dengan fokus wajah <code>50% 22%</code>.</span>
+    </div>
+    <script>
+    jQuery(function($){
+        var frame;
+        $('#ppb_dosen_foto_picker').on('click', function(e){
+            e.preventDefault();
+            if (frame) { frame.open(); return; }
+            frame = wp.media({ title: 'Pilih Foto Dosen', button: { text: 'Gunakan Foto' }, multiple: false });
+            frame.on('select', function(){
+                var att = frame.state().get('selection').first().toJSON();
+                if (att && att.url) { $('#ppb_dosen_foto_link').val(att.url); }
+            });
+            frame.open();
+        });
+    });
+    </script>
 
     <div class="ppb-form-row">
         <label for="ppb_dosen_kepakaran">Bidang Kepakaran (Pisahkan dengan tanda koma):</label>
@@ -211,6 +239,12 @@ function ppb_dosen_save_meta($post_id) {
             if (empty($ini)) $ini = 'BK';
         }
         update_post_meta($post_id, '_ppb_dosen_inisial', strtoupper(substr($ini, 0, 3)));
+    }
+    if (isset($_POST['ppb_dosen_foto_link'])) {
+        $raw_foto = wp_unslash($_POST['ppb_dosen_foto_link']);
+        $clean_foto = function_exists('bk_sanitize_asset_or_url') ? bk_sanitize_asset_or_url($raw_foto) : sanitize_text_field($raw_foto);
+        update_post_meta($post_id, '_ppb_dosen_foto_link', $clean_foto);
+        update_post_meta($post_id, '_dosen_foto_link', $clean_foto);
     }
     if (isset($_POST['ppb_dosen_kepakaran'])) {
         update_post_meta($post_id, '_ppb_dosen_kepakaran', sanitize_textarea_field($_POST['ppb_dosen_kepakaran']));
@@ -470,7 +504,7 @@ function ppb_shortcode_dosen_roster() {
     ]);
 
     if (!$query->have_posts()) {
-        return '<div style="padding:40px;text-align:center;font-size:14px;color:#6B7280;font-family:\'Poppins\',sans-serif;">Belum ada data dosen yang ditambahkan di WP Admin.</div>';
+        return '<div style="padding:40px;text-align:center;font-size:14px;color:#6B7280;font-family:\'Plus Jakarta Sans\',sans-serif;">Belum ada data dosen yang ditambahkan di WP Admin.</div>';
     }
 
     $all_dosen = [];
@@ -484,6 +518,8 @@ function ppb_shortcode_dosen_roster() {
         $kategori = get_post_meta($id, '_ppb_dosen_kategori', true) ?: 'LEKTOR';
         $jabatan = get_post_meta($id, '_ppb_dosen_jabatan', true);
         $inisial = get_post_meta($id, '_ppb_dosen_inisial', true) ?: 'BK';
+        $foto_raw = get_post_meta($id, '_ppb_dosen_foto_link', true) ?: get_post_meta($id, '_dosen_foto_link', true);
+        $foto_url = ($foto_raw && function_exists('bk_resolve_theme_asset_url')) ? bk_resolve_theme_asset_url($foto_raw) : $foto_raw;
         $kepakaran_raw = get_post_meta($id, '_ppb_dosen_kepakaran', true);
         $sinta_url = get_post_meta($id, '_ppb_dosen_sinta_url', true) ?: 'https://sinta.kemdiktisaintek.go.id/';
 
@@ -525,6 +561,7 @@ function ppb_shortcode_dosen_roster() {
             'badge_color' => $badge_color,
             'jabatan' => $jabatan,
             'inisial' => $inisial,
+            'foto_url' => $foto_url,
             'kepakaran' => $kepakaran,
             'sinta_url' => $sinta_url,
         ];
@@ -534,8 +571,8 @@ function ppb_shortcode_dosen_roster() {
     // Render HTML
     ob_start();
     ?>
-    <section style="padding:0 var(--bk-edge-pad, 1rem) 40px;box-sizing:border-box;font-family:'Poppins',sans-serif;">
-        <div style="max-width:100%;width:100%;margin:0 auto;">
+    <section style="padding:0 var(--bk-edge-pad, 1rem) 40px;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;">
+        <div style="max-width:var(--max-w, 1160px);width:100%;margin:0 auto;">
             <!-- Filter Bar -->
             <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:20px;padding:14px 18px;margin-bottom:28px;box-shadow:0 4px 16px -6px rgba(13,59,34,0.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                 <div style="font-size:12px;font-weight:700;color:#0D3B22;display:flex;align-items:center;gap:6px;">
@@ -543,11 +580,11 @@ function ppb_shortcode_dosen_roster() {
                     <span>Filter Kepakaran:</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:2px;" class="no-scrollbar" id="bk-chip-filters">
-                    <button type="button" class="bk-chip-btn active" data-tag="semua" style="border:none;background:#0D3B22;color:#F5B82E;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;">Semua Kepakaran</button>
+                    <button type="button" class="bk-chip-btn active" data-tag="semua" style="border:none;background:#0D3B22;color:#F5B82E;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;">Semua Kepakaran</button>
                     <?php 
                     $popular_tags = ['Psikometri', 'Multikultural', 'Cybercounseling', 'Karier', 'Teori', 'Evaluasi'];
                     foreach ($popular_tags as $pt) : ?>
-                        <button type="button" class="bk-chip-btn" data-tag="<?php echo esc_attr($pt); ?>" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;"><?php echo esc_html($pt); ?></button>
+                        <button type="button" class="bk-chip-btn" data-tag="<?php echo esc_attr($pt); ?>" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;"><?php echo esc_html($pt); ?></button>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -560,8 +597,12 @@ function ppb_shortcode_dosen_roster() {
                 <div class="bk-dosen-card-item" data-text="<?php echo esc_attr($searchable); ?>" style="background:#ffffff;border:1px solid #D4E3D8;border-radius:22px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 6px 18px -8px rgba(13,59,34,0.06);transition:all 0.2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 24px -8px rgba(13,59,34,0.12)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 18px -8px rgba(13,59,34,0.06)'">
                     <div>
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                            <div style="width:44px;height:44px;border-radius:14px;background:#0D3B22;color:#F5B82E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;font-family:'Fraunces',Georgia,serif;">
-                                <?php echo esc_html($d['inisial']); ?>
+                            <div class="bk-avatar<?php echo !empty($d['foto_url']) ? ' has-photo' : ''; ?>" data-fb-init="<?php echo esc_attr($d['inisial']); ?>" style="width:46px;height:46px;border-radius:50%;background:#0D3B22;color:#F5B82E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;font-family:'Fraunces',Georgia,serif;overflow:hidden;border:2px solid <?php echo ($d['kategori'] === 'GURU BESAR') ? '#F5B82E' : 'rgba(13,59,34,0.18)'; ?>;">
+                                <?php if (!empty($d['foto_url'])) : ?>
+                                    <img src="<?php echo esc_url($d['foto_url']); ?>" alt="<?php echo esc_attr($d['nama']); ?>" style="width:100%;height:100%;object-fit:cover;object-position:50% 22%;display:block;" onerror="var p=this.parentElement;if(p){p.classList.remove('has-photo');p.textContent=p.getAttribute('data-fb-init')||'BK';}">
+                                <?php else : ?>
+                                    <?php echo esc_html($d['inisial']); ?>
+                                <?php endif; ?>
                             </div>
                             <span style="font-size:9.5px;font-weight:800;background:<?php echo $d['badge_bg']; ?>;color:<?php echo $d['badge_color']; ?>;padding:3px 8px;border-radius:9999px;letter-spacing:0.04em;">
                                 <?php echo esc_html($d['kategori']); ?>
@@ -670,7 +711,7 @@ function ppb_shortcode_dokumen_grid() {
     ]);
 
     if (!$query->have_posts()) {
-        return '<div style="padding:40px;text-align:center;font-size:14px;color:#6B7280;font-family:\'Poppins\',sans-serif;">Belum ada dokumen mutu yang ditambahkan di WP Admin.</div>';
+        return '<div style="padding:40px;text-align:center;font-size:14px;color:#6B7280;font-family:\'Plus Jakarta Sans\',sans-serif;">Belum ada dokumen mutu yang ditambahkan di WP Admin.</div>';
     }
 
     $all_dok = [];
@@ -704,17 +745,17 @@ function ppb_shortcode_dokumen_grid() {
 
     ob_start();
     ?>
-    <section style="padding:0 var(--bk-edge-pad, 1rem) 40px;box-sizing:border-box;font-family:'Poppins',sans-serif;">
-        <div style="max-width:100%;width:100%;margin:0 auto;">
+    <section style="padding:0 var(--bk-edge-pad, 1rem) 40px;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;">
+        <div style="max-width:var(--max-w, 1160px);width:100%;margin:0 auto;">
             <!-- Category Tabs Bar -->
             <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:20px;padding:12px 16px;margin-bottom:28px;box-shadow:0 4px 16px -6px rgba(13,59,34,0.06);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                 <div style="display:flex;align-items:center;gap:6px;overflow-x:auto;padding-bottom:2px;" class="no-scrollbar" id="bk-doc-cat-tabs">
-                    <button type="button" class="bk-doc-tab-btn active" data-cat="semua" style="border:none;background:#0D3B22;color:#F5B82E;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;">Semua Dokumen</button>
-                    <button type="button" class="bk-doc-tab-btn" data-cat="renstra" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">Renstra &amp; Renop</button>
-                    <button type="button" class="bk-doc-tab-btn" data-cat="sk_senat" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SK Senat &amp; Tata Kelola</button>
-                    <button type="button" class="bk-doc-tab-btn" data-cat="pedoman_penilaian" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">Pedoman OBE</button>
-                    <button type="button" class="bk-doc-tab-btn" data-cat="sk_mahasiswa_aktif" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SK Mahasiswa Aktif</button>
-                    <button type="button" class="bk-doc-tab-btn" data-cat="perlindungan_mahasiswa" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SOP Perlindungan &amp; PPKS</button>
+                    <button type="button" class="bk-doc-tab-btn active" data-cat="semua" style="border:none;background:#0D3B22;color:#F5B82E;font-size:11.5px;font-weight:700;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;">Semua Dokumen</button>
+                    <button type="button" class="bk-doc-tab-btn" data-cat="renstra" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">Renstra &amp; Renop</button>
+                    <button type="button" class="bk-doc-tab-btn" data-cat="sk_senat" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SK Senat &amp; Tata Kelola</button>
+                    <button type="button" class="bk-doc-tab-btn" data-cat="pedoman_penilaian" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">Pedoman OBE</button>
+                    <button type="button" class="bk-doc-tab-btn" data-cat="sk_mahasiswa_aktif" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SK Mahasiswa Aktif</button>
+                    <button type="button" class="bk-doc-tab-btn" data-cat="perlindungan_mahasiswa" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SOP Perlindungan &amp; PPKS</button>
                 </div>
                 <div style="font-size:12px;color:#6B7280;font-weight:600;" id="bk-doc-count-info">
                     Total: <strong style="color:#0D3B22;"><?php echo count($all_dok); ?></strong> dokumen tersedia

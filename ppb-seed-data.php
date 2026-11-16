@@ -53,6 +53,8 @@ if (!empty($dosen_list)) {
                 '_ppb_dosen_kategori'  => $kat,
                 '_ppb_dosen_jabatan'   => $jab . (!empty($d['jabatan_struktural']) ? ' / ' . $d['jabatan_struktural'] : ''),
                 '_ppb_dosen_inisial'   => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $d['slug'] ?? 'BK'), 0, 2)),
+                '_ppb_dosen_foto_link' => $d['foto_link'] ?? '',
+                '_dosen_foto_link'     => $d['foto_link'] ?? '',
                 '_ppb_dosen_kepakaran' => implode(', ', $d['kepakaran'] ?? array('Bimbingan dan Konseling')),
                 '_ppb_dosen_sinta_url' => $d['sinta_url'] ?? 'https://sinta.kemdiktisaintek.go.id/',
             )
@@ -847,10 +849,15 @@ if (function_exists('ppb_sync_default_mega_menu_to_wp')) {
     echo "Seeded complete Mega Menu to primary-menu.\n";
 }
 
+// 7. Seed E-Library default items & portal links if not present
+if (function_exists('ppb_get_elibrary_default_items') && !get_option('ppb_elibrary_items')) {
+    update_option('ppb_elibrary_items', ppb_get_elibrary_default_items(), false);
+}
+if (function_exists('ppb_get_elibrary_default_portal_links') && !get_option('ppb_elibrary_portal_links')) {
+    update_option('ppb_elibrary_portal_links', ppb_get_elibrary_default_portal_links(), false);
+}
+
 update_option('ppb_portal_initial_seeded_v2', 'yes');
-update_option('ppb_content_synced_version', '9.7');
-
-
 
 }
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Module: BK Connect Fonts & Global Motion Engine
- * Description: Enqueues Fraunces & Poppins typography, Scholaro Design Tokens, Ultra-Slim Floating Header, Complete Mobile Responsiveness Suite, and Full Motion Engine
+ * Description: Enqueues Fraunces, Plus Jakarta Sans & IBM Plex Mono typography, Editorial Calm 1160px Design Tokens, Ultra-Slim Floating Header, Complete Mobile Responsiveness Suite, and Full Motion Engine
  */
 
 if (!defined('ABSPATH')) exit;
@@ -10,7 +10,7 @@ if (!function_exists('bk_enqueue_scholaro_fonts')) {
 function bk_enqueue_scholaro_fonts() {
     wp_enqueue_style(
         'bk-fonts',
-        'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Poppins:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap',
+        'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap',
         array(),
         null
     );
@@ -24,27 +24,40 @@ function bk_enqueue_scholaro_fonts() {
             overflow-x: clip !important;
         }
         body {
-            font-family: 'Poppins', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
             background-color: #FAF8F5 !important;
             color: #111827;
             overflow-x: clip !important;
         }
-        h1, h2, h3, .font-display, .font-serif {
-            font-family: 'Fraunces', Georgia, serif !important;
+        h1, h2, .font-display, .font-serif {
+            font-family: 'Fraunces', Georgia, serif;
+        }
+        .elementor-page h3 {
+            font-family: 'Fraunces', Georgia, serif;
+        }
+        .font-mono, code, kbd, .bk-mono {
+            font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
         }
         .elementor-heading-title {
             letter-spacing: -0.02em;
         }
 
         /* ===================================================================== */
-        /* FIXED TOP HEADER & RAZOR-SLIM COMPACT TOPNAV                          */
+        /* FIXED TOP HEADER & EDITORIAL CALM 1160PX LAYOUT TOKENS                */
         /* ===================================================================== */
         :root {
-            --ppb-navbar-height: 52px;
+            --max-w: 1160px;
+            --util-h: 26px;
+            --nav-h: 62px;
+            --header-h: calc(var(--util-h) + var(--nav-h));
+            --ppb-navbar-height: 88px;
+            --bk-navbar-height: 88px;
+            --bk-admin-bar-offset: 0px;
         }
         @media (min-width: 1025px) {
             :root {
-                --ppb-navbar-height: 68px;
+                --ppb-navbar-height: 88px;
+                --bk-navbar-height: 88px;
             }
         }
         #masthead,
@@ -63,11 +76,17 @@ function bk_enqueue_scholaro_fonts() {
         }
 
         /* Body top offset handled cleanly by #bk-navbar-spacer in theme header.php */
+        body.admin-bar {
+            --bk-admin-bar-offset: 32px;
+        }
         body.admin-bar #masthead,
         body.admin-bar .elementor-hf-header {
             top: 32px !important;
         }
         @media screen and (max-width: 782px) {
+            body.admin-bar {
+                --bk-admin-bar-offset: 46px;
+            }
             body.admin-bar #masthead,
             body.admin-bar .elementor-hf-header {
                 top: 46px !important;
@@ -319,7 +338,7 @@ function bk_enqueue_scholaro_fonts() {
             .hfe-nav-menu > li > .hfe-has-submenu-container > a.hfe-menu-item,
             .hfe-nav-menu > li > .hfe-has-submenu-container > a {
                 color: rgba(255, 255, 255, 0.9) !important;
-                font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
                 font-size: 13px !important;
                 font-weight: 600 !important;
                 letter-spacing: -0.01em !important;
@@ -423,7 +442,7 @@ function bk_enqueue_scholaro_fonts() {
             .hfe-nav-menu .sub-menu li a.hfe-sub-menu-item,
             .hfe-nav-menu .sub-menu li a {
                 color: #2D3748 !important;
-                font-family: 'Poppins', sans-serif !important;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
                 font-size: 12.5px !important;
                 font-weight: 500 !important;
                 padding: 8px 12px !important;
@@ -689,7 +708,7 @@ function bk_enqueue_scholaro_fonts() {
                 justify-content: space-between !important;
                 width: 100% !important;
                 padding: 13px 4px !important;
-                font-family: 'Poppins', sans-serif !important;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
                 font-size: 15px !important;
                 font-weight: 500 !important;
                 color: #ffffff !important;
@@ -797,7 +816,7 @@ function bk_enqueue_scholaro_fonts() {
                 display: block !important;
                 width: 100% !important;
                 padding: 10px 6px !important;
-                font-family: 'Poppins', sans-serif !important;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
                 font-size: 13.5px !important;
                 font-weight: 400 !important;
                 color: rgba(255, 255, 255, 0.85) !important;
@@ -832,7 +851,7 @@ function bk_enqueue_scholaro_fonts() {
                 padding: 12px 20px !important;
                 background: #F5B82E !important;
                 color: #0D3B22 !important;
-                font-family: 'Poppins', sans-serif !important;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
                 font-size: 14px !important;
                 font-weight: 700 !important;
                 text-decoration: none !important;
@@ -888,27 +907,47 @@ function bk_enqueue_scholaro_fonts() {
         }
 
         /* ===================================================================== */
-        /* RESPONSIVE LAYOUT & ULTRA-SLIM GUTTERS (MARGIN TIPIS KIRI KANAN)      */
+        /* EDITORIAL CALM LAYOUT: FULL-BLEED BANDS + 1160PX INNER CONTAINERS     */
         /* ===================================================================== */
         .elementor-section {
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
-        .elementor-section.elementor-section-boxed > .elementor-container,
+        .elementor-section.elementor-section-boxed > .elementor-container {
+            max-width: var(--max-w, 1160px) !important;
+            width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: clamp(20px, 4vw, 40px) !important;
+            padding-right: clamp(20px, 4vw, 40px) !important;
+            box-sizing: border-box !important;
+        }
         .elementor-section.elementor-section-full_width > .elementor-container {
             max-width: 100% !important;
             width: 100% !important;
-            padding-left: clamp(10px, 2vw, 24px) !important;
-            padding-right: clamp(10px, 2vw, 24px) !important;
+            padding-left: clamp(16px, 3vw, 32px) !important;
+            padding-right: clamp(16px, 3vw, 32px) !important;
+            box-sizing: border-box !important;
+        }
+        .bk-wrap,
+        .bk-container {
+            max-width: var(--max-w, 1160px) !important;
+            width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: clamp(20px, 4vw, 40px);
+            padding-right: clamp(20px, 4vw, 40px);
             box-sizing: border-box !important;
         }
 
-        /* Mobile Gutters & Spacing (<768px) - Margin Tipis Mepet ke Tepi Layar */
+        /* Mobile Gutters & Spacing (<768px) */
         @media (max-width: 768px) {
             .elementor-section.elementor-section-boxed > .elementor-container,
-            .elementor-section.elementor-section-full_width > .elementor-container {
-                padding-left: 10px !important;
-                padding-right: 10px !important;
+            .elementor-section.elementor-section-full_width > .elementor-container,
+            .bk-wrap,
+            .bk-container {
+                padding-left: 16px !important;
+                padding-right: 16px !important;
                 box-sizing: border-box !important;
             }
 
@@ -951,21 +990,21 @@ function bk_enqueue_scholaro_fonts() {
                 padding-top: 18px !important;
                 padding-bottom: 22px !important;
             }
-            /* Fluid mobile headings */
-            h1, .elementor-element-hero_section h1 {
+            /* Fluid mobile headings (scoped to legacy Elementor pages) */
+            .elementor-page h1, .elementor-element-hero_section h1 {
                 font-size: clamp(24px, 6.8vw, 34px) !important;
                 line-height: 1.2 !important;
                 letter-spacing: -0.02em !important;
             }
-            h2 {
+            .elementor-page h2 {
                 font-size: clamp(19px, 5.5vw, 26px) !important;
                 line-height: 1.25 !important;
                 letter-spacing: -0.02em !important;
             }
-            h3 {
+            .elementor-page h3 {
                 font-size: 16px !important;
             }
-            p {
+            .elementor-page p {
                 font-size: 13px !important;
                 line-height: 1.55 !important;
             }
@@ -1000,7 +1039,7 @@ function bk_enqueue_scholaro_fonts() {
             .bk-prodi-grid,
             .bk-lulusan-grid,
             .bk-lab-grid,
-            .bk-news-grid {
+            .elementor-page .bk-news-grid {
                 grid-template-columns: 1fr !important;
                 gap: 20px !important;
             }
@@ -1156,7 +1195,7 @@ function bk_enqueue_scholaro_fonts() {
             z-index: 45 !important;
             margin-top: -28px !important;
             margin-bottom: 30px !important;
-            padding: 0 var(--bk-edge-pad, 1rem) !important;
+            padding: 0 var(--bk-edge-pad, clamp(20px, 4vw, 40px)) !important;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -1170,7 +1209,7 @@ function bk_enqueue_scholaro_fonts() {
             border-radius: 18px !important;
             box-shadow: 0 8px 24px -4px rgba(13, 59, 34, 0.08), 0 2px 6px rgba(13, 59, 34, 0.04) !important;
             padding: 6px 8px !important;
-            max-width: 100% !important;
+            max-width: var(--max-w, 1160px) !important;
             width: 100% !important;
             margin: 0 auto !important;
             box-sizing: border-box !important;
@@ -1199,7 +1238,7 @@ function bk_enqueue_scholaro_fonts() {
             padding: 7px 14px !important;
             border-radius: 6px !important;
             font-size: 12px !important;
-            font-family: 'Poppins', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
             font-weight: 500 !important;
             color: #4B5563 !important;
             text-decoration: none !important;
@@ -1246,7 +1285,7 @@ function bk_enqueue_scholaro_fonts() {
             padding: 9px 12px !important;
             border-radius: 13px !important;
             font-size: 12px !important;
-            font-family: 'Poppins', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
             font-weight: 600 !important;
             cursor: pointer !important;
             border: none !important;
@@ -1287,7 +1326,7 @@ function bk_enqueue_scholaro_fonts() {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
             color: #ffffff !important;
             padding: var(--bk-top-clearance, 36px) 0 60px !important;
-            font-family: 'Poppins', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
             width: 100% !important;
             box-sizing: border-box !important;
         }
@@ -1586,13 +1625,14 @@ function bk_enqueue_motion_engine_scripts() {
     (function() {
         function initMotionEngine() {
             // 0. Sticky Header Scroll Listener & Height Synchronizer
-            var masthead = document.getElementById('masthead') || document.querySelector('.elementor-hf-header');
+            var masthead = document.getElementById('masthead') || document.querySelector('.elementor-hf-header') || document.getElementById('bk-main-navbar');
             if (masthead) {
                 function syncHeaderHeight() {
                     var h = masthead.getBoundingClientRect().height;
                     if (h > 0) {
                         var exactH = Math.round(h);
                         document.documentElement.style.setProperty('--ppb-navbar-height', exactH + 'px');
+                        document.documentElement.style.setProperty('--bk-navbar-height', exactH + 'px');
                         // padding-top handled by #bk-navbar-spacer
                     }
                 }
@@ -1633,13 +1673,19 @@ function bk_enqueue_motion_engine_scripts() {
                         });
 
                         var pathPrefixMap = {
-                            '/profil': ['menu-item-39'],
-                            '/akademik': ['menu-item-46'],
-                            '/kemahasiswaan': ['menu-item-51'],
-                            '/layanan': ['menu-item-55'],
-                            '/lab-bk': ['menu-item-55'],
-                            '/survei': ['menu-item-55'],
-                            '/berita': ['menu-item-62']
+                            '/profil': ['menu-item-39', 'bk-pillar-profil'],
+                            '/akreditasi': ['menu-item-39', 'bk-pillar-profil'],
+                            '/akademik': ['menu-item-46', 'bk-pillar-akademik'],
+                            '/jurnal-bk': ['menu-item-46', 'bk-pillar-akademik'],
+                            '/mis-pnbp': ['menu-item-46', 'bk-pillar-akademik'],
+                            '/kemahasiswaan': ['menu-item-51', 'bk-pillar-layanan'],
+                            '/layanan': ['menu-item-55', 'bk-pillar-layanan'],
+                            '/laboratorium': ['menu-item-55', 'bk-pillar-layanan'],
+                            '/lab-bk': ['menu-item-55', 'bk-pillar-layanan'],
+                            '/survei': ['menu-item-55', 'bk-pillar-layanan'],
+                            '/e-library': ['menu-item-46', 'menu-item-55', 'bk-pillar-akademik', 'bk-pillar-layanan'],
+                            '/elibrary': ['menu-item-46', 'menu-item-55', 'bk-pillar-akademik', 'bk-pillar-layanan'],
+                            '/berita': ['menu-item-62', 'bk-pillar-layanan']
                         };
 
                         for (var prefix in pathPrefixMap) {
@@ -1825,13 +1871,16 @@ function bk_enqueue_motion_engine_scripts() {
             var btnRight = document.getElementById("bk-dosen-right");
 
             if (track) {
+                window.bkDosenMotionActive = true;
+                track.style.scrollBehavior = 'auto';
+                var isDuplicatedLoop = track.getAttribute("data-bk-loop") === "1";
                 var scrollPos = track.scrollLeft;
                 var targetPos = track.scrollLeft;
                 var isHovered = false;
                 var isInteracting = false;
                 var resumeTimer = null;
-                var speed = 0.65; // ~39px per second (silky smooth readability)
-                var stepAmount = 320; // 300px card + 20px gap
+                var speed = 0.55;
+                var stepAmount = 320;
 
                 track.addEventListener("mouseenter", function() { isHovered = true; });
                 track.addEventListener("mouseleave", function() { isHovered = false; });
@@ -1881,8 +1930,13 @@ function bk_enqueue_motion_engine_scripts() {
                         e.preventDefault();
                         isInteracting = true;
                         if (resumeTimer) clearTimeout(resumeTimer);
-                        resumeTimer = setTimeout(function() { isInteracting = false; }, 1500);
-                        targetPos += stepAmount;
+                        resumeTimer = setTimeout(function() { isInteracting = false; }, 1800);
+                        var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+                        if (!isDuplicatedLoop && targetPos >= maxScroll - 8) {
+                            targetPos = 0;
+                        } else {
+                            targetPos = isDuplicatedLoop ? (targetPos + stepAmount) : Math.min(maxScroll, targetPos + stepAmount);
+                        }
                     });
                 }
 
@@ -1892,17 +1946,22 @@ function bk_enqueue_motion_engine_scripts() {
                         var half = track.scrollWidth / 2;
                         isInteracting = true;
                         if (resumeTimer) clearTimeout(resumeTimer);
-                        resumeTimer = setTimeout(function() { isInteracting = false; }, 1500);
-                        if (targetPos < stepAmount && half > 0) {
-                            scrollPos += half;
-                            targetPos += half;
-                            track.scrollLeft = scrollPos;
+                        resumeTimer = setTimeout(function() { isInteracting = false; }, 1800);
+                        if (isDuplicatedLoop) {
+                            if (targetPos < stepAmount && half > 0) {
+                                scrollPos += half;
+                                targetPos += half;
+                                track.scrollLeft = scrollPos;
+                            }
+                            targetPos -= stepAmount;
+                        } else {
+                            targetPos = Math.max(0, targetPos - stepAmount);
                         }
-                        targetPos -= stepAmount;
                     });
                 }
 
                 function animStep() {
+                    var maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
                     var half = track.scrollWidth / 2;
                     var diff = targetPos - scrollPos;
 
@@ -1910,13 +1969,13 @@ function bk_enqueue_motion_engine_scripts() {
                         scrollPos += diff * 0.16;
                     } else {
                         scrollPos = targetPos;
-                        if (!isHovered && !isInteracting && !isDown) {
+                        if (isDuplicatedLoop && !isHovered && !isInteracting && !isDown && maxScroll > 0) {
                             scrollPos += speed;
                             targetPos = scrollPos;
                         }
                     }
 
-                    if (half > 0) {
+                    if (isDuplicatedLoop && half > 0) {
                         if (scrollPos >= half) {
                             scrollPos -= half;
                             targetPos -= half;
@@ -1924,6 +1983,9 @@ function bk_enqueue_motion_engine_scripts() {
                             scrollPos += half;
                             targetPos += half;
                         }
+                    } else {
+                        if (scrollPos > maxScroll) { scrollPos = maxScroll; }
+                        if (scrollPos < 0) { scrollPos = 0; }
                     }
 
                     track.scrollLeft = scrollPos;

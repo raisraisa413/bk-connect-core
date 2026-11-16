@@ -30,7 +30,7 @@ while (have_posts()) : the_post();
     $share_wa = 'https://wa.me/?text=' . rawurlencode(get_the_title() . "\n\nBaca selengkapnya di: " . $current_url);
 ?>
 
-<div class="bk-page-wrapper" style="width:100%;background-color:#FAF8F5;min-height:100vh;font-family:'Poppins',sans-serif;color:#111827;">
+<div class="bk-page-wrapper" style="width:100%;background-color:#FAF8F5;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;color:#111827;">
 
     <!-- =================================================================== -->
     <!-- 1. HERO BAND (SCHOLARO DEEP FOREST GREEN)                           -->
@@ -97,7 +97,7 @@ while (have_posts()) : the_post();
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5B82E" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
                         <span>Bagikan</span>
                     </a>
-                    <button type="button" onclick="navigator.clipboard.writeText(window.location.href);alert('Tautan artikel berhasil disalin!');" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Poppins',sans-serif;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                    <button type="button" onclick="navigator.clipboard.writeText(window.location.href);alert('Tautan artikel berhasil disalin!');" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F5B82E" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         <span>Salin Link</span>
                     </button>
