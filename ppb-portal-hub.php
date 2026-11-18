@@ -210,6 +210,16 @@ function ppb_register_portal_hub_menu() {
         'edit.php?post_type=ppb_dokumen'
     );
 
+    // 10b. Import / Export Massal Excel & JSON
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Import / Export Data Massal (Excel & JSON)',
+        '📥 Import / Export Excel & JSON',
+        'edit_posts',
+        'ppb-excel-import',
+        'ppb_render_excel_import_admin_page'
+    );
+
     // 11. Navigasi Menu Navbar (4 Pilar)
     add_submenu_page(
         'ppb-portal-hub',
@@ -602,6 +612,23 @@ function ppb_render_portal_hub_dashboard() {
                 <div class="ppb-card-btns">
                     <a href="<?php echo admin_url('admin.php?page=ppb-mega-menu-manager'); ?>" class="ppb-btn ppb-btn-gold">✨ Kelola Mega Menu (4 Pilar)</a>
                     <a href="<?php echo admin_url('nav-menus.php'); ?>" class="ppb-btn ppb-btn-primary">⚙️ Atur Menu Navbar</a>
+                </div>
+            </div>
+
+            <!-- 8. Import / Export Massal Excel & JSON -->
+            <div class="ppb-action-card">
+                <div>
+                    <div class="ppb-card-top">
+                        <div class="ppb-card-icon green">📥</div>
+                        <div class="ppb-card-text">
+                            <h3>Import / Export Excel &amp; JSON</h3>
+                            <p>Unggah atau unduh massal ke-16 dataset Portal (Mata Kuliah, Hibah PNBP, Jadwal, E-Library, Inventaris, Dokumen Mutu &amp; Dosen) via <code>.xlsx</code>, <code>.csv</code>, atau <code>.json</code>.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-excel-import'); ?>" class="ppb-btn ppb-btn-gold">📥 Buka Hub Import / Export (16 Dataset)</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-excel-import&dataset=matkul'); ?>" class="ppb-btn ppb-btn-secondary">📚 Impor Mata Kuliah</a>
                 </div>
             </div>
 

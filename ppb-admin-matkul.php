@@ -454,6 +454,15 @@ function ppb_render_mata_kuliah_admin_page() {
 
     $notice = '';
 
+    // Handle Inline Bulk Excel / JSON Import
+    if (function_exists('ppb_excel_handle_inline_upload')) {
+        $xl_notice = ppb_excel_handle_inline_upload('matkul');
+        if ($xl_notice !== '') {
+            $notice  = $xl_notice;
+            $courses = ppb_get_mata_kuliah_list(false);
+        }
+    }
+
     // Handle Save / Add / Edit Course
     if (isset($_POST['ppb_save_matkul_submit']) && check_admin_referer('ppb_matkul_save_action', 'ppb_matkul_nonce')) {
         $edit_id = sanitize_key($_POST['mk_id'] ?? '');
@@ -605,6 +614,8 @@ function ppb_render_mata_kuliah_admin_page() {
             <div class="ppb-mk-kpi"><small>Terhubung ke Dosen</small><strong style="color:#15803D;"><?php echo (int) $tot_linked; ?></strong></div>
             <div class="ppb-mk-kpi"><small>Total Dosen Terdaftar</small><strong><?php echo count($dosen_map); ?></strong></div>
         </div>
+
+        <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('matkul'); ?>
 
         <!-- Toolbar Filter -->
         <form method="get" action="" class="ppb-mk-toolbar">

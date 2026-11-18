@@ -1210,6 +1210,24 @@ function ppb_render_layanan_settings_page() {
 
     $notice = '';
 
+    if (function_exists('ppb_excel_handle_inline_upload')) {
+        $xl_keg = ppb_excel_handle_inline_upload('lab_kegiatan');
+        if ($xl_keg !== '') {
+            $active_tab = 'lab_kegiatan';
+            $notice     = $xl_keg;
+        }
+        $xl_lmb = ppb_excel_handle_inline_upload('lab_lomba');
+        if ($xl_lmb !== '') {
+            $active_tab = 'lab_kegiatan';
+            $notice     = $xl_lmb;
+        }
+        $xl_srp = ppb_excel_handle_inline_upload('sarpras');
+        if ($xl_srp !== '') {
+            $active_tab = 'sarpras';
+            $notice     = $xl_srp;
+        }
+    }
+
     // Tab 1A: Simpan Pengaturan Umum Layanan
     if (isset($_POST['ppb_save_layanan_options']) && check_admin_referer('ppb_save_layanan_nonce')) {
         $active_tab = 'umum';
@@ -1464,6 +1482,7 @@ function ppb_render_layanan_settings_page() {
                             <a href="<?php echo esc_url(admin_url('edit.php?post_type=ppb_inventaris_lab')); ?>" class="button">🧪 Kelola Inventaris Lab (<?php echo (int) $inv_count; ?>)</a>
                             <a href="<?php echo esc_url(admin_url('edit.php?post_type=ppb_template_dok')); ?>" class="button">📄 Kelola Template Surat</a>
                             <a href="<?php echo esc_url(admin_url('edit.php?post_type=ppb_alur_sop')); ?>" class="button">🔄 Kelola Alur SOP</a>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-excel-import&dataset=inventaris')); ?>" class="button" style="border-color:#0D3B22;color:#0D3B22;font-weight:700;">📥 Import Excel/JSON Inventaris &amp; Template</a>
                             <a href="<?php echo esc_url(home_url('/lab-bk/inventaris/')); ?>" target="_blank" class="button">↗ Lihat /lab-bk/inventaris/</a>
                         </div>
                         <form method="post" style="margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0;">
@@ -1478,6 +1497,8 @@ function ppb_render_layanan_settings_page() {
             $kegiatan_list = ppb_get_lab_kegiatan_list();
             $lomba_list    = ppb_get_lab_lomba_list();
         ?>
+            <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('lab_kegiatan'); ?>
+
             <!-- Form Kegiatan Lab -->
             <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:22px;">
                 <?php wp_nonce_field('ppb_lab_kegiatan_nonce_action', 'ppb_lab_kegiatan_nonce'); ?>
@@ -1537,6 +1558,8 @@ function ppb_render_layanan_settings_page() {
                 </div>
             </form>
 
+            <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('lab_lomba'); ?>
+
             <!-- Form Lomba Lab -->
             <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;">
                 <?php wp_nonce_field('ppb_lab_lomba_nonce_action', 'ppb_lab_lomba_nonce'); ?>
@@ -1587,6 +1610,8 @@ function ppb_render_layanan_settings_page() {
         <?php elseif ($active_tab === 'sarpras') :
             $sarpras_list = ppb_get_sarpras_list();
         ?>
+            <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('sarpras'); ?>
+
             <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;">
                 <?php wp_nonce_field('ppb_sarpras_nonce_action', 'ppb_sarpras_nonce'); ?>
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
@@ -2716,7 +2741,8 @@ function ppb_render_elibrary_admin_page() {
         wp_enqueue_media();
     }
 
-    $notice = '';
+    $notice    = '';
+    $xl_notice = function_exists('ppb_excel_handle_inline_upload') ? ppb_excel_handle_inline_upload('elibrary') : '';
 
     // 1. Handle Moderation Actions (Approve / Reject Submission)
     if (isset($_POST['ppb_elib_mod_action']) && check_admin_referer('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce')) {
@@ -2873,6 +2899,7 @@ function ppb_render_elibrary_admin_page() {
             </div>
         </div>
 
+        <?php echo $xl_notice; ?>
         <?php if ($notice) : ?>
             <div class="notice notice-success is-dismissible" style="padding:12px 16px;border-radius:8px;margin-bottom:20px;"><p style="margin:0;"><?php echo wp_kses_post($notice); ?></p></div>
         <?php endif; ?>
@@ -2976,6 +3003,7 @@ function ppb_render_elibrary_admin_page() {
         </form>
 
         <!-- 3. KATALOG KOLEKSI E-LIBRARY (ELB-01..ELB-xx) -->
+        <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('elibrary'); ?>
         <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
             <?php wp_nonce_field('ppb_elibrary_admin_nonce', 'ppb_elibrary_nonce'); ?>
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">

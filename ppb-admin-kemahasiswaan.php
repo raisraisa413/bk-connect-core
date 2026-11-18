@@ -760,6 +760,19 @@ function ppb_render_kemahasiswaan_settings_page() {
 
     $notice = '';
 
+    if (function_exists('ppb_excel_handle_inline_upload')) {
+        $xl_maba = ppb_excel_handle_inline_upload('maba_tren');
+        if ($xl_maba !== '') {
+            $active_tab = 'statistik';
+            $notice     = $xl_maba;
+        }
+        $xl_mbkm = ppb_excel_handle_inline_upload('mbkm');
+        if ($xl_mbkm !== '') {
+            $active_tab = 'mbkm';
+            $notice     = $xl_mbkm;
+        }
+    }
+
     // Form 1A: Indikator Demografi & Tracer Study
     if (isset($_POST['ppb_save_kemahasiswaan_options']) && check_admin_referer('ppb_save_km_nonce')) {
         $active_tab = 'statistik';
@@ -1088,6 +1101,8 @@ function ppb_render_kemahasiswaan_settings_page() {
                 </div>
             </form>
 
+            <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('maba_tren'); ?>
+
             <!-- KARTU 3: STATISTIK PENERIMAAN MABA & TREN DAYA TAMPUNG (SHORTCODE [ppb_maba_statistik]) -->
             <form method="post" action="" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;box-shadow:0 3px 10px rgba(0,0,0,0.03);">
                 <?php wp_nonce_field('ppb_maba_nonce_action', 'ppb_maba_nonce'); ?>
@@ -1180,6 +1195,8 @@ function ppb_render_kemahasiswaan_settings_page() {
             $mbkm_items = $mbkm_data['mbkm_items'];
             $pk         = $mbkm_data['proyek_kemanusiaan'];
         ?>
+            <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('mbkm'); ?>
+
             <form method="post" action="">
                 <?php wp_nonce_field('ppb_mbkm_nonce_action', 'ppb_mbkm_nonce'); ?>
 

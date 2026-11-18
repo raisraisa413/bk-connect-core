@@ -611,6 +611,18 @@ function ppb_akademik_render_settings_page() {
     ];
 
     $notice = '';
+    if (function_exists('ppb_excel_handle_inline_upload')) {
+        $xl_pnbp = ppb_excel_handle_inline_upload('pnbp');
+        if ($xl_pnbp !== '') {
+            $active_tab = 'pnbp';
+            $notice     = $xl_pnbp;
+        }
+        $xl_jurnal = ppb_excel_handle_inline_upload('jurnal');
+        if ($xl_jurnal !== '') {
+            $active_tab = 'jurnal';
+            $notice     = $xl_jurnal;
+        }
+    }
     if (isset($_POST['ppb_save_akademik_options']) && check_admin_referer('ppb_akademik_options_verify')) {
         $active_tab = 'tautan';
         foreach ($option_keys as $opt_key) {
@@ -867,6 +879,8 @@ function ppb_akademik_render_settings_page() {
             $riset_list = $pnbp_data['riset'];
             $pkm_list   = $pnbp_data['pkm'];
         ?>
+            <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('pnbp'); ?>
+
             <form method="post" action="">
                 <?php wp_nonce_field('ppb_pnbp_nonce_action', 'ppb_pnbp_nonce'); ?>
 
@@ -1041,6 +1055,8 @@ function ppb_akademik_render_settings_page() {
         <?php elseif ($active_tab === 'jurnal') :
             $jurnal_list = ppb_get_jurnal_bk_data();
         ?>
+            <?php if (function_exists('ppb_excel_render_inline_widget')) ppb_excel_render_inline_widget('jurnal'); ?>
+
             <form method="post" action="" style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;">
                 <?php wp_nonce_field('ppb_jurnal_nonce_action', 'ppb_jurnal_nonce'); ?>
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;border-bottom:2px solid #E8F0EA;padding-bottom:10px;">
