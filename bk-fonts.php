@@ -67,7 +67,7 @@ function bk_enqueue_scholaro_fonts() {
             left: 0 !important;
             right: 0 !important;
             width: 100% !important;
-            z-index: 999999 !important;
+            z-index: 99990 !important;
             margin: 0 !important;
             padding: 0 !important;
             background: #0D3B22 !important;
@@ -1683,8 +1683,8 @@ function bk_enqueue_motion_engine_scripts() {
                             '/laboratorium': ['menu-item-55', 'bk-pillar-layanan'],
                             '/lab-bk': ['menu-item-55', 'bk-pillar-layanan'],
                             '/survei': ['menu-item-55', 'bk-pillar-layanan'],
-                            '/e-library': ['menu-item-46', 'menu-item-55', 'bk-pillar-akademik', 'bk-pillar-layanan'],
-                            '/elibrary': ['menu-item-46', 'menu-item-55', 'bk-pillar-akademik', 'bk-pillar-layanan'],
+                            '/e-library': ['menu-item-55', 'bk-pillar-layanan'],
+                            '/elibrary': ['menu-item-55', 'bk-pillar-layanan'],
                             '/berita': ['menu-item-62', 'bk-pillar-layanan']
                         };
 
@@ -2036,7 +2036,7 @@ if (!function_exists('bk_render_suite_footer_assets')) {
 function bk_render_suite_footer_assets() {
     ?>
     <!-- Global Drive Modal Viewer -->
-    <div id="bkDriveModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(13,59,34,0.65);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
+    <div id="bkDriveModal" style="display:none;position:fixed;inset:0;z-index:1000045;background:rgba(13,59,34,0.65);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
         <div style="background:#ffffff;border-radius:8px;max-width:900px;width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);overflow:hidden;border:1px solid #D4E3D8;">
             <div style="padding:18px 24px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#FAF8F5;">
                 <div style="flex:1;">
