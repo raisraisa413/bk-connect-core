@@ -1773,3 +1773,54 @@ function ppb_auto_seed_portal_data() {
     update_option('ppb_portal_dummy_seeded_v4', 'yes');
 }
 }
+
+/* ========================================================================== */
+/* 7. PENANDA BLOK DINAMIS YANG DIKELOLA VIA WP ADMIN (UNTUK FRONTEND EDITOR) */
+/* ========================================================================== */
+if (!function_exists('ppb_get_admin_managed_shortcode_map')) {
+function ppb_get_admin_managed_shortcode_map() {
+    return array(
+        'ppb_dosen_roster'       => array('label' => 'Direktori Dosen & SINTA',       'url' => admin_url('admin.php?page=bk-direktori-dosen')),
+        'ppb_kurikulum_rps_sap'  => array('label' => 'Mata Kuliah OBE & RPS/SAP',     'url' => admin_url('admin.php?page=ppb-mata-kuliah-manager')),
+        'ppb_jadwal_ujian_list'  => array('label' => 'Jadwal Ujian & Seminar',        'url' => admin_url('edit.php?post_type=ppb_jadwal')),
+        'ppb_mis_pnbp'           => array('label' => 'Hibah Riset & PkM PNBP',        'url' => admin_url('admin.php?page=ppb-akademik-settings&tab=pnbp')),
+        'ppb_jurnal_bk'          => array('label' => 'Jurnal Ilmiah Prodi BK',        'url' => admin_url('admin.php?page=ppb-akademik-settings&tab=jurnal')),
+        'ppb_dokumen_grid'       => array('label' => 'Dokumen Mutu (Google Drive)',   'url' => admin_url('edit.php?post_type=ppb_dokumen')),
+        'ppb_prestasi_list'      => array('label' => 'Prestasi Mahasiswa',            'url' => admin_url('edit.php?post_type=ppb_prestasi')),
+        'ppb_karya_list'         => array('label' => 'Karya & Inovasi Mahasiswa',     'url' => admin_url('edit.php?post_type=ppb_karya')),
+        'ppb_tracer_study_view'  => array('label' => 'Tracer Study & Alumni',         'url' => admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=statistik')),
+        'ppb_maba_statistik'     => array('label' => 'Statistik Maba & Daya Tampung', 'url' => admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=statistik')),
+        'ppb_mbkm_kemanusiaan'   => array('label' => 'Pameran MBKM & Kemanusiaan',    'url' => admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=mbkm')),
+        'ppb_inventaris_lab'     => array('label' => 'Inventaris Alat & Tes Lab BK',  'url' => admin_url('edit.php?post_type=ppb_inventaris_lab')),
+        'ppb_layanan_persuratan' => array('label' => 'Template Surat & Alur SOP',     'url' => admin_url('edit.php?post_type=ppb_template_dok')),
+        'ppb_lab_portals'        => array('label' => 'Layanan & Portal Lab BK',       'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=umum')),
+        'ppb_lab_kegiatan'       => array('label' => 'Kegiatan Lab BK',               'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=lab_kegiatan')),
+        'ppb_lab_lomba'          => array('label' => 'Lomba & Event Lab BK',          'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=lab_kegiatan')),
+        'ppb_elibrary'           => array('label' => 'E-Library & Modul Praktikum',   'url' => admin_url('admin.php?page=ppb-elibrary-manager')),
+        'ppb_sarana_prasarana'   => array('label' => 'Fasilitas & Foto Sarpras',      'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=sarpras')),
+        'ppb_survei_form'        => array('label' => 'Survei Kepuasan GPM',           'url' => admin_url('admin.php?page=ppb-survei-manager')),
+        'ppb_berita_grid'        => array('label' => 'Warta & Berita Jurusan',        'url' => admin_url('edit.php')),
+        'ppb_home_news'          => array('label' => 'Warta & Berita Beranda',        'url' => admin_url('edit.php')),
+    );
+}
+}
+
+add_filter('do_shortcode_tag', function($output, $tag, $attr, $m) {
+    if (is_admin() || !is_user_logged_in() || !current_user_can('edit_posts')) {
+        return $output;
+    }
+    $map = ppb_get_admin_managed_shortcode_map();
+    if (!isset($map[$tag])) {
+        return $output;
+    }
+    $info = $map[$tag];
+    $raw_shortcode = isset($m[0]) ? $m[0] : '[' . $tag . ']';
+    return sprintf(
+        '<div class="ppb-admin-managed-zone" data-ppb-admin-label="%s" data-ppb-admin-url="%s" data-ppb-shortcode="%s">%s</div>',
+        esc_attr($info['label']),
+        esc_url($info['url']),
+        esc_attr($raw_shortcode),
+        $output
+    );
+}, 20, 4);
+
