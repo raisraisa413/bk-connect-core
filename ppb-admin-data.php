@@ -330,9 +330,21 @@ function ppb_dokumen_render_meta_box($post) {
     </div>
 
     <div class="ppb-form-row">
-        <label for="ppb_dokumen_link"><strong style="color:#0D3B22;">Tautan Berkas (Link Google Drive):</strong></label>
-        <input type="url" id="ppb_dokumen_link" name="ppb_dokumen_link" value="<?php echo esc_url($drive_link); ?>" placeholder="https://drive.google.com/file/d/XXXXXX/view?usp=sharing" style="border: 2px solid #0D3B22; background: #fff;">
-        <span class="ppb-form-hint">Tautan resmi Google Drive atau URL berkas dokumen PDF.</span>
+        <label for="ppb_dokumen_link"><strong style="color:#0D3B22;">Tautan Berkas (Link Google Drive / Upload PDF WP Media):</strong></label>
+        <?php if (function_exists('ppb_render_media_url_control')) : ?>
+            <?php ppb_render_media_url_control([
+                'id'          => 'ppb_dokumen_link',
+                'name'        => 'ppb_dokumen_link',
+                'value'       => $drive_link,
+                'placeholder' => 'https://drive.google.com/file/d/XXXXXX/view?usp=sharing atau upload PDF',
+                'title'       => 'Pilih / Upload Dokumen Mutu PDF',
+                'btn_label'   => '📁 Upload / Pilih PDF',
+                'input_style' => 'border: 2px solid #0D3B22; background: #fff;',
+            ]); ?>
+        <?php else : ?>
+            <input type="url" id="ppb_dokumen_link" name="ppb_dokumen_link" value="<?php echo esc_url($drive_link); ?>" placeholder="https://drive.google.com/file/d/XXXXXX/view?usp=sharing" style="border: 2px solid #0D3B22; background: #fff;">
+        <?php endif; ?>
+        <span class="ppb-form-hint">Tautan resmi Google Drive atau unggah berkas PDF langsung dari Media Library WordPress.</span>
     </div>
 
     <div class="ppb-form-row">
@@ -387,7 +399,9 @@ function ppb_dokumen_save_meta($post_id) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     if (isset($_POST['ppb_dokumen_link'])) {
-        update_post_meta($post_id, '_ppb_dokumen_link', esc_url_raw($_POST['ppb_dokumen_link']));
+        $raw_link = wp_unslash($_POST['ppb_dokumen_link']);
+        $clean_link = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw_link) : esc_url_raw($raw_link);
+        update_post_meta($post_id, '_ppb_dokumen_link', $clean_link);
     }
     if (isset($_POST['ppb_dokumen_kategori'])) {
         update_post_meta($post_id, '_ppb_dokumen_kategori', sanitize_text_field($_POST['ppb_dokumen_kategori']));
@@ -730,6 +744,37 @@ function ppb_shortcode_dosen_roster() {
 }
 add_shortcode('ppb_dosen_roster', 'ppb_shortcode_dosen_roster');
 
+if (!function_exists('ppb_dokumen_normalize_category')) {
+function ppb_dokumen_normalize_category($raw) {
+    $norm = strtolower(trim((string) $raw));
+    $norm = str_replace(array('&amp;', '&'), ' dan ', $norm);
+    $norm = preg_replace('/\s+/', ' ', $norm);
+
+    if ($norm === 'renop' || strpos($norm, 'operasional') !== false) {
+        return ['slug' => 'renop', 'label' => 'Renop'];
+    }
+    if ($norm === 'renstra' || strpos($norm, 'rencana strategis') !== false || strpos($norm, 'strategis') !== false) {
+        return ['slug' => 'renstra', 'label' => 'Renstra'];
+    }
+    if ($norm === 'sk_senat' || strpos($norm, 'sk dan regulasi') !== false || strpos($norm, 'sk & regulasi') !== false || strpos($norm, 'senat') !== false) {
+        return ['slug' => 'sk_senat', 'label' => 'SK Senat'];
+    }
+    if ($norm === 'sk_mahasiswa_aktif' || strpos($norm, 'mahasiswa aktif') !== false) {
+        return ['slug' => 'sk_mahasiswa_aktif', 'label' => 'SK Mahasiswa Aktif'];
+    }
+    if ($norm === 'pedoman_penilaian' || strpos($norm, 'pedoman penilaian') !== false || strpos($norm, 'kurikulum') !== false || strpos($norm, 'akademik') !== false) {
+        return ['slug' => 'pedoman_penilaian', 'label' => 'Pedoman Penilaian'];
+    }
+    if ($norm === 'perlindungan_mahasiswa' || strpos($norm, 'perlindungan') !== false || strpos($norm, 'ppks') !== false || strpos($norm, 'sop') !== false) {
+        return ['slug' => 'perlindungan_mahasiswa', 'label' => 'SOP Perlindungan'];
+    }
+    if ($norm === 'akreditasi' || strpos($norm, 'akreditasi') !== false || strpos($norm, 'mutu') !== false) {
+        return ['slug' => 'akreditasi', 'label' => 'Akreditasi'];
+    }
+    return ['slug' => 'lainnya', 'label' => ($raw !== '' ? (string) $raw : 'Lainnya')];
+}
+}
+
 // SHORTCODE DOKUMEN MUTU
 if (!function_exists('ppb_shortcode_dokumen_grid')) {
 function ppb_shortcode_dokumen_grid() {
@@ -748,30 +793,31 @@ function ppb_shortcode_dokumen_grid() {
     while ($query->have_posts()) {
         $query->the_post();
         $id = get_the_ID();
+        $raw_link = get_post_meta($id, '_ppb_dokumen_link', true);
+        $clean_link = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw_link) : esc_url_raw((string) $raw_link);
+        $cat_info = ppb_dokumen_normalize_category(get_post_meta($id, '_ppb_dokumen_kategori', true) ?: 'renstra');
+
         $all_dok[] = [
-            'id' => $id,
-            'judul' => get_the_title(),
-            'link' => get_post_meta($id, '_ppb_dokumen_link', true) ?: '#',
-            'kategori' => get_post_meta($id, '_ppb_dokumen_kategori', true) ?: 'renstra',
-            'nomor' => get_post_meta($id, '_ppb_dokumen_nomor', true),
-            'tahun' => get_post_meta($id, '_ppb_dokumen_tahun', true) ?: '2025',
-            'pengesah' => get_post_meta($id, '_ppb_dokumen_pengesah', true),
-            'size' => get_post_meta($id, '_ppb_dokumen_size', true) ?: 'PDF',
-            'desc' => get_post_meta($id, '_ppb_dokumen_deskripsi', true),
+            'id'        => $id,
+            'judul'     => get_the_title(),
+            'link'      => $clean_link,
+            'kategori'  => $cat_info['slug'],
+            'cat_label' => $cat_info['label'],
+            'nomor'     => get_post_meta($id, '_ppb_dokumen_nomor', true),
+            'tahun'     => get_post_meta($id, '_ppb_dokumen_tahun', true) ?: date('Y'),
+            'pengesah'  => get_post_meta($id, '_ppb_dokumen_pengesah', true),
+            'size'      => get_post_meta($id, '_ppb_dokumen_size', true) ?: 'PDF',
+            'desc'      => get_post_meta($id, '_ppb_dokumen_deskripsi', true),
         ];
     }
     wp_reset_postdata();
 
-    $cat_labels = [
-        'renstra' => 'Renstra',
-        'renop' => 'Renop',
-        'sk_senat' => 'SK Senat',
-        'pedoman_penilaian' => 'Pedoman Penilaian',
-        'sk_mahasiswa_aktif' => 'SK Mahasiswa Aktif',
-        'perlindungan_mahasiswa' => 'SOP Perlindungan',
-        'akreditasi' => 'Akreditasi',
-        'lainnya' => 'Lainnya',
-    ];
+    $has_akreditasi = false;
+    $has_lainnya = false;
+    foreach ($all_dok as $d_chk) {
+        if ($d_chk['kategori'] === 'akreditasi') $has_akreditasi = true;
+        if ($d_chk['kategori'] === 'lainnya') $has_lainnya = true;
+    }
 
     ob_start();
     ?>
@@ -786,6 +832,12 @@ function ppb_shortcode_dokumen_grid() {
                     <button type="button" class="bk-doc-tab-btn" data-cat="pedoman_penilaian" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">Pedoman OBE</button>
                     <button type="button" class="bk-doc-tab-btn" data-cat="sk_mahasiswa_aktif" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SK Mahasiswa Aktif</button>
                     <button type="button" class="bk-doc-tab-btn" data-cat="perlindungan_mahasiswa" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">SOP Perlindungan &amp; PPKS</button>
+                    <?php if ($has_akreditasi) : ?>
+                        <button type="button" class="bk-doc-tab-btn" data-cat="akreditasi" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">Akreditasi &amp; Mutu</button>
+                    <?php endif; ?>
+                    <?php if ($has_lainnya) : ?>
+                        <button type="button" class="bk-doc-tab-btn" data-cat="lainnya" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;border:1px solid #E5E7EB;">Lainnya</button>
+                    <?php endif; ?>
                 </div>
                 <div style="font-size:12px;color:#6B7280;font-weight:600;" id="bk-doc-count-info">
                     Total: <strong style="color:#0D3B22;"><?php echo count($all_dok); ?></strong> dokumen tersedia
@@ -794,14 +846,12 @@ function ppb_shortcode_dokumen_grid() {
 
             <!-- Grid Dokumen -->
             <div id="bk-dokumen-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:20px;">
-                <?php foreach ($all_dok as $d) : 
-                    $cat_name = $cat_labels[$d['kategori']] ?? ucfirst($d['kategori']);
-                ?>
+                <?php foreach ($all_dok as $d) : ?>
                 <div class="bk-doc-card-item" data-cat="<?php echo esc_attr($d['kategori']); ?>" style="background:#ffffff;border:1px solid #D4E3D8;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 6px 18px -8px rgba(13,59,34,0.06);transition:all 0.2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 24px -8px rgba(13,59,34,0.12)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 6px 18px -8px rgba(13,59,34,0.06)'">
                     <div>
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;">
                             <span style="font-size:10px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 9px;border-radius:9999px;text-transform:uppercase;">
-                                <?php echo esc_html($cat_name); ?>
+                                <?php echo esc_html($d['cat_label']); ?>
                             </span>
                             <span style="font-size:11px;font-weight:600;color:#6B7280;">Tahun <?php echo esc_html($d['tahun']); ?></span>
                         </div>
@@ -833,10 +883,14 @@ function ppb_shortcode_dokumen_grid() {
                         <span style="font-size:11px;color:#9CA3AF;font-weight:500;">
                             Ukuran: <?php echo esc_html($d['size']); ?>
                         </span>
-                        <a href="<?php echo esc_url($d['link']); ?>" target="_blank" rel="noopener" class="bk-doc-btn" style="display:inline-flex;align-items:center;gap:6px;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;padding:8px 16px;border-radius:9999px;text-decoration:none;transition:all 0.2s;box-shadow:0 3px 8px rgba(13,59,34,0.18);" onmouseover="this.style.background='#185333'" onmouseout="this.style.background='#0D3B22'">
-                            <span>Unduh Dokumen PDF</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        </a>
+                        <?php if ($d['link'] !== '') : ?>
+                            <a href="<?php echo esc_url($d['link']); ?>" target="_blank" rel="noopener noreferrer" class="bk-doc-btn" style="display:inline-flex;align-items:center;gap:6px;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;padding:8px 16px;border-radius:9999px;text-decoration:none;transition:all 0.2s;box-shadow:0 3px 8px rgba(13,59,34,0.18);" onmouseover="this.style.background='#185333'" onmouseout="this.style.background='#0D3B22'">
+                                <span>Unduh Dokumen PDF</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            </a>
+                        <?php else : ?>
+                            <span style="display:inline-flex;align-items:center;padding:7px 14px;border-radius:9999px;background:#F3F4F6;color:#6B7280;font-size:11.5px;font-weight:600;">Segera Diunggah</span>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -892,6 +946,99 @@ function ppb_shortcode_dokumen_grid() {
 }
 add_shortcode('ppb_dokumen_grid', 'ppb_shortcode_dokumen_grid');
 
+// Sinkronkan CPT Dokumen Mutu (`ppb_dokumen`) ke halaman statis /profil/dokumen/ (#bk-dok-grid)
+if (!function_exists('ppb_dokumen_sync_page_content')) {
+function ppb_dokumen_sync_page_content($content) {
+    if (!is_string($content) || $content === '' || is_admin()) {
+        return $content;
+    }
+    if (!function_exists('is_page') || (!is_page() && !is_singular())) {
+        return $content;
+    }
+
+    $slug_path = function_exists('ppb_get_current_page_slug_path') ? ppb_get_current_page_slug_path() : '';
+    $is_dok_page = ($slug_path === 'profil/dokumen' || $slug_path === 'dokumen' || strpos($content, 'id="bk-dok-grid"') !== false || strpos($content, "id='bk-dok-grid'") !== false);
+    if (!$is_dok_page || strpos($content, 'bk-dok-grid') === false) {
+        return $content;
+    }
+
+    $query = new WP_Query([
+        'post_type'      => 'ppb_dokumen',
+        'posts_per_page' => -1,
+        'post_status'    => 'publish',
+        'orderby'        => ['menu_order' => 'ASC', 'date' => 'DESC'],
+    ]);
+
+    if (!$query->have_posts()) {
+        wp_reset_postdata();
+        return $content;
+    }
+
+    $extra_cats = [];
+    $cards_html = '';
+
+    while ($query->have_posts()) {
+        $query->the_post();
+        $id       = get_the_ID();
+        $judul    = get_the_title();
+        $raw_link = get_post_meta($id, '_ppb_dokumen_link', true);
+        $link     = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw_link) : esc_url_raw((string) $raw_link);
+        $raw_kat  = get_post_meta($id, '_ppb_dokumen_kategori', true) ?: 'renstra';
+        $cat_info = ppb_dokumen_normalize_category($raw_kat);
+        $nomor    = (string) get_post_meta($id, '_ppb_dokumen_nomor', true);
+        $tahun    = (string) (get_post_meta($id, '_ppb_dokumen_tahun', true) ?: date('Y'));
+        $pengesah = (string) get_post_meta($id, '_ppb_dokumen_pengesah', true);
+        $size     = (string) (get_post_meta($id, '_ppb_dokumen_size', true) ?: 'PDF');
+        $desc     = (string) get_post_meta($id, '_ppb_dokumen_deskripsi', true);
+
+        if (!in_array($cat_info['slug'], ['renstra', 'renop', 'sk_senat', 'sk_mahasiswa_aktif', 'pedoman_penilaian', 'perlindungan_mahasiswa'], true)) {
+            $extra_cats[$cat_info['slug']] = $cat_info['label'];
+        }
+
+        $search_str = strtolower(trim($judul . ' ' . $nomor . ' ' . $pengesah . ' ' . $desc . ' ' . $cat_info['label']));
+
+        $cards_html .= '<div class="bk-dok-card-item" data-kat="' . esc_attr($cat_info['slug']) . '" data-search="' . esc_attr($search_str) . '" style="background:#ffffff;border:1px solid #D4E3D8;border-radius:22px;padding:22px;display:flex;flex-direction:column;justify-content:space-between">'
+            . '<div>'
+            . '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+            . '<span style="font-size:10px;font-weight:800;color:#0D3B22;background:#E8F0EA;padding:3px 9px;border-radius:9999px;letter-spacing:0.04em;text-transform:uppercase">' . esc_html($cat_info['label']) . '</span>'
+            . '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#6B7280;font-weight:600">Tahun ' . esc_html($tahun) . '</span>'
+            . '</div>'
+            . '<h3 style="font-family:\'Fraunces\',Georgia,serif;font-size:15.5px;font-weight:700;color:#111827;line-height:1.35;margin:0 0 6px 0">' . esc_html($judul) . '</h3>'
+            . ($nomor !== '' ? '<p style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:#0D3B22;font-weight:600;margin:0 0 10px 0">' . esc_html($nomor) . '</p>' : '')
+            . ($desc !== '' ? '<p style="font-size:12px;color:#4B5563;line-height:1.6;margin:0 0 14px 0;text-align:justify">' . esc_html($desc) . '</p>' : '')
+            . ($pengesah !== '' ? '<div style="font-size:11px;color:#6B7280;margin-bottom:14px;border-top:1px solid #F3F4F6;padding-top:10px"><strong>Pengesah:</strong> ' . esc_html($pengesah) . '</div>' : '')
+            . '</div>'
+            . '<div style="border-top:1px solid #F3F4F6;padding-top:12px;display:flex;align-items:center;justify-content:space-between">'
+            . '<span style="font-size:10.5px;color:#9CA3AF;font-weight:600">PDF &middot; ' . esc_html($size) . '</span>'
+            . ($link !== ''
+                ? '<a href="' . esc_url($link) . '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#0D3B22;background:#E8F0EA;padding:6px 14px;border-radius:9999px;text-decoration:none"><span>Buka Dokumen</span></a>'
+                : '<span style="display:inline-flex;align-items:center;font-size:11px;font-weight:600;color:#6B7280;background:#F3F4F6;padding:6px 12px;border-radius:9999px">Segera Diunggah</span>')
+            . '</div>'
+            . '</div>';
+    }
+    wp_reset_postdata();
+
+    if (!empty($extra_cats) && strpos($content, 'id="bk-dok-tabs"') !== false) {
+        $extra_btns = '';
+        foreach ($extra_cats as $kat_slug => $kat_label) {
+            if (strpos($content, 'data-kat="' . $kat_slug . '"') === false) {
+                $extra_btns .= '<button type="button" class="bk-dok-btn" data-kat="' . esc_attr($kat_slug) . '" style="border:none;background:#FAF8F5;color:#4B5563;font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:9999px;cursor:pointer;font-family:\'Plus Jakarta Sans\',sans-serif;white-space:nowrap;border:1px solid #E5E7EB">' . esc_html($kat_label) . '</button>';
+            }
+        }
+        if ($extra_btns !== '') {
+            $content = preg_replace('/(<div\b[^>]*id=(["\'])bk-dok-tabs\2[^>]*>.*?)(<\/div>)/is', '$1' . $extra_btns . '$3', $content, 1);
+        }
+    }
+
+    if (function_exists('ppb_replace_div_by_id')) {
+        $content = ppb_replace_div_by_id($content, 'bk-dok-grid', $cards_html);
+    }
+
+    return $content;
+}
+}
+add_filter('the_content', 'ppb_dokumen_sync_page_content', 12);
+
 // Pastikan Shortcode diproses di dalam widget HTML Elementor
 add_filter('elementor/widget/render_content', function($content, $widget) {
     if ($widget->get_name() === 'html') {
@@ -899,3 +1046,4 @@ add_filter('elementor/widget/render_content', function($content, $widget) {
     }
     return $content;
 }, 10, 2);
+

@@ -186,13 +186,36 @@ function ppb_prestasi_render_meta_box($post) {
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px;">
             <div style="background:#FAF8F5;border:1px solid #e2e8f0;border-radius:12px;padding:12px;">
-                <label style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">🔗 Tautan Sertifikat (Google Drive)</label>
-                <input type="url" name="ppb_drive_sertifikat_link" value="<?php echo esc_attr($drive_sertif); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://drive.google.com/file/d/..." />
+                <label for="ppb_drive_sertifikat_link" style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">🔗 Tautan Sertifikat (Google Drive / Upload WP Media)</label>
+                <?php if (function_exists('ppb_render_media_url_control')) : ?>
+                    <?php ppb_render_media_url_control([
+                        'id'          => 'ppb_drive_sertifikat_link',
+                        'name'        => 'ppb_drive_sertifikat_link',
+                        'value'       => $drive_sertif,
+                        'placeholder' => 'https://drive.google.com/file/d/... atau upload PDF/gambar',
+                        'title'       => 'Pilih / Upload Sertifikat Prestasi',
+                        'btn_label'   => '📁 Upload / Pilih File',
+                    ]); ?>
+                <?php else : ?>
+                    <input type="url" id="ppb_drive_sertifikat_link" name="ppb_drive_sertifikat_link" value="<?php echo esc_attr($drive_sertif); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://drive.google.com/file/d/..." />
+                <?php endif; ?>
                 <span style="font-size:11px;color:#64748B;">Tombol 'Lihat Sertifikat' di kartu akan membuka link ini.</span>
             </div>
             <div style="background:#FAF8F5;border:1px solid #e2e8f0;border-radius:12px;padding:12px;">
-                <label style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">📸 Tautan Dokumentasi / Foto Piala (Google Drive)</label>
-                <input type="url" name="ppb_drive_foto_link" value="<?php echo esc_attr($drive_foto); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://drive.google.com/file/d/..." />
+                <label for="ppb_drive_foto_link" style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">📸 Tautan Dokumentasi / Foto Piala (Drive / Upload Media)</label>
+                <?php if (function_exists('ppb_render_media_url_control')) : ?>
+                    <?php ppb_render_media_url_control([
+                        'id'          => 'ppb_drive_foto_link',
+                        'name'        => 'ppb_drive_foto_link',
+                        'value'       => $drive_foto,
+                        'placeholder' => 'https://drive.google.com/file/d/... atau upload foto',
+                        'title'       => 'Pilih / Upload Foto Dokumentasi',
+                        'btn_label'   => '📷 Upload / Pilih Foto',
+                        'library'     => 'image',
+                    ]); ?>
+                <?php else : ?>
+                    <input type="url" id="ppb_drive_foto_link" name="ppb_drive_foto_link" value="<?php echo esc_attr($drive_foto); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://drive.google.com/file/d/..." />
+                <?php endif; ?>
                 <span style="font-size:11px;color:#64748B;">Tombol 'Foto' di kartu akan membuka link ini.</span>
             </div>
         </div>
@@ -231,8 +254,14 @@ function ppb_prestasi_save_meta_data($post_id) {
 
     foreach ($fields as $key => $meta_key) {
         if (isset($_POST[$key])) {
-            $val = in_array($key, ['ppb_drive_sertifikat_link', 'ppb_drive_foto_link']) ? esc_url_raw($_POST[$key]) : sanitize_text_field($_POST[$key]);
-            if ($key === 'ppb_deskripsi') $val = sanitize_textarea_field($_POST[$key]);
+            $raw = wp_unslash($_POST[$key]);
+            if (in_array($key, ['ppb_drive_sertifikat_link', 'ppb_drive_foto_link'], true)) {
+                $val = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw) : esc_url_raw($raw);
+            } elseif ($key === 'ppb_deskripsi') {
+                $val = sanitize_textarea_field($raw);
+            } else {
+                $val = sanitize_text_field($raw);
+            }
             update_post_meta($post_id, $meta_key, $val);
         }
     }
@@ -413,13 +442,37 @@ function ppb_karya_render_meta_box($post) {
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px;">
             <div style="background:#FAF8F5;border:1px solid #e2e8f0;border-radius:12px;padding:12px;">
-                <label style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">🖼️ Foto / Cover Produk (URL / Image)</label>
-                <input type="url" name="ppb_foto_karya_link" value="<?php echo esc_attr($foto_link); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://..." />
+                <label for="ppb_foto_karya_link" style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">🖼️ Foto / Cover Produk (Upload Media / URL)</label>
+                <?php if (function_exists('ppb_render_media_url_control')) : ?>
+                    <?php ppb_render_media_url_control([
+                        'id'             => 'ppb_foto_karya_link',
+                        'name'           => 'ppb_foto_karya_link',
+                        'value'          => $foto_link,
+                        'placeholder'    => 'https://... atau upload gambar WP Media',
+                        'title'          => 'Pilih / Upload Foto Cover Produk',
+                        'btn_label'      => '📷 Upload / Pilih Foto',
+                        'library'        => 'image',
+                        'allow_relative' => true,
+                    ]); ?>
+                <?php else : ?>
+                    <input type="text" id="ppb_foto_karya_link" name="ppb_foto_karya_link" value="<?php echo esc_attr($foto_link); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://..." />
+                <?php endif; ?>
                 <span style="font-size:11px;color:#64748B;">Foto dokumentasi produk atau cover depan modul/media.</span>
             </div>
             <div style="background:#FAF8F5;border:1px solid #e2e8f0;border-radius:12px;padding:12px;">
-                <label style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">📁 Tautan Berkas / Buku / Aplikasi (Google Drive)</label>
-                <input type="url" name="ppb_drive_file_link" value="<?php echo esc_attr($drive_link); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://drive.google.com/file/d/..." />
+                <label for="ppb_drive_file_link" style="font-weight:700;display:block;margin-bottom:5px;color:#0D3B22;">📁 Tautan Berkas / Buku / Aplikasi (Drive / Upload WP Media)</label>
+                <?php if (function_exists('ppb_render_media_url_control')) : ?>
+                    <?php ppb_render_media_url_control([
+                        'id'          => 'ppb_drive_file_link',
+                        'name'        => 'ppb_drive_file_link',
+                        'value'       => $drive_link,
+                        'placeholder' => 'https://drive.google.com/file/d/... atau upload PDF',
+                        'title'       => 'Pilih / Upload Berkas Karya Inovasi',
+                        'btn_label'   => '📁 Upload / Pilih File',
+                    ]); ?>
+                <?php else : ?>
+                    <input type="url" id="ppb_drive_file_link" name="ppb_drive_file_link" value="<?php echo esc_attr($drive_link); ?>" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;" placeholder="https://drive.google.com/file/d/..." />
+                <?php endif; ?>
                 <span style="font-size:11px;color:#64748B;">Tombol 'Buka Berkas & Detail Produk' akan membuka link ini.</span>
             </div>
         </div>
@@ -452,8 +505,22 @@ function ppb_karya_save_meta_data($post_id) {
 
     foreach ($fields as $key => $meta_key) {
         if (isset($_POST[$key])) {
-            $val = in_array($key, ['ppb_foto_karya_link', 'ppb_drive_file_link']) ? esc_url_raw($_POST[$key]) : sanitize_text_field($_POST[$key]);
-            if (in_array($key, ['ppb_deskripsi', 'ppb_manfaat'])) $val = sanitize_textarea_field($_POST[$key]);
+            $raw = wp_unslash($_POST[$key]);
+            if ($key === 'ppb_foto_karya_link') {
+                if (function_exists('bk_sanitize_asset_or_url')) {
+                    $val = bk_sanitize_asset_or_url($raw);
+                } elseif (function_exists('ppb_clean_document_url')) {
+                    $val = ppb_clean_document_url($raw);
+                } else {
+                    $val = esc_url_raw($raw);
+                }
+            } elseif ($key === 'ppb_drive_file_link') {
+                $val = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw) : esc_url_raw($raw);
+            } elseif (in_array($key, ['ppb_deskripsi', 'ppb_manfaat'], true)) {
+                $val = sanitize_textarea_field($raw);
+            } else {
+                $val = sanitize_text_field($raw);
+            }
             update_post_meta($post_id, $meta_key, $val);
         }
     }
@@ -545,37 +612,352 @@ function ppb_kemahasiswaan_admin_menu() {
 // Handled by ppb-portal-hub
 // add_action('admin_menu', 'ppb_kemahasiswaan_admin_menu');
 
+if (!function_exists('ppb_get_maba_statistik_defaults')) {
+function ppb_get_maba_statistik_defaults() {
+    return [
+        'portal_url' => 'https://penerimaan.unm.ac.id/',
+        'unm_url'    => 'https://unm.ac.id/',
+        'jalur'      => [
+            [
+                'badge'     => 'Jalur Prestasi',
+                'tema'      => 'green',
+                'judul'     => 'SNBP (Prestasi Rapor & Portofolio)',
+                'deskripsi' => 'Seleksi berbasis nilai akademik rapor semester 1–5 dan portofolio prestasi non-akademik siswa SMA/SMK/MA sederajat.',
+            ],
+            [
+                'badge'     => 'Jalur Tes Nasional',
+                'tema'      => 'gold',
+                'judul'     => 'SNBT (Ujian Tertulis Berbasis Komputer)',
+                'deskripsi' => 'Seleksi nasional terpusat mengukur Tes Potensi Skolastik (TPS), Literasi Bahasa Indonesia & Inggris, dan Penalaran Matematika.',
+            ],
+            [
+                'badge'     => 'Jalur Mandiri',
+                'tema'      => 'blue',
+                'judul'     => 'Jalur Mandiri Universitas Negeri Makassar',
+                'deskripsi' => 'Penerimaan seleksi mandiri UNM mencakup Jalur Ujian Tulis Mandiri, Jalur Prestasi Khusus, dan Afirmasi Daerah 3T.',
+            ],
+        ],
+        'tren' => [
+            ['tahun' => '2024', 'daya_tampung' => 120, 'peminat_snbp' => 482, 'peminat_snbt' => 1120, 'peminat_mandiri' => 310, 'total_peminat' => 1912, 'keketatan' => '1 : 16'],
+            ['tahun' => '2023', 'daya_tampung' => 120, 'peminat_snbp' => 465, 'peminat_snbt' => 1085, 'peminat_mandiri' => 295, 'total_peminat' => 1845, 'keketatan' => '1 : 15'],
+            ['tahun' => '2022', 'daya_tampung' => 115, 'peminat_snbp' => 430, 'peminat_snbt' => 998,  'peminat_mandiri' => 280, 'total_peminat' => 1708, 'keketatan' => '1 : 15'],
+            ['tahun' => '2021', 'daya_tampung' => 110, 'peminat_snbp' => 395, 'peminat_snbt' => 920,  'peminat_mandiri' => 250, 'total_peminat' => 1565, 'keketatan' => '1 : 14'],
+            ['tahun' => '2020', 'daya_tampung' => 105, 'peminat_snbp' => 370, 'peminat_snbt' => 880,  'peminat_mandiri' => 230, 'total_peminat' => 1480, 'keketatan' => '1 : 14'],
+        ],
+    ];
+}
+}
+
+if (!function_exists('ppb_get_maba_statistik_data')) {
+function ppb_get_maba_statistik_data() {
+    $defaults = ppb_get_maba_statistik_defaults();
+    $saved    = get_option('ppb_maba_statistik_data', null);
+    if (!is_array($saved) || empty($saved)) {
+        return $defaults;
+    }
+    $clean_url = function($u, $fb) {
+        $v = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($u) : esc_url_raw((string) $u);
+        return $v !== '' ? $v : $fb;
+    };
+    return [
+        'portal_url' => $clean_url($saved['portal_url'] ?? '', $defaults['portal_url']),
+        'unm_url'    => $clean_url($saved['unm_url'] ?? '', $defaults['unm_url']),
+        'jalur'      => (!empty($saved['jalur']) && is_array($saved['jalur'])) ? array_values($saved['jalur']) : $defaults['jalur'],
+        'tren'       => (!empty($saved['tren']) && is_array($saved['tren'])) ? array_values($saved['tren']) : $defaults['tren'],
+    ];
+}
+}
+
+if (!function_exists('ppb_get_mbkm_kemanusiaan_defaults')) {
+function ppb_get_mbkm_kemanusiaan_defaults() {
+    return [
+        'mbkm_items' => [
+            [
+                'tahun'     => 'Tahun 2024',
+                'lokasi'    => 'Kampus Gunungsari',
+                'judul'     => 'Expo Media & Alat Permainan Edukatif (APE) Konseling',
+                'deskripsi' => 'Pameran 45 karya media bimbingan kelompok interaktif hasil PPL MBKM mahasiswa di 15 SMA/SMK mitra Sulawesi Selatan.',
+                'catatan'   => '👥 Diikuti oleh 120 mahasiswa praktikan dan dihadiri kepala sekolah mitra.',
+                'dok_url'   => '',
+            ],
+            [
+                'tahun'     => 'Tahun 2023',
+                'lokasi'    => 'Gedung Phinisi UNM',
+                'judul'     => 'Gelar Karya Inovasi Modul Konseling Sebaya & Karir',
+                'deskripsi' => 'Peluncuran e-modul bimbingan karir digital untuk siswa kelas XII serta demonstrasi simulasi konseling lintas budaya.',
+                'catatan'   => '👥 Disertai sesi talkshow interaktif bersama praktisi HRD industri.',
+                'dok_url'   => '',
+            ],
+            [
+                'tahun'     => 'Tahun 2022',
+                'lokasi'    => 'Pelataran FIP UNM',
+                'judul'     => 'Pekan Layanan Konseling & Asesmen Gratis Kampus Mengajar',
+                'deskripsi' => 'Pemberian layanan asesmen minat bakat gratis bagi 250 siswa SMP/SMA binaan program Kampus Mengajar Angkatan 3 & 4.',
+                'catatan'   => '👥 Dilaporkan sebagai eviden unggulan evaluasi mutu MBKM tingkat fakultas.',
+                'dok_url'   => '',
+            ],
+        ],
+        'proyek_kemanusiaan' => [
+            'badge'        => 'Program Unggulan Kemanusiaan 2023',
+            'judul'        => 'Trauma Healing & Psychological First Aid (PFA) Korban Banjir',
+            'deskripsi'    => 'Tim Relawan Mahasiswa dan Dosen Pembimbing Bimbingan dan Konseling FIP UNM diterjunkan langsung dalam program pemulihan psikologis bagi anak-anak dan keluarga terdampak bencana banjir bandang di kawasan Makassar dan Maros pada awal 2023.',
+            'poin_list'    => [
+                'Layanan konseling kelompok ekspresif melalui art therapy dan play therapy',
+                'Penyaluran 150 paket edukasi anak ceria dan alat tulis sekolah',
+                'Mitra pelaksana: Dinas Sosial Provinsi Sulawesi Selatan dan PMI Cabang Makassar',
+            ],
+            'capaian_list' => [
+                ['label' => '215 Anak & Remaja', 'detail' => 'terlayani sesi trauma healing terbimbing.'],
+                ['label' => '25 Mahasiswa BK', 'detail' => 'memperoleh konversi 20 SKS mata kuliah MBKM Kemanusiaan.'],
+                ['label' => '1 Buku Antologi', 'detail' => '"Jejak Empati di Garis Bencana" ber-ISBN terbitan UNM Press.'],
+            ],
+            'dok_url'      => '',
+        ],
+    ];
+}
+}
+
+if (!function_exists('ppb_get_mbkm_kemanusiaan_data')) {
+function ppb_get_mbkm_kemanusiaan_data() {
+    $defaults = ppb_get_mbkm_kemanusiaan_defaults();
+    $saved    = get_option('ppb_mbkm_kemanusiaan_data', null);
+    if (!is_array($saved) || empty($saved)) {
+        return $defaults;
+    }
+    $mbkm_items = (isset($saved['mbkm_items']) && is_array($saved['mbkm_items']) && !empty($saved['mbkm_items']))
+        ? array_values($saved['mbkm_items'])
+        : $defaults['mbkm_items'];
+    $pk = (isset($saved['proyek_kemanusiaan']) && is_array($saved['proyek_kemanusiaan']))
+        ? array_merge($defaults['proyek_kemanusiaan'], $saved['proyek_kemanusiaan'])
+        : $defaults['proyek_kemanusiaan'];
+    if (empty($pk['poin_list']) || !is_array($pk['poin_list'])) {
+        $pk['poin_list'] = $defaults['proyek_kemanusiaan']['poin_list'];
+    }
+    if (empty($pk['capaian_list']) || !is_array($pk['capaian_list'])) {
+        $pk['capaian_list'] = $defaults['proyek_kemanusiaan']['capaian_list'];
+    }
+    return [
+        'mbkm_items'         => $mbkm_items,
+        'proyek_kemanusiaan' => $pk,
+    ];
+}
+}
+
 if (!function_exists('ppb_render_kemahasiswaan_settings_page')) {
 function ppb_render_kemahasiswaan_settings_page() {
-    if (isset($_POST['ppb_save_kemahasiswaan_options'])) {
-        check_admin_referer('ppb_save_km_nonce');
+    if (!current_user_can('edit_posts')) {
+        wp_die('Anda tidak memiliki izin mengakses halaman ini.');
+    }
+
+    if (function_exists('ppb_admin_enqueue_media_assets')) {
+        ppb_admin_enqueue_media_assets();
+    }
+
+    $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'statistik';
+    if (!in_array($active_tab, ['statistik', 'mbkm'], true)) {
+        $active_tab = 'statistik';
+    }
+
+    $notice = '';
+
+    // Form 1A: Indikator Demografi & Tracer Study
+    if (isset($_POST['ppb_save_kemahasiswaan_options']) && check_admin_referer('ppb_save_km_nonce')) {
+        $active_tab = 'statistik';
+        $raw_laporan = wp_unslash($_POST['ppb_ts_drive_laporan_link'] ?? '');
+        $clean_laporan = function_exists('ppb_clean_document_url')
+            ? ppb_clean_document_url($raw_laporan)
+            : esc_url_raw($raw_laporan);
 
         $options = [
-            'ppb_km_total_aktif'          => sanitize_text_field($_POST['ppb_km_total_aktif']),
-            'ppb_km_lulus_tepat_waktu'    => sanitize_text_field($_POST['ppb_km_lulus_tepat_waktu']),
-            'ppb_km_persen_3t'            => sanitize_text_field($_POST['ppb_km_persen_3t']),
-            'ppb_km_rasio_dosen'          => sanitize_text_field($_POST['ppb_km_rasio_dosen']),
-            'ppb_km_ipk_rata'             => sanitize_text_field($_POST['ppb_km_ipk_rata']),
-            'ppb_ts_response_rate'        => sanitize_text_field($_POST['ppb_ts_response_rate']),
-            'ppb_ts_waktu_tunggu_3bln'    => sanitize_text_field($_POST['ppb_ts_waktu_tunggu_3bln']),
-            'ppb_ts_keselarasan_tinggi'   => sanitize_text_field($_POST['ppb_ts_keselarasan_tinggi']),
-            'ppb_ts_kepuasan_sangat_baik' => sanitize_text_field($_POST['ppb_ts_kepuasan_sangat_baik']),
-            'ppb_ts_drive_laporan_link'   => esc_url_raw($_POST['ppb_ts_drive_laporan_link']),
-            'ppb_ts_catatan_analisis'     => sanitize_textarea_field($_POST['ppb_ts_catatan_analisis']),
+            'ppb_km_total_aktif'          => sanitize_text_field(wp_unslash($_POST['ppb_km_total_aktif'] ?? '')),
+            'ppb_km_lulus_tepat_waktu'    => sanitize_text_field(wp_unslash($_POST['ppb_km_lulus_tepat_waktu'] ?? '')),
+            'ppb_km_persen_3t'            => sanitize_text_field(wp_unslash($_POST['ppb_km_persen_3t'] ?? '')),
+            'ppb_km_rasio_dosen'          => sanitize_text_field(wp_unslash($_POST['ppb_km_rasio_dosen'] ?? '')),
+            'ppb_km_ipk_rata'             => sanitize_text_field(wp_unslash($_POST['ppb_km_ipk_rata'] ?? '')),
+            'ppb_ts_response_rate'        => sanitize_text_field(wp_unslash($_POST['ppb_ts_response_rate'] ?? '')),
+            'ppb_ts_waktu_tunggu_3bln'    => sanitize_text_field(wp_unslash($_POST['ppb_ts_waktu_tunggu_3bln'] ?? '')),
+            'ppb_ts_keselarasan_tinggi'   => sanitize_text_field(wp_unslash($_POST['ppb_ts_keselarasan_tinggi'] ?? '')),
+            'ppb_ts_kepuasan_sangat_baik' => sanitize_text_field(wp_unslash($_POST['ppb_ts_kepuasan_sangat_baik'] ?? '')),
+            'ppb_ts_drive_laporan_link'   => $clean_laporan,
+            'ppb_ts_catatan_analisis'     => sanitize_textarea_field(wp_unslash($_POST['ppb_ts_catatan_analisis'] ?? '')),
         ];
 
         foreach ($options as $k => $v) {
-            update_option($k, $v);
+            update_option($k, $v, false);
         }
 
-        // Invalidate Elementor caches
         delete_post_meta(31, '_elementor_element_cache');
         delete_post_meta(34, '_elementor_element_cache');
         if (class_exists('\\Elementor\\Plugin')) {
             \Elementor\Plugin::$instance->files_manager->clear_cache();
         }
 
-        echo '<div class="updated notice"><p><strong>✅ Pengaturan Tracer Study & Data Kemahasiswaan berhasil disimpan!</strong></p></div>';
+        $notice = '<div class="notice notice-success is-dismissible"><p><strong>✅ Pengaturan Tracer Study &amp; Data Kemahasiswaan berhasil disimpan!</strong></p></div>';
+    }
+
+    // Form 1B: Statistik Maba & Tren Daya Tampung 5 Tahun
+    if (isset($_POST['ppb_save_maba_statistik']) && check_admin_referer('ppb_maba_nonce_action', 'ppb_maba_nonce')) {
+        $active_tab = 'statistik';
+        $defaults_maba = ppb_get_maba_statistik_defaults();
+        $portal_raw = wp_unslash($_POST['maba_portal_url'] ?? '');
+        $unm_raw    = wp_unslash($_POST['maba_unm_url'] ?? '');
+        $portal_url = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($portal_raw) : esc_url_raw($portal_raw);
+        $unm_url    = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($unm_raw) : esc_url_raw($unm_raw);
+
+        $jalur_clean = [];
+        $raw_jalur = isset($_POST['jalur']) && is_array($_POST['jalur']) ? wp_unslash($_POST['jalur']) : [];
+        foreach ($raw_jalur as $jrow) {
+            if (empty(trim((string) ($jrow['judul'] ?? '')))) continue;
+            $tema = in_array(($jrow['tema'] ?? ''), ['green', 'gold', 'blue'], true) ? $jrow['tema'] : 'green';
+            $jalur_clean[] = [
+                'badge'     => sanitize_text_field($jrow['badge'] ?? 'Jalur Seleksi'),
+                'tema'      => $tema,
+                'judul'     => sanitize_text_field($jrow['judul']),
+                'deskripsi' => sanitize_textarea_field($jrow['deskripsi'] ?? ''),
+            ];
+        }
+        if (empty($jalur_clean)) {
+            $jalur_clean = $defaults_maba['jalur'];
+        }
+
+        $tren_clean = [];
+        $raw_tren = isset($_POST['tren']) && is_array($_POST['tren']) ? wp_unslash($_POST['tren']) : [];
+        foreach ($raw_tren as $trow) {
+            if (!empty($trow['delete']) || empty(trim((string) ($trow['tahun'] ?? '')))) continue;
+            $dt  = max(0, (int) ($trow['daya_tampung'] ?? 0));
+            $snb = max(0, (int) ($trow['peminat_snbp'] ?? 0));
+            $sbt = max(0, (int) ($trow['peminat_snbt'] ?? 0));
+            $mnd = max(0, (int) ($trow['peminat_mandiri'] ?? 0));
+            $tot = (int) ($trow['total_peminat'] ?? 0);
+            if ($tot <= 0) {
+                $tot = $snb + $sbt + $mnd;
+            }
+            $ket = sanitize_text_field($trow['keketatan'] ?? '');
+            if ($ket === '' && $dt > 0) {
+                $ket = '1 : ' . max(1, (int) round($tot / $dt));
+            }
+            $tren_clean[] = [
+                'tahun'           => sanitize_text_field($trow['tahun']),
+                'daya_tampung'    => $dt,
+                'peminat_snbp'    => $snb,
+                'peminat_snbt'    => $sbt,
+                'peminat_mandiri' => $mnd,
+                'total_peminat'   => $tot,
+                'keketatan'       => $ket,
+            ];
+        }
+        if (!empty($_POST['new_tren']['tahun']) && trim((string) $_POST['new_tren']['tahun']) !== '') {
+            $nt  = wp_unslash($_POST['new_tren']);
+            $dt  = max(0, (int) ($nt['daya_tampung'] ?? 0));
+            $snb = max(0, (int) ($nt['peminat_snbp'] ?? 0));
+            $sbt = max(0, (int) ($nt['peminat_snbt'] ?? 0));
+            $mnd = max(0, (int) ($nt['peminat_mandiri'] ?? 0));
+            $tot = (int) ($nt['total_peminat'] ?? 0);
+            if ($tot <= 0) {
+                $tot = $snb + $sbt + $mnd;
+            }
+            $ket = sanitize_text_field($nt['keketatan'] ?? '');
+            if ($ket === '' && $dt > 0) {
+                $ket = '1 : ' . max(1, (int) round($tot / $dt));
+            }
+            array_unshift($tren_clean, [
+                'tahun'           => sanitize_text_field($nt['tahun']),
+                'daya_tampung'    => $dt,
+                'peminat_snbp'    => $snb,
+                'peminat_snbt'    => $sbt,
+                'peminat_mandiri' => $mnd,
+                'total_peminat'   => $tot,
+                'keketatan'       => $ket,
+            ]);
+        }
+
+        update_option('ppb_maba_statistik_data', [
+            'portal_url' => $portal_url !== '' ? $portal_url : $defaults_maba['portal_url'],
+            'unm_url'    => $unm_url !== '' ? $unm_url : $defaults_maba['unm_url'],
+            'jalur'      => array_values($jalur_clean),
+            'tren'       => array_values($tren_clean),
+        ], false);
+        $notice = '<div class="notice notice-success is-dismissible"><p><strong>🎓 Data Penerimaan Mahasiswa Baru &amp; Tren 5 Tahun (' . count($tren_clean) . ' tahun) berhasil disimpan!</strong></p></div>';
+    }
+    if (isset($_POST['ppb_reset_maba_statistik']) && check_admin_referer('ppb_maba_nonce_action', 'ppb_maba_nonce')) {
+        $active_tab = 'statistik';
+        delete_option('ppb_maba_statistik_data');
+        $notice = '<div class="notice notice-warning is-dismissible"><p>Data Penerimaan Mahasiswa Baru dikembalikan ke bawaan.</p></div>';
+    }
+
+    // Form 2: Pameran MBKM & Proyek Kemanusiaan
+    if (isset($_POST['ppb_save_mbkm_kemanusiaan']) && check_admin_referer('ppb_mbkm_nonce_action', 'ppb_mbkm_nonce')) {
+        $active_tab = 'mbkm';
+        $mbkm_clean = [];
+        $raw_mbkm = isset($_POST['mbkm_items']) && is_array($_POST['mbkm_items']) ? wp_unslash($_POST['mbkm_items']) : [];
+        foreach ($raw_mbkm as $mrow) {
+            if (!empty($mrow['delete']) || empty(trim((string) ($mrow['judul'] ?? '')))) continue;
+            $dok = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($mrow['dok_url'] ?? '') : esc_url_raw((string) ($mrow['dok_url'] ?? ''));
+            $mbkm_clean[] = [
+                'tahun'     => sanitize_text_field($mrow['tahun'] ?? ''),
+                'lokasi'    => sanitize_text_field($mrow['lokasi'] ?? ''),
+                'judul'     => sanitize_text_field($mrow['judul']),
+                'deskripsi' => sanitize_textarea_field($mrow['deskripsi'] ?? ''),
+                'catatan'   => sanitize_text_field($mrow['catatan'] ?? ''),
+                'dok_url'   => $dok,
+            ];
+        }
+        if (!empty($_POST['new_mbkm']['judul']) && trim((string) $_POST['new_mbkm']['judul']) !== '') {
+            $nm = wp_unslash($_POST['new_mbkm']);
+            $dok = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($nm['dok_url'] ?? '') : esc_url_raw((string) ($nm['dok_url'] ?? ''));
+            $mbkm_clean[] = [
+                'tahun'     => sanitize_text_field($nm['tahun'] ?? ''),
+                'lokasi'    => sanitize_text_field($nm['lokasi'] ?? ''),
+                'judul'     => sanitize_text_field($nm['judul']),
+                'deskripsi' => sanitize_textarea_field($nm['deskripsi'] ?? ''),
+                'catatan'   => sanitize_text_field($nm['catatan'] ?? ''),
+                'dok_url'   => $dok,
+            ];
+        }
+
+        $raw_pk = isset($_POST['pk']) && is_array($_POST['pk']) ? wp_unslash($_POST['pk']) : [];
+        $poin_lines = array_values(array_filter(array_map(function($line) {
+            return sanitize_text_field($line);
+        }, preg_split('/\r\n|\r|\n/', (string) ($raw_pk['poin_text'] ?? '')))));
+
+        $capaian_clean = [];
+        if (!empty($raw_pk['capaian']) && is_array($raw_pk['capaian'])) {
+            foreach ($raw_pk['capaian'] as $crow) {
+                if (!empty($crow['delete']) || empty(trim((string) ($crow['label'] ?? '')))) continue;
+                $capaian_clean[] = [
+                    'label'  => sanitize_text_field($crow['label']),
+                    'detail' => sanitize_text_field($crow['detail'] ?? ''),
+                ];
+            }
+        }
+        if (!empty($_POST['new_capaian']['label']) && trim((string) $_POST['new_capaian']['label']) !== '') {
+            $nc = wp_unslash($_POST['new_capaian']);
+            $capaian_clean[] = [
+                'label'  => sanitize_text_field($nc['label']),
+                'detail' => sanitize_text_field($nc['detail'] ?? ''),
+            ];
+        }
+
+        $pk_dok = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw_pk['dok_url'] ?? '') : esc_url_raw((string) ($raw_pk['dok_url'] ?? ''));
+        $defaults_mbkm = ppb_get_mbkm_kemanusiaan_defaults();
+
+        update_option('ppb_mbkm_kemanusiaan_data', [
+            'mbkm_items'         => array_values($mbkm_clean),
+            'proyek_kemanusiaan' => [
+                'badge'        => sanitize_text_field($raw_pk['badge'] ?? $defaults_mbkm['proyek_kemanusiaan']['badge']),
+                'judul'        => sanitize_text_field($raw_pk['judul'] ?? $defaults_mbkm['proyek_kemanusiaan']['judul']),
+                'deskripsi'    => sanitize_textarea_field($raw_pk['deskripsi'] ?? $defaults_mbkm['proyek_kemanusiaan']['deskripsi']),
+                'poin_list'    => !empty($poin_lines) ? $poin_lines : $defaults_mbkm['proyek_kemanusiaan']['poin_list'],
+                'capaian_list' => !empty($capaian_clean) ? $capaian_clean : $defaults_mbkm['proyek_kemanusiaan']['capaian_list'],
+                'dok_url'      => $pk_dok,
+            ],
+        ], false);
+        $notice = '<div class="notice notice-success is-dismissible"><p><strong>🤝 Data Pameran MBKM (' . count($mbkm_clean) . ' kegiatan) &amp; Proyek Kemanusiaan berhasil disimpan!</strong></p></div>';
+    }
+    if (isset($_POST['ppb_reset_mbkm_kemanusiaan']) && check_admin_referer('ppb_mbkm_nonce_action', 'ppb_mbkm_nonce')) {
+        $active_tab = 'mbkm';
+        delete_option('ppb_mbkm_kemanusiaan_data');
+        $notice = '<div class="notice notice-warning is-dismissible"><p>Data MBKM &amp; Proyek Kemanusiaan dikembalikan ke bawaan.</p></div>';
     }
 
     $opt_total_aktif   = get_option('ppb_km_total_aktif', '542');
@@ -590,84 +972,313 @@ function ppb_render_kemahasiswaan_settings_page() {
     $opt_ts_puas       = get_option('ppb_ts_kepuasan_sangat_baik', '84.5');
     $opt_ts_link       = get_option('ppb_ts_drive_laporan_link', 'https://drive.google.com/file/d/1_Laporan_Resmi_TracerStudy_TS1/view?usp=sharing');
     $opt_ts_analisis   = get_option('ppb_ts_catatan_analisis', "Response rate melampaui standar minimal akreditasi (82,43% > 50%). Waktu tunggu kerja rata-rata 2,4 bulan. Pengguna lulusan sangat mengapresiasi empati konseling dan literasi asesmen digital alumni BK UNM.");
+
+    $tabs = [
+        'statistik' => '📊 Demografi, Tracer & Maba',
+        'mbkm'      => '🤝 Pameran MBKM & Kemanusiaan',
+    ];
     ?>
-    <div class="wrap" style="max-width:960px;">
-        <h1 style="font-family:'Fraunces',Georgia,serif;color:#0D3B22;margin-bottom:8px;">📊 Pengaturan Tracer Study & Indikator Kemahasiswaan</h1>
-        <p style="color:#64748B;margin-bottom:20px;">Sesuaikan indikator akreditasi, hasil Tracer Study alumni, dan link Google Drive laporan resmi agar otomatis tertayang di website.</p>
-
-        <form method="post" action="">
-            <?php wp_nonce_field('ppb_save_km_nonce'); ?>
-
-            <!-- KARTU 1: INDIKATOR STATISTIK DEMOGRAFI -->
-            <div style="background:#ffffff;border:1px solid #E2E8F0;border-radius:6px;padding:22px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-                <h2 style="font-size:16px;font-weight:700;color:#0D3B22;margin-top:0;margin-bottom:14px;border-bottom:1px solid #E2E8F0;padding-bottom:10px;">📈 Indikator Utama Statistik Mahasiswa (/kemahasiswaan/statistik/)</h2>
-                
-                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:14px;">
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Total Mahasiswa Aktif</label>
-                        <input type="text" name="ppb_km_total_aktif" value="<?php echo esc_attr($opt_total_aktif); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Lulus Tepat Waktu (%)</label>
-                        <input type="text" name="ppb_km_lulus_tepat_waktu" value="<?php echo esc_attr($opt_tepat_waktu); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Mahasiswa Daerah 3T (%)</label>
-                        <input type="text" name="ppb_km_persen_3t" value="<?php echo esc_attr($opt_3t); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Rasio Dosen : Mahasiswa</label>
-                        <input type="text" name="ppb_km_rasio_dosen" value="<?php echo esc_attr($opt_rasio); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">IPK Rata-Rata Kumulatif</label>
-                        <input type="text" name="ppb_km_ipk_rata" value="<?php echo esc_attr($opt_ipk); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- KARTU 2: METRIK TRACER STUDY ALUMNI -->
-            <div style="background:#ffffff;border:1px solid #E2E8F0;border-radius:6px;padding:22px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-                <h2 style="font-size:16px;font-weight:700;color:#0D3B22;margin-top:0;margin-bottom:14px;border-bottom:1px solid #E2E8F0;padding-bottom:10px;">🎓 Metrik Akreditasi Tracer Study (/kemahasiswaan/alumni/)</h2>
-                
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Response Rate (%)</label>
-                        <input type="text" name="ppb_ts_response_rate" value="<?php echo esc_attr($opt_ts_resp); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                        <span style="font-size:11px;color:#64748B;">Standar Akreditasi minimal &ge; 50%</span>
-                    </div>
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Waktu Tunggu Kerja &lt; 3 Bulan (%)</label>
-                        <input type="text" name="ppb_ts_waktu_tunggu_3bln" value="<?php echo esc_attr($opt_ts_tunggu); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Keselarasan Bidang Kerja Tinggi (%)</label>
-                        <input type="text" name="ppb_ts_keselarasan_tinggi" value="<?php echo esc_attr($opt_ts_selaras); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                    <div>
-                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Kepuasan Pengguna Sangat Baik (%)</label>
-                        <input type="text" name="ppb_ts_kepuasan_sangat_baik" value="<?php echo esc_attr($opt_ts_puas); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    </div>
-                </div>
-
-                <div style="margin-bottom:14px;">
-                    <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">🔗 Tautan Laporan Lengkap Tracer Study Ber-SK (Google Drive)</label>
-                    <input type="url" name="ppb_ts_drive_laporan_link" value="<?php echo esc_attr($opt_ts_link); ?>" style="width:100%;padding:7px 12px;border-radius:8px;border:1px solid #cbd5e1;" />
-                </div>
-
-                <div style="margin-bottom:10px;">
-                    <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Ringkasan Analisis Akreditasi</label>
-                    <textarea name="ppb_ts_catatan_analisis" rows="3" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;"><?php echo esc_textarea($opt_ts_analisis); ?></textarea>
-                </div>
-            </div>
-
+    <div class="wrap" style="max-width:1120px;margin:20px auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e293b;">
+        <div style="background:linear-gradient(135deg,#0D3B22 0%,#185333 100%);color:#fff;border-radius:16px;padding:24px 28px;margin-bottom:18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;">
             <div>
-                <button type="submit" name="ppb_save_kemahasiswaan_options" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;padding:6px 20px;height:auto;font-size:13px;font-weight:700;border-radius:8px;">💾 Simpan Pengaturan Kemahasiswaan</button>
+                <h1 style="margin:0 0 6px;color:#fff;font-size:23px;font-weight:800;">🏆 Pengaturan Kemahasiswaan, Maba, Tracer Study &amp; MBKM</h1>
+                <p style="margin:0;color:rgba(255,255,255,0.85);font-size:13px;">Kelola metrik demografi mahasiswa, laporan Tracer Study alumni, data peminat &amp; daya tampung Maba 5 tahun, serta dokumentasi Pameran MBKM &amp; Kemanusiaan.</p>
             </div>
-        </form>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <a href="<?php echo esc_url(admin_url('edit.php?post_type=ppb_prestasi')); ?>" class="button" style="background:#F5B82E;color:#0D3B22;border:none;font-weight:700;border-radius:8px;">🏅 CPT Prestasi</a>
+                <a href="<?php echo esc_url(admin_url('edit.php?post_type=ppb_karya')); ?>" class="button" style="border-radius:8px;">🎨 CPT Karya</a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-portal-hub')); ?>" class="button" style="border-radius:8px;">← Pusat Kendali</a>
+            </div>
+        </div>
+
+        <nav class="nav-tab-wrapper" style="margin-bottom:20px;">
+            <?php foreach ($tabs as $tk => $tl) : ?>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=' . $tk)); ?>" class="nav-tab <?php echo $active_tab === $tk ? 'nav-tab-active' : ''; ?>" style="<?php echo $active_tab === $tk ? 'background:#0D3B22;color:#fff;border-color:#0D3B22;' : ''; ?>font-weight:700;">
+                    <?php echo esc_html($tl); ?>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+
+        <?php echo $notice; ?>
+
+        <?php if ($active_tab === 'statistik') :
+            $maba_data = ppb_get_maba_statistik_data();
+        ?>
+            <form method="post" action="" style="margin-bottom:24px;">
+                <?php wp_nonce_field('ppb_save_km_nonce'); ?>
+
+                <!-- KARTU 1: INDIKATOR STATISTIK DEMOGRAFI -->
+                <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:18px;box-shadow:0 3px 10px rgba(0,0,0,0.03);">
+                    <h2 style="font-size:16px;font-weight:700;color:#0D3B22;margin-top:0;margin-bottom:14px;border-bottom:1px solid #E2E8F0;padding-bottom:10px;">📈 1. Indikator Utama Statistik Mahasiswa (/kemahasiswaan/statistik/)</h2>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:14px;">
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Total Mahasiswa Aktif</label>
+                            <input type="text" name="ppb_km_total_aktif" value="<?php echo esc_attr($opt_total_aktif); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Lulus Tepat Waktu (%)</label>
+                            <input type="text" name="ppb_km_lulus_tepat_waktu" value="<?php echo esc_attr($opt_tepat_waktu); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Mahasiswa Daerah 3T (%)</label>
+                            <input type="text" name="ppb_km_persen_3t" value="<?php echo esc_attr($opt_3t); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Rasio Dosen : Mahasiswa</label>
+                            <input type="text" name="ppb_km_rasio_dosen" value="<?php echo esc_attr($opt_rasio); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">IPK Rata-Rata Kumulatif</label>
+                            <input type="text" name="ppb_km_ipk_rata" value="<?php echo esc_attr($opt_ipk); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KARTU 2: METRIK TRACER STUDY ALUMNI -->
+                <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:14px;box-shadow:0 3px 10px rgba(0,0,0,0.03);">
+                    <h2 style="font-size:16px;font-weight:700;color:#0D3B22;margin-top:0;margin-bottom:14px;border-bottom:1px solid #E2E8F0;padding-bottom:10px;">🎓 2. Metrik Akreditasi Tracer Study (/kemahasiswaan/alumni/)</h2>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Response Rate (%)</label>
+                            <input type="text" name="ppb_ts_response_rate" value="<?php echo esc_attr($opt_ts_resp); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                            <span style="font-size:11px;color:#64748B;">Standar Akreditasi minimal &ge; 50%</span>
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Waktu Tunggu Kerja &lt; 3 Bulan (%)</label>
+                            <input type="text" name="ppb_ts_waktu_tunggu_3bln" value="<?php echo esc_attr($opt_ts_tunggu); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;">
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Keselarasan Bidang Kerja Tinggi (%)</label>
+                            <input type="text" name="ppb_ts_keselarasan_tinggi" value="<?php echo esc_attr($opt_ts_selaras); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Kepuasan Pengguna Sangat Baik (%)</label>
+                            <input type="text" name="ppb_ts_kepuasan_sangat_baik" value="<?php echo esc_attr($opt_ts_puas); ?>" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;" />
+                        </div>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label for="ppb_ts_drive_laporan_link" style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">🔗 Berkas / Tautan Laporan Lengkap Tracer Study Ber-SK (Upload PDF atau Link Drive)</label>
+                        <?php
+                        if (function_exists('ppb_render_media_url_control')) {
+                            ppb_render_media_url_control(array(
+                                'id'             => 'ppb_ts_drive_laporan_link',
+                                'name'           => 'ppb_ts_drive_laporan_link',
+                                'value'          => $opt_ts_link,
+                                'allow_relative' => true,
+                                'placeholder'    => 'https://drive.google.com/... atau upload PDF laporan Tracer Study',
+                                'title'          => 'Pilih atau Upload Laporan Lengkap Tracer Study (PDF)',
+                                'button_text'    => 'Gunakan Laporan Ini',
+                                'btn_label'      => '📁 Upload / Pilih Laporan PDF',
+                            ));
+                        } else {
+                            echo '<input type="url" id="ppb_ts_drive_laporan_link" name="ppb_ts_drive_laporan_link" value="' . esc_attr($opt_ts_link) . '" style="width:100%;padding:7px 12px;border-radius:8px;border:1px solid #cbd5e1;" />';
+                        }
+                        ?>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">Ringkasan Analisis Akreditasi</label>
+                        <textarea name="ppb_ts_catatan_analisis" rows="3" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;"><?php echo esc_textarea($opt_ts_analisis); ?></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" name="ppb_save_kemahasiswaan_options" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;padding:6px 20px;height:auto;font-size:13px;font-weight:700;border-radius:8px;">💾 Simpan Pengaturan Demografi &amp; Tracer Study</button>
+                </div>
+            </form>
+
+            <!-- KARTU 3: STATISTIK PENERIMAAN MABA & TREN DAYA TAMPUNG (SHORTCODE [ppb_maba_statistik]) -->
+            <form method="post" action="" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;box-shadow:0 3px 10px rgba(0,0,0,0.03);">
+                <?php wp_nonce_field('ppb_maba_nonce_action', 'ppb_maba_nonce'); ?>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;border-bottom:2px solid #E8F0EA;padding-bottom:10px;">
+                    <div>
+                        <h2 style="margin:0;color:#0D3B22;font-size:17px;">🎯 3. Data Peminat &amp; Daya Tampung Maba 5 Tahun (Shortcode <code>[ppb_maba_statistik]</code>)</h2>
+                        <span style="font-size:12px;color:#64748b;">Digunakan untuk tabel tren penerimaan Kriteria 3 LAMDIK dan kartu 3 jalur masuk (SNBP, SNBT, Mandiri).</span>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button type="submit" name="ppb_save_maba_statistik" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan Statistik Maba</button>
+                        <button type="submit" name="ppb_reset_maba_statistik" class="button" onclick="return confirm('Reset Data Statistik Maba ke bawaan?');">↺ Reset Default</button>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+                    <div>
+                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">URL Portal Penerimaan UNM</label>
+                        <input type="url" name="maba_portal_url" value="<?php echo esc_attr($maba_data['portal_url']); ?>" class="widefat">
+                    </div>
+                    <div>
+                        <label style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">URL Website Resmi UNM</label>
+                        <input type="url" name="maba_unm_url" value="<?php echo esc_attr($maba_data['unm_url']); ?>" class="widefat">
+                    </div>
+                </div>
+
+                <h3 style="font-size:14px;color:#0D3B22;margin:0 0 8px;">Kartu 3 Jalur Penerimaan</h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px;margin-bottom:18px;">
+                    <?php foreach ($maba_data['jalur'] as $jidx => $jl) : ?>
+                        <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;background:#fcfdfd;">
+                            <div style="display:grid;grid-template-columns:1fr 90px;gap:8px;margin-bottom:6px;">
+                                <input type="text" name="jalur[<?php echo $jidx; ?>][badge]" value="<?php echo esc_attr($jl['badge'] ?? ''); ?>" placeholder="Badge jalur" class="widefat">
+                                <select name="jalur[<?php echo $jidx; ?>][tema]" class="widefat">
+                                    <option value="green" <?php selected($jl['tema'] ?? 'green', 'green'); ?>>Hijau</option>
+                                    <option value="gold" <?php selected($jl['tema'] ?? '', 'gold'); ?>>Emas</option>
+                                    <option value="blue" <?php selected($jl['tema'] ?? '', 'blue'); ?>>Biru</option>
+                                </select>
+                            </div>
+                            <input type="text" name="jalur[<?php echo $jidx; ?>][judul]" value="<?php echo esc_attr($jl['judul'] ?? ''); ?>" placeholder="Judul jalur seleksi" class="widefat" style="font-weight:700;margin-bottom:6px;">
+                            <textarea name="jalur[<?php echo $jidx; ?>][deskripsi]" rows="2" class="widefat"><?php echo esc_textarea($jl['deskripsi'] ?? ''); ?></textarea>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <h3 style="font-size:14px;color:#0D3B22;margin:0 0 8px;">Tabel Tren Peminat vs Daya Tampung</h3>
+                <table class="widefat striped" style="margin-bottom:12px;">
+                    <thead>
+                        <tr>
+                            <th>Tahun</th>
+                            <th>Daya Tampung</th>
+                            <th>Peminat SNBP</th>
+                            <th>Peminat SNBT</th>
+                            <th>Peminat Mandiri</th>
+                            <th>Total Peminat <small>(0 = otomatis)</small></th>
+                            <th>Rasio Keketatan <small>(kosong = otomatis)</small></th>
+                            <th>Hapus</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($maba_data['tren'] as $tidx => $tr) : ?>
+                            <tr>
+                                <td><input type="text" name="tren[<?php echo $tidx; ?>][tahun]" value="<?php echo esc_attr($tr['tahun'] ?? ''); ?>" style="width:70px;font-weight:700;"></td>
+                                <td><input type="number" min="0" name="tren[<?php echo $tidx; ?>][daya_tampung]" value="<?php echo (int) ($tr['daya_tampung'] ?? 0); ?>" style="width:78px;"></td>
+                                <td><input type="number" min="0" name="tren[<?php echo $tidx; ?>][peminat_snbp]" value="<?php echo (int) ($tr['peminat_snbp'] ?? 0); ?>" style="width:82px;"></td>
+                                <td><input type="number" min="0" name="tren[<?php echo $tidx; ?>][peminat_snbt]" value="<?php echo (int) ($tr['peminat_snbt'] ?? 0); ?>" style="width:82px;"></td>
+                                <td><input type="number" min="0" name="tren[<?php echo $tidx; ?>][peminat_mandiri]" value="<?php echo (int) ($tr['peminat_mandiri'] ?? 0); ?>" style="width:82px;"></td>
+                                <td><input type="number" min="0" name="tren[<?php echo $tidx; ?>][total_peminat]" value="<?php echo (int) ($tr['total_peminat'] ?? 0); ?>" style="width:86px;font-weight:700;"></td>
+                                <td><input type="text" name="tren[<?php echo $tidx; ?>][keketatan]" value="<?php echo esc_attr($tr['keketatan'] ?? ''); ?>" style="width:82px;"></td>
+                                <td style="text-align:center;"><input type="checkbox" name="tren[<?php echo $tidx; ?>][delete]" value="1"></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr style="background:#f0fdf4;">
+                            <td><input type="text" name="new_tren[tahun]" placeholder="2025" style="width:70px;"></td>
+                            <td><input type="number" min="0" name="new_tren[daya_tampung]" placeholder="125" style="width:78px;"></td>
+                            <td><input type="number" min="0" name="new_tren[peminat_snbp]" placeholder="500" style="width:82px;"></td>
+                            <td><input type="number" min="0" name="new_tren[peminat_snbt]" placeholder="1150" style="width:82px;"></td>
+                            <td><input type="number" min="0" name="new_tren[peminat_mandiri]" placeholder="320" style="width:82px;"></td>
+                            <td><input type="number" min="0" name="new_tren[total_peminat]" placeholder="Auto" style="width:86px;"></td>
+                            <td><input type="text" name="new_tren[keketatan]" placeholder="Auto" style="width:82px;"></td>
+                            <td style="font-size:11px;color:#166534;font-weight:700;">+ Baru</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align:right;">
+                    <button type="submit" name="ppb_save_maba_statistik" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;padding:6px 20px;height:auto;font-weight:700;border-radius:8px;">💾 Simpan Data Statistik Maba</button>
+                </div>
+            </form>
+
+        <?php elseif ($active_tab === 'mbkm') :
+            $mbkm_data = ppb_get_mbkm_kemanusiaan_data();
+            $mbkm_items = $mbkm_data['mbkm_items'];
+            $pk         = $mbkm_data['proyek_kemanusiaan'];
+        ?>
+            <form method="post" action="">
+                <?php wp_nonce_field('ppb_mbkm_nonce_action', 'ppb_mbkm_nonce'); ?>
+
+                <!-- Pameran MBKM -->
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;border-bottom:2px solid #E8F0EA;padding-bottom:10px;">
+                        <div>
+                            <h2 style="margin:0;color:#0D3B22;font-size:18px;">🤝 Pameran Inovasi Layanan MBKM (<?php echo count($mbkm_items); ?>)</h2>
+                            <span style="font-size:12px;color:#64748b;">Ditampilkan pada shortcode <code>[ppb_mbkm_kemanusiaan]</code>.</span>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button type="submit" name="ppb_save_mbkm_kemanusiaan" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan MBKM &amp; Kemanusiaan</button>
+                            <button type="submit" name="ppb_reset_mbkm_kemanusiaan" class="button" onclick="return confirm('Reset data MBKM & Kemanusiaan ke bawaan?');">↺ Reset Default</button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;gap:12px;margin-bottom:16px;">
+                        <?php foreach ($mbkm_items as $midx => $mk) : ?>
+                            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;background:#fcfdfd;">
+                                <div style="display:grid;grid-template-columns:120px 1fr 2fr;gap:10px;margin-bottom:8px;">
+                                    <input type="text" name="mbkm_items[<?php echo $midx; ?>][tahun]" value="<?php echo esc_attr($mk['tahun'] ?? ''); ?>" placeholder="Tahun 2024" class="widefat">
+                                    <input type="text" name="mbkm_items[<?php echo $midx; ?>][lokasi]" value="<?php echo esc_attr($mk['lokasi'] ?? ''); ?>" placeholder="Lokasi Kegiatan" class="widefat">
+                                    <input type="text" name="mbkm_items[<?php echo $midx; ?>][judul]" value="<?php echo esc_attr($mk['judul'] ?? ''); ?>" placeholder="Judul Pameran / Inovasi" class="widefat" style="font-weight:700;">
+                                </div>
+                                <textarea name="mbkm_items[<?php echo $midx; ?>][deskripsi]" rows="2" class="widefat" placeholder="Deskripsi kegiatan..." style="margin-bottom:8px;"><?php echo esc_textarea($mk['deskripsi'] ?? ''); ?></textarea>
+                                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;">
+                                    <input type="text" name="mbkm_items[<?php echo $midx; ?>][catatan]" value="<?php echo esc_attr($mk['catatan'] ?? ''); ?>" placeholder="👥 Catatan jumlah peserta / dampak" class="widefat">
+                                    <?php ppb_render_media_url_control(['id' => 'mbkm_dok_' . $midx, 'name' => "mbkm_items[$midx][dok_url]", 'value' => $mk['dok_url'] ?? '', 'placeholder' => 'Link Dokumentasi / Laporan PDF (opsional)', 'btn_label' => '📁 Upload / Drive']); ?>
+                                    <label style="color:#b91c1c;font-size:11.5px;font-weight:600;white-space:nowrap;"><input type="checkbox" name="mbkm_items[<?php echo $midx; ?>][delete]" value="1"> Hapus</label>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div style="background:#f0fdf4;border:1.5px dashed #166534;border-radius:10px;padding:14px;">
+                        <strong style="display:block;color:#0D3B22;margin-bottom:8px;">➕ Tambah Kegiatan Pameran MBKM Baru</strong>
+                        <div style="display:grid;grid-template-columns:120px 1fr 2fr;gap:10px;margin-bottom:8px;">
+                            <input type="text" name="new_mbkm[tahun]" placeholder="Tahun 2025" class="widefat">
+                            <input type="text" name="new_mbkm[lokasi]" placeholder="Lokasi Pameran" class="widefat">
+                            <input type="text" name="new_mbkm[judul]" placeholder="Judul Kegiatan MBKM baru (isi untuk menambah)..." class="widefat">
+                        </div>
+                        <textarea name="new_mbkm[deskripsi]" rows="2" placeholder="Ringkasan karya atau program MBKM..." class="widefat" style="margin-bottom:8px;"></textarea>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                            <input type="text" name="new_mbkm[catatan]" placeholder="👥 Catatan dampak / keterlibatan mahasiswa" class="widefat">
+                            <?php ppb_render_media_url_control(['id' => 'mbkm_dok_new', 'name' => 'new_mbkm[dok_url]', 'value' => '', 'placeholder' => 'Link Dokumentasi / SK (opsional)', 'btn_label' => '📁 Upload / Drive']); ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proyek Kemanusiaan -->
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:18px;">
+                    <h2 style="margin:0 0 14px;color:#0D3B22;font-size:18px;border-bottom:2px solid #E8F0EA;padding-bottom:10px;">❤️ Sorotan Proyek Kemanusiaan Mahasiswa BK</h2>
+                    <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:3px;">Badge Program</label>
+                            <input type="text" name="pk[badge]" value="<?php echo esc_attr($pk['badge'] ?? ''); ?>" class="widefat">
+                        </div>
+                        <div>
+                            <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:3px;">Judul Program Kemanusiaan</label>
+                            <input type="text" name="pk[judul]" value="<?php echo esc_attr($pk['judul'] ?? ''); ?>" class="widefat" style="font-weight:700;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:3px;">Deskripsi Naratif</label>
+                        <textarea name="pk[deskripsi]" rows="3" class="widefat"><?php echo esc_textarea($pk['deskripsi'] ?? ''); ?></textarea>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
+                        <div>
+                            <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:3px;">Poin Aksi Lapangan (1 baris = 1 poin)</label>
+                            <textarea name="pk[poin_text]" rows="5" class="widefat"><?php echo esc_textarea(implode("\n", $pk['poin_list'] ?? [])); ?></textarea>
+                        </div>
+                        <div>
+                            <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:4px;">Kartu Capaian &amp; Dampak</label>
+                            <div style="display:grid;gap:6px;">
+                                <?php foreach ($pk['capaian_list'] ?? [] as $cidx => $cp) : ?>
+                                    <div style="display:grid;grid-template-columns:1fr 1.6fr auto;gap:6px;align-items:center;">
+                                        <input type="text" name="pk[capaian][<?php echo $cidx; ?>][label]" value="<?php echo esc_attr($cp['label'] ?? ''); ?>" placeholder="Angka/Label" class="widefat">
+                                        <input type="text" name="pk[capaian][<?php echo $cidx; ?>][detail]" value="<?php echo esc_attr($cp['detail'] ?? ''); ?>" placeholder="Uraian dampak" class="widefat">
+                                        <label style="color:#b91c1c;font-size:11px;"><input type="checkbox" name="pk[capaian][<?php echo $cidx; ?>][delete]" value="1"> Hps</label>
+                                    </div>
+                                <?php endforeach; ?>
+                                <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:6px;padding-top:4px;border-top:1px dashed #cbd5e1;">
+                                    <input type="text" name="new_capaian[label]" placeholder="+ Tambah Capaian Baru" class="widefat">
+                                    <input type="text" name="new_capaian[detail]" placeholder="Uraian dampak tambahan..." class="widefat">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size:11.5px;font-weight:700;display:block;margin-bottom:4px;">Link Dokumen / Foto Laporan Proyek Kemanusiaan (Opsional)</label>
+                        <?php ppb_render_media_url_control(['id' => 'pk_dok_url', 'name' => 'pk[dok_url]', 'value' => $pk['dok_url'] ?? '', 'placeholder' => 'Link Drive / upload PDF laporan kemanusiaan', 'btn_label' => '📁 Upload / Drive']); ?>
+                    </div>
+                </div>
+
+                <div style="text-align:right;">
+                    <button type="submit" name="ppb_save_mbkm_kemanusiaan" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;padding:7px 22px;height:auto;font-size:13.5px;font-weight:700;border-radius:8px;">💾 Simpan Pameran MBKM &amp; Kemanusiaan</button>
+                </div>
+            </form>
+        <?php endif; ?>
     </div>
     <?php
 }
@@ -1412,14 +2023,17 @@ add_action('template_redirect', function() {
 /* ========================================================================== */
 if (!function_exists('ppb_shortcode_maba_statistik')) {
 function ppb_shortcode_maba_statistik($atts = []) {
-    ob_start();
-    $data_tren = [
-        ['tahun' => '2024', 'daya_tampung' => 120, 'peminat_snbp' => 482, 'peminat_snbt' => 1120, 'peminat_mandiri' => 310, 'total_peminat' => 1912, 'keketatan' => '1 : 16'],
-        ['tahun' => '2023', 'daya_tampung' => 120, 'peminat_snbp' => 465, 'peminat_snbt' => 1085, 'peminat_mandiri' => 295, 'total_peminat' => 1845, 'keketatan' => '1 : 15'],
-        ['tahun' => '2022', 'daya_tampung' => 115, 'peminat_snbp' => 430, 'peminat_snbt' => 998, 'peminat_mandiri' => 280, 'total_peminat' => 1708, 'keketatan' => '1 : 15'],
-        ['tahun' => '2021', 'daya_tampung' => 110, 'peminat_snbp' => 395, 'peminat_snbt' => 920, 'peminat_mandiri' => 250, 'total_peminat' => 1565, 'keketatan' => '1 : 14'],
-        ['tahun' => '2020', 'daya_tampung' => 105, 'peminat_snbp' => 370, 'peminat_snbt' => 880, 'peminat_mandiri' => 230, 'total_peminat' => 1480, 'keketatan' => '1 : 14']
+    $maba       = function_exists('ppb_get_maba_statistik_data') ? ppb_get_maba_statistik_data() : [];
+    $portal_url = $maba['portal_url'] ?? 'https://penerimaan.unm.ac.id/';
+    $unm_url    = $maba['unm_url'] ?? 'https://unm.ac.id/';
+    $jalur_list = $maba['jalur'] ?? [];
+    $data_tren  = $maba['tren'] ?? [];
+    $themes = [
+        'green' => ['bg' => '#E8F0EA', 'fg' => '#0D3B22'],
+        'gold'  => ['bg' => '#FEF3C7', 'fg' => '#92400E'],
+        'blue'  => ['bg' => '#E0E7FF', 'fg' => '#3730A3'],
     ];
+    ob_start();
     ?>
     <section class="ppb-maba-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
         
@@ -1432,42 +2046,40 @@ function ppb_shortcode_maba_statistik($atts = []) {
                 Data Peminat, Daya Tampung &amp; Penerimaan Mahasiswa Baru
             </h2>
             <p style="color:rgba(255,255,255,0.85);font-size:14px;max-width:760px;margin:0 0 20px;line-height:1.6;">
-                Program Studi Bimbingan dan Konseling FIP UNM menerima mahasiswa baru melalui 3 jalur seleksi nasional dan mandiri terpusat di Universitas Negeri Makassar.
+                Program Studi Bimbingan dan Konseling FIP UNM menerima mahasiswa baru melalui jalur seleksi nasional dan mandiri terpusat di Universitas Negeri Makassar.
             </p>
             <div style="display:flex;flex-wrap:wrap;gap:12px;">
-                <a href="https://penerimaan.unm.ac.id/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#F5B82E;color:#0D3B22;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;text-decoration:none;">
-                    Portal Penerimaan UNM &rarr;
-                </a>
-                <a href="https://unm.ac.id/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);color:#ffffff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:10px;text-decoration:none;border:1px solid rgba(255,255,255,0.25);">
-                    Website Resmi UNM
-                </a>
+                <?php if ($portal_url !== '') : ?>
+                    <a href="<?php echo esc_url($portal_url); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#F5B82E;color:#0D3B22;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;text-decoration:none;">
+                        Portal Penerimaan UNM &rarr;
+                    </a>
+                <?php endif; ?>
+                <?php if ($unm_url !== '') : ?>
+                    <a href="<?php echo esc_url($unm_url); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);color:#ffffff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:10px;text-decoration:none;border:1px solid rgba(255,255,255,0.25);">
+                        Website Resmi UNM
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
-        <!-- Kartu 3 Jalur Penerimaan -->
+        <!-- Kartu Jalur Penerimaan -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin-bottom:35px;">
-            <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-                <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;">Jalur Prestasi</span>
-                <h4 style="font-size:17px;font-weight:700;color:#0D3B22;margin:0 0 8px;">SNBP (Prestasi Rapor &amp; Portofolio)</h4>
-                <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0;">Seleksi berbasis nilai akademik rapor semester 1–5 dan portofolio prestasi non-akademik siswa SMA/SMK/MA sederajat.</p>
-            </div>
-            <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-                <span style="font-size:11px;font-weight:700;background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;">Jalur Tes Nasional</span>
-                <h4 style="font-size:17px;font-weight:700;color:#0D3B22;margin:0 0 8px;">SNBT (Ujian Tertulis Berbasis Komputer)</h4>
-                <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0;">Seleksi nasional terpusat mengukur Tes Potensi Skolastik (TPS), Literasi Bahasa Indonesia &amp; Inggris, dan Penalaran Matematika.</p>
-            </div>
-            <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-                <span style="font-size:11px;font-weight:700;background:#E0E7FF;color:#3730A3;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;">Jalur Mandiri</span>
-                <h4 style="font-size:17px;font-weight:700;color:#0D3B22;margin:0 0 8px;">Jalur Mandiri Universitas Negeri Makassar</h4>
-                <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0;">Penerimaan seleksi mandiri UNM mencakup Jalur Ujian Tulis Mandiri, Jalur Prestasi Khusus, dan Afirmasi Daerah 3T.</p>
-            </div>
+            <?php foreach ($jalur_list as $jl) :
+                $tm = $themes[$jl['tema'] ?? 'green'] ?? $themes['green'];
+            ?>
+                <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+                    <span style="font-size:11px;font-weight:700;background:<?php echo esc_attr($tm['bg']); ?>;color:<?php echo esc_attr($tm['fg']); ?>;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;"><?php echo esc_html($jl['badge'] ?? 'Jalur Seleksi'); ?></span>
+                    <h4 style="font-size:17px;font-weight:700;color:#0D3B22;margin:0 0 8px;"><?php echo esc_html($jl['judul'] ?? ''); ?></h4>
+                    <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0;"><?php echo esc_html($jl['deskripsi'] ?? ''); ?></p>
+                </div>
+            <?php endforeach; ?>
         </div>
 
         <!-- Tabel Tren 5 Tahun: Peminat vs Daya Tampung -->
         <div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.04);">
             <div style="background:#FAF8F5;border-bottom:1px solid #E5E7EB;padding:16px 22px;">
                 <h3 style="font-family:'Fraunces',Georgia,serif;font-size:18px;color:#0D3B22;margin:0 0 4px;">
-                    Tabel Tren Peminat vs. Daya Tampung 5 Tahun Terakhir
+                    Tabel Tren Peminat vs. Daya Tampung <?php echo count($data_tren); ?> Tahun Terakhir
                 </h3>
                 <span style="font-size:12px;color:#6B7280;">Sumber: Data Resmi Penerimaan Mahasiswa Baru Bimbingan dan Konseling FIP UNM</span>
             </div>
@@ -1487,14 +2099,14 @@ function ppb_shortcode_maba_statistik($atts = []) {
                     <tbody>
                         <?php foreach ($data_tren as $d) : ?>
                             <tr style="border-bottom:1px solid #F3F4F6;">
-                                <td style="padding:12px 18px;font-weight:700;color:#0D3B22;"><?php echo esc_html($d['tahun']); ?></td>
-                                <td style="padding:12px 18px;text-align:center;font-weight:600;"><?php echo (int)$d['daya_tampung']; ?></td>
-                                <td style="padding:12px 18px;text-align:center;color:#4B5563;"><?php echo number_format($d['peminat_snbp']); ?></td>
-                                <td style="padding:12px 18px;text-align:center;color:#4B5563;"><?php echo number_format($d['peminat_snbt']); ?></td>
-                                <td style="padding:12px 18px;text-align:center;color:#4B5563;"><?php echo number_format($d['peminat_mandiri']); ?></td>
-                                <td style="padding:12px 18px;text-align:center;font-weight:700;color:#0D3B22;"><?php echo number_format($d['total_peminat']); ?></td>
+                                <td style="padding:12px 18px;font-weight:700;color:#0D3B22;"><?php echo esc_html($d['tahun'] ?? ''); ?></td>
+                                <td style="padding:12px 18px;text-align:center;font-weight:600;"><?php echo (int) ($d['daya_tampung'] ?? 0); ?></td>
+                                <td style="padding:12px 18px;text-align:center;color:#4B5563;"><?php echo number_format((int) ($d['peminat_snbp'] ?? 0)); ?></td>
+                                <td style="padding:12px 18px;text-align:center;color:#4B5563;"><?php echo number_format((int) ($d['peminat_snbt'] ?? 0)); ?></td>
+                                <td style="padding:12px 18px;text-align:center;color:#4B5563;"><?php echo number_format((int) ($d['peminat_mandiri'] ?? 0)); ?></td>
+                                <td style="padding:12px 18px;text-align:center;font-weight:700;color:#0D3B22;"><?php echo number_format((int) ($d['total_peminat'] ?? 0)); ?></td>
                                 <td style="padding:12px 18px;text-align:center;">
-                                    <span style="background:#DCFCE7;color:#166534;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:6px;"><?php echo esc_html($d['keketatan']); ?></span>
+                                    <span style="background:#DCFCE7;color:#166534;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:6px;"><?php echo esc_html($d['keketatan'] ?? '-'); ?></span>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -1515,6 +2127,12 @@ add_shortcode('ppb_maba_statistik', 'ppb_shortcode_maba_statistik');
 /* ========================================================================== */
 if (!function_exists('ppb_shortcode_mbkm_kemanusiaan')) {
 function ppb_shortcode_mbkm_kemanusiaan($atts = []) {
+    $data       = function_exists('ppb_get_mbkm_kemanusiaan_data') ? ppb_get_mbkm_kemanusiaan_data() : [];
+    $mbkm_items = $data['mbkm_items'] ?? [];
+    $pk         = $data['proyek_kemanusiaan'] ?? [];
+    $pk_dok     = !empty($pk['dok_url']) && function_exists('ppb_clean_document_url')
+        ? ppb_clean_document_url($pk['dok_url'])
+        : trim((string) ($pk['dok_url'] ?? ''));
     ob_start();
     ?>
     <section class="ppb-mbkm-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
@@ -1524,79 +2142,75 @@ function ppb_shortcode_mbkm_kemanusiaan($atts = []) {
                 <span>Kriteria 3 LAMDIK: Inovasi &amp; Pengabdian Mahasiswa</span>
             </div>
             <h2 style="font-family:'Fraunces',Georgia,serif;font-size:clamp(22px, 3vw, 30px);color:#ffffff;margin:0 0 10px;font-weight:600;">
-                Pameran Layanan MBKM &amp; Proyek Kemanusiaan 2023
+                Pameran Layanan MBKM &amp; Proyek Kemanusiaan
             </h2>
             <p style="color:rgba(255,255,255,0.85);font-size:14px;max-width:760px;margin:0;line-height:1.6;">
-                Dokumentasi rekaman jejak diseminasi inovasi bimbingan konseling karya mahasiswa Program Merdeka Belajar Kampus Merdeka (sejak 2022) dan aksi nyata Proyek Kemanusiaan penanganan trauma psikososial 2023.
+                Dokumentasi rekaman jejak diseminasi inovasi bimbingan konseling karya mahasiswa Program Merdeka Belajar Kampus Merdeka dan aksi nyata Proyek Kemanusiaan penanganan trauma psikososial.
             </p>
         </div>
 
-        <!-- Bagian 1: Pameran Layanan MBKM (Sejak 2022) -->
+        <!-- Bagian 1: Pameran Layanan MBKM -->
         <h3 style="font-family:'Fraunces',Georgia,serif;font-size:22px;color:#0D3B22;margin:0 0 18px;">
-            Pameran Inovasi Layanan BK Mahasiswa MBKM (Tahun 2022 – 2024)
+            Pameran Inovasi Layanan BK Mahasiswa MBKM
         </h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;margin-bottom:40px;">
-            <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 8px;border-radius:4px;">Tahun 2024</span>
-                    <span style="font-size:12px;color:#059669;font-weight:600;">Kampus Gunungsari</span>
+            <?php foreach ($mbkm_items as $mk) :
+                $dok_url = !empty($mk['dok_url']) && function_exists('ppb_clean_document_url')
+                    ? ppb_clean_document_url($mk['dok_url'])
+                    : trim((string) ($mk['dok_url'] ?? ''));
+            ?>
+                <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                            <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 8px;border-radius:4px;"><?php echo esc_html($mk['tahun'] ?? ''); ?></span>
+                            <span style="font-size:12px;color:#059669;font-weight:600;"><?php echo esc_html($mk['lokasi'] ?? ''); ?></span>
+                        </div>
+                        <h4 style="font-size:16px;font-weight:700;color:#0D3B22;margin:0 0 8px;"><?php echo esc_html($mk['judul'] ?? ''); ?></h4>
+                        <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0 0 12px;"><?php echo esc_html($mk['deskripsi'] ?? ''); ?></p>
+                    </div>
+                    <div>
+                        <?php if (!empty($mk['catatan'])) : ?>
+                            <div style="font-size:12px;color:#6B7280;margin-bottom:<?php echo $dok_url !== '' ? '10px' : '0'; ?>;"><?php echo esc_html($mk['catatan']); ?></div>
+                        <?php endif; ?>
+                        <?php if ($dok_url !== '') : ?>
+                            <a href="<?php echo esc_url($dok_url); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#E8F0EA;color:#0D3B22;border:1px solid #B7D0BE;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;">📂 Dokumentasi / Eviden &#8599;</a>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <h4 style="font-size:16px;font-weight:700;color:#0D3B22;margin:0 0 8px;">Expo Media &amp; Alat Permainan Edukatif (APE) Konseling</h4>
-                <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0 0 12px;">Pameran 45 karya media bimbingan kelompok interaktif hasil PPL MBKM mahasiswa di 15 SMA/SMK mitra Sulawesi Selatan.</p>
-                <div style="font-size:12px;color:#6B7280;">👥 Diikuti oleh 120 mahasiswa praktikan dan dihadiri kepala sekolah mitra.</div>
-            </div>
-
-            <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 8px;border-radius:4px;">Tahun 2023</span>
-                    <span style="font-size:12px;color:#059669;font-weight:600;">Gedung Phinisi UNM</span>
-                </div>
-                <h4 style="font-size:16px;font-weight:700;color:#0D3B22;margin:0 0 8px;">Gelar Karya Inovasi Modul Konseling Sebaya &amp; Karir</h4>
-                <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0 0 12px;">Peluncuran e-modul bimbingan karir digital untuk siswa kelas XII serta demonstrasi simulasi konseling lintas budaya.</p>
-                <div style="font-size:12px;color:#6B7280;">👥 Disertai sesi talkshow interaktif bersama praktisi HRD industri.</div>
-            </div>
-
-            <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 8px;border-radius:4px;">Tahun 2022</span>
-                    <span style="font-size:12px;color:#059669;font-weight:600;">Pelataran FIP UNM</span>
-                </div>
-                <h4 style="font-size:16px;font-weight:700;color:#0D3B22;margin:0 0 8px;">Pekan Layanan Konseling &amp; Asesmen Gratis Kampus Mengajar</h4>
-                <p style="font-size:13px;color:#4B5563;line-height:1.5;margin:0 0 12px;">Pemberian layanan asesmen minat bakat gratis bagi 250 siswa SMP/SMA binaan program Kampus Mengajar Angkatan 3 &amp; 4.</p>
-                <div style="font-size:12px;color:#6B7280;">👥 Dilaporkan sebagai eviden unggulan evaluasi mutu MBKM tingkat fakultas.</div>
-            </div>
+            <?php endforeach; ?>
         </div>
 
-        <!-- Bagian 2: Proyek Kemanusiaan 2023 -->
+        <!-- Bagian 2: Proyek Kemanusiaan -->
         <h3 style="font-family:'Fraunces',Georgia,serif;font-size:22px;color:#0D3B22;margin:0 0 18px;">
-            Proyek Kemanusiaan Mahasiswa BK (Tahun 2023)
+            Proyek Kemanusiaan Mahasiswa BK
         </h3>
         <div style="background:#FAF8F5;border:1.5px solid #D4E3D8;border-radius:18px;padding:26px;">
             <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;">
                 <div>
-                    <span style="background:#FEE2E2;color:#991B1B;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;">Program Unggulan Kemanusiaan 2023</span>
-                    <h4 style="font-size:18px;font-weight:700;color:#0D3B22;margin:0 0 10px;">Trauma Healing &amp; Psychological First Aid (PFA) Korban Banjir</h4>
+                    <span style="background:#FEE2E2;color:#991B1B;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:8px;"><?php echo esc_html($pk['badge'] ?? 'Program Unggulan Kemanusiaan'); ?></span>
+                    <h4 style="font-size:18px;font-weight:700;color:#0D3B22;margin:0 0 10px;"><?php echo esc_html($pk['judul'] ?? ''); ?></h4>
                     <p style="font-size:13.5px;color:#4B5563;line-height:1.6;margin:0 0 16px;">
-                        Tim Relawan Mahasiswa dan Dosen Pembimbing Bimbingan dan Konseling FIP UNM diterjunkan langsung dalam program pemulihan psikologis bagi anak-anak dan keluarga terdampak bencana banjir bandang di kawasan Makassar dan Maros pada awal 2023.
+                        <?php echo esc_html($pk['deskripsi'] ?? ''); ?>
                     </p>
-                    <ul style="font-size:13px;color:#374151;line-height:1.7;padding-left:18px;margin:0;">
-                        <li>Layanan konseling kelompok ekspresif melalui art therapy dan play therapy</li>
-                        <li>Penyaluran 150 paket edukasi anak ceria dan alat tulis sekolah</li>
-                        <li>Mitra pelaksana: Dinas Sosial Provinsi Sulawesi Selatan dan PMI Cabang Makassar</li>
-                    </ul>
+                    <?php if (!empty($pk['poin_list']) && is_array($pk['poin_list'])) : ?>
+                        <ul style="font-size:13px;color:#374151;line-height:1.7;padding-left:18px;margin:0 0 14px;">
+                            <?php foreach ($pk['poin_list'] as $poin) : ?>
+                                <li><?php echo esc_html($poin); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                    <?php if ($pk_dok !== '') : ?>
+                        <a href="<?php echo esc_url($pk_dok); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#0D3B22;color:#F5B82E;font-size:12.5px;font-weight:700;padding:9px 16px;border-radius:10px;text-decoration:none;">📄 Unduh Laporan &amp; Dokumentasi Kemanusiaan &#8599;</a>
+                    <?php endif; ?>
                 </div>
                 <div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;padding:20px;">
                     <h5 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 10px;">Capaian &amp; Dampak Program Kemanusiaan:</h5>
                     <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#4B5563;">
-                        <div style="padding:10px;background:#F9FAFB;border-radius:8px;border-left:3px solid #0D3B22;">
-                            <strong style="color:#0D3B22;">215 Anak &amp; Remaja</strong> terlayani sesi trauma healing terbimbing.
-                        </div>
-                        <div style="padding:10px;background:#F9FAFB;border-radius:8px;border-left:3px solid #0D3B22;">
-                            <strong style="color:#0D3B22;">25 Mahasiswa BK</strong> memperoleh konversi 20 SKS mata kuliah MBKM Kemanusiaan.
-                        </div>
-                        <div style="padding:10px;background:#F9FAFB;border-radius:8px;border-left:3px solid #0D3B22;">
-                            <strong style="color:#0D3B22;">1 Buku Antologi</strong> "Jejak Empati di Garis Bencana" ber-ISBN terbitan UNM Press.
-                        </div>
+                        <?php foreach ($pk['capaian_list'] ?? [] as $cp) : ?>
+                            <div style="padding:10px;background:#F9FAFB;border-radius:8px;border-left:3px solid #0D3B22;">
+                                <strong style="color:#0D3B22;"><?php echo esc_html($cp['label'] ?? ''); ?></strong> <?php echo esc_html($cp['detail'] ?? ''); ?>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
@@ -1608,4 +2222,49 @@ function ppb_shortcode_mbkm_kemanusiaan($atts = []) {
 }
 }
 add_shortcode('ppb_mbkm_kemanusiaan', 'ppb_shortcode_mbkm_kemanusiaan');
+
+/* ========================================================================== */
+/* 12. SYNC FRONTEND /kemahasiswaan/statistik/ DARI SETTINGS ADMIN           */
+/* ========================================================================== */
+if (!function_exists('ppb_kemahasiswaan_statistik_sync_content')) {
+function ppb_kemahasiswaan_statistik_sync_content($content) {
+    if (is_admin() || !is_string($content) || strpos($content, 'bk-page-wrapper') === false) {
+        return $content;
+    }
+
+    $slug_path = function_exists('ppb_get_current_page_slug_path') ? ppb_get_current_page_slug_path() : '';
+    if ($slug_path === 'akademik/statistik') {
+        return $content;
+    }
+
+    $is_km_stat = ($slug_path === 'kemahasiswaan/statistik' || strpos($content, 'Total 468 Mhs') !== false);
+    if (!$is_km_stat) {
+        return $content;
+    }
+
+    $total_aktif = trim((string) get_option('ppb_km_total_aktif', '542'));
+    $lulus_tw    = trim((string) get_option('ppb_km_lulus_tepat_waktu', '88.4'));
+    $persen_3t   = trim((string) get_option('ppb_km_persen_3t', '24.8'));
+    $rasio       = trim((string) get_option('ppb_km_rasio_dosen', '1 : 28'));
+
+    if ($total_aktif !== '') {
+        $content = str_replace('Total 468 Mhs', 'Total ' . esc_html($total_aktif) . ' Mhs', $content);
+    }
+    if ($lulus_tw !== '') {
+        $clean_lulus = rtrim($lulus_tw, " %");
+        $content = str_replace('86.4%', esc_html($clean_lulus) . '%', $content);
+    }
+    if ($rasio !== '') {
+        $content = str_replace('1 : 24', esc_html($rasio), $content);
+    }
+    if ($persen_3t !== '') {
+        $clean_3t = rtrim($persen_3t, " %");
+        $content = str_replace('>18.6%<', '>' . esc_html($clean_3t) . '%<', $content);
+    }
+
+    return $content;
+}
+}
+add_filter('the_content', 'ppb_kemahasiswaan_statistik_sync_content', 12);
+
 

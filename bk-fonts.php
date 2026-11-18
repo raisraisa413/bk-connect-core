@@ -2176,7 +2176,11 @@ function bk_render_suite_footer_assets() {
 
     // Inventaris Lab Filtering
     var currentInvFilter = "semua";
-    function setInvFilter(cat) {
+    function setInvFilter(cat, btnEl) {
+        if (typeof window.ppbSetInvFilter === "function") {
+            window.ppbSetInvFilter(cat);
+            return;
+        }
         currentInvFilter = cat;
         var pills = document.querySelectorAll(".inv-filter-pill");
         pills.forEach(function(p) {
@@ -2184,11 +2188,16 @@ function bk_render_suite_footer_assets() {
             p.style.color = "#475569";
             p.style.border = "1px solid #E2E8F0";
         });
-        if (window.event && window.event.target) {
-            var btn = window.event.target.closest("button") || window.event.target;
-            btn.style.background = "#0D3B22";
-            btn.style.color = "#F5B82E";
-            btn.style.border = "none";
+        var targetBtn = btnEl || (window.event && window.event.target ? window.event.target.closest("button") : null);
+        if (!targetBtn) {
+            pills.forEach(function(p) {
+                if (p.getAttribute("data-cat") === cat) targetBtn = p;
+            });
+        }
+        if (targetBtn) {
+            targetBtn.style.background = "#0D3B22";
+            targetBtn.style.color = "#F5B82E";
+            targetBtn.style.border = "none";
         }
         filterInventaris();
     }
@@ -2269,6 +2278,10 @@ function bk_render_suite_footer_assets() {
     }
 
     function submitSurvey() {
+        if (typeof window.ppbSubmitSurveyForm === "function") {
+            window.ppbSubmitSurveyForm();
+            return;
+        }
         var card = document.getElementById("surveyFormCard");
         var success = document.getElementById("surveySuccessCard");
         if (card) card.style.display = "none";

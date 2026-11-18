@@ -95,6 +95,36 @@ function ppb_register_portal_hub_menu() {
         'ppb_render_portal_dosen_bridge'
     );
 
+    // 5b. Mata Kuliah OBE & Auto-Sync Dosen
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Mata Kuliah OBE, RPS/SAP & Penugasan Dosen',
+        '📚 Mata Kuliah & Dosen',
+        'edit_posts',
+        'ppb-mata-kuliah-manager',
+        'ppb_render_mata_kuliah_admin_page'
+    );
+
+    // 5c. Akreditasi LAMDIK & Link Drive Bukti Fisik
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Akreditasi LAMDIK, 9 Kriteria & Sertifikat S1-S3',
+        '🏅 Akreditasi & LAMDIK',
+        'edit_posts',
+        'ppb-lamdik-settings',
+        'ppb_render_lamdik_admin_page'
+    );
+
+    // 5d. Tautan Dokumen Akademik, Hibah PNBP & Jurnal Prodi BK
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Dokumen Akademik, Hibah PNBP & Jurnal Prodi BK',
+        '⚖️ Akademik, PNBP & Jurnal',
+        'edit_posts',
+        'ppb-akademik-settings',
+        'ppb_akademik_render_settings_page'
+    );
+
     // 6. Jadwal Ujian & Seminar
     add_submenu_page(
         'ppb-portal-hub',
@@ -104,24 +134,51 @@ function ppb_register_portal_hub_menu() {
         'edit.php?post_type=ppb_jadwal'
     );
 
-    // 7. Kemahasiswaan & Prestasi
+    // 7. Kemahasiswaan, Maba, Prestasi & MBKM
     add_submenu_page(
         'ppb-portal-hub',
-        'Kemahasiswaan & Prestasi',
-        '🏆 Kemahasiswaan & Prestasi',
+        'Kemahasiswaan, Maba, Tracer Study & MBKM',
+        '🏆 Kemahasiswaan, Maba & MBKM',
         'edit_posts',
         'ppb-kemahasiswaan-settings',
         'ppb_render_kemahasiswaan_settings_page'
     );
 
-    // 8. Layanan & Inventaris Lab
+    // 8. Layanan, Lab BK & Sarpras
     add_submenu_page(
         'ppb-portal-hub',
-        'Layanan Mahasiswa & Lab',
-        '📁 Layanan & Inventaris',
+        'Layanan Mahasiswa, Lab BK & Sarpras',
+        '📁 Layanan, Lab & Sarpras',
         'edit_posts',
         'ppb-layanan-settings',
         'ppb_render_layanan_settings_page'
+    );
+
+    // 8b. Inventaris Alat Lab BK
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Inventaris Alat & Tes Lab BK',
+        '🧪 Inventaris Alat Lab',
+        'edit_posts',
+        'edit.php?post_type=ppb_inventaris_lab'
+    );
+
+    // 8c. Template Surat & SOP
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Template Surat & Formulir',
+        '📄 Template Surat',
+        'edit_posts',
+        'edit.php?post_type=ppb_template_dok'
+    );
+
+    // 8d. Alur SOP Layanan
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Alur SOP Layanan Akademik',
+        '🔄 Alur SOP Layanan',
+        'edit_posts',
+        'edit.php?post_type=ppb_alur_sop'
     );
 
     // 9. E-Library & Repositori Modul (Katalog ELB-xx & Kurasi Naskah)
@@ -132,6 +189,16 @@ function ppb_register_portal_hub_menu() {
         'edit_posts',
         'ppb-elibrary-manager',
         'ppb_render_elibrary_admin_page'
+    );
+
+    // 9b. Survei Kepuasan Mahasiswa GPM
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Rekap & Analitik Survei Kepuasan Mahasiswa (GPM)',
+        '📊 Survei Kepuasan GPM',
+        'edit_posts',
+        'ppb-survei-manager',
+        'ppb_render_survei_admin_page'
     );
 
     // 10. Dokumen Mutu (Link Google Drive)
@@ -162,6 +229,7 @@ add_action('admin_menu', function() {
     remove_menu_page('ppb-spotlight-beranda');
     remove_menu_page('bk-direktori-dosen');
     remove_menu_page('ppb-elibrary-manager');
+    remove_menu_page('ppb-survei-manager');
     remove_menu_page('edit.php?post_type=dosen');
     remove_menu_page('edit.php?post_type=ppb_dosen');
     remove_menu_page('edit.php?post_type=ppb_dokumen');
@@ -183,6 +251,15 @@ function ppb_render_portal_hub_dashboard() {
     $count_dokumen = wp_count_posts('ppb_dokumen')->publish ?: 8;
     $count_jadwal  = wp_count_posts('ppb_jadwal')->publish ?: 5;
     $count_berita  = wp_count_posts('post')->publish ?: 2;
+    $mk_list       = function_exists('ppb_get_mata_kuliah_list') ? ppb_get_mata_kuliah_list(true) : array();
+    $count_matkul  = is_array($mk_list) ? count($mk_list) : 0;
+    $lamdik_cfg    = function_exists('ppb_get_lamdik_settings') ? ppb_get_lamdik_settings() : array();
+    $lamdik_filled = 0;
+    if (!empty($lamdik_cfg['kriteria']) && is_array($lamdik_cfg['kriteria'])) {
+        foreach ($lamdik_cfg['kriteria'] as $kr) {
+            if (!empty($kr['drive_url'])) $lamdik_filled++;
+        }
+    }
     $elib_items    = function_exists('ppb_get_elibrary_items') ? ppb_get_elibrary_items() : array();
     $count_elib    = is_array($elib_items) && !empty($elib_items) ? count($elib_items) : 6;
     $elib_subs     = function_exists('ppb_get_elibrary_submissions') ? ppb_get_elibrary_submissions() : array();
@@ -194,6 +271,10 @@ function ppb_render_portal_hub_dashboard() {
             }
         }
     }
+    $count_inventaris = wp_count_posts('ppb_inventaris_lab')->publish ?: 7;
+    $survei_subs      = function_exists('ppb_get_survei_submissions') ? ppb_get_survei_submissions() : array();
+    $count_survei     = is_array($survei_subs) ? count($survei_subs) : 0;
+    $survei_summary   = function_exists('ppb_calculate_survei_summary') ? ppb_calculate_survei_summary($survei_subs) : array('ikm_pct' => 0);
     ?>
     <div class="wrap ppb-hub-wrap">
         <style>
@@ -205,12 +286,12 @@ function ppb_render_portal_hub_dashboard() {
             .ppb-header-subtitle { font-size: 14px; color: rgba(255, 255, 255, 0.85); margin: 0; max-width: 780px; line-height: 1.6; }
             
             /* Metrik Ringkas */
-            .ppb-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+            .ppb-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 16px; margin-bottom: 28px; }
             .ppb-metric-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: transform 0.15s ease; }
             .ppb-metric-card:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.06); }
-            .ppb-metric-info span { display: block; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
-            .ppb-metric-info strong { display: block; font-size: 26px; font-weight: 800; color: #0D3B22; margin-top: 2px; }
-            .ppb-metric-icon { width: 44px; height: 44px; border-radius: 10px; background: #E8F0EA; color: #0D3B22; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+            .ppb-metric-info span { display: block; font-size: 11.5px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+            .ppb-metric-info strong { display: block; font-size: 24px; font-weight: 800; color: #0D3B22; margin-top: 2px; }
+            .ppb-metric-icon { width: 42px; height: 42px; border-radius: 10px; background: #E8F0EA; color: #0D3B22; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
 
             /* Grid Kartu Aksi */
             .ppb-actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 32px; }
@@ -249,7 +330,7 @@ function ppb_render_portal_hub_dashboard() {
             <span class="ppb-header-badge">⭐ Jurusan PPB / Prodi BK FIP UNM</span>
             <h1 class="ppb-header-title">Pusat Kendali Portal Web PPB</h1>
             <p class="ppb-header-subtitle">
-                Selamat datang di pusat pengelolaan mandiri website. Seluruh data dosen, tautan berkas Google Drive, jadwal ujian, e-library modul, dan tata letak menu dapat Anda atur langsung melalui tombol di bawah ini tanpa perlu memahami kode pemrograman.
+                Selamat datang di pusat pengelolaan mandiri website. Seluruh data dosen, mata kuliah &amp; RPS, link Drive akreditasi LAMDIK, survei kepuasan GPM, inventaris Lab BK, sarana prasarana, hibah PNBP, E-Library, dan menu dapat Anda atur langsung melalui tombol di bawah ini.
             </p>
         </div>
 
@@ -264,6 +345,34 @@ function ppb_render_portal_hub_dashboard() {
             </div>
             <div class="ppb-metric-card">
                 <div class="ppb-metric-info">
+                    <span>Mata Kuliah OBE</span>
+                    <strong><?php echo esc_html($count_matkul); ?></strong>
+                </div>
+                <div class="ppb-metric-icon">📖</div>
+            </div>
+            <div class="ppb-metric-card">
+                <div class="ppb-metric-info">
+                    <span>Eviden LAMDIK</span>
+                    <strong><?php echo esc_html($lamdik_filled); ?>/9</strong>
+                </div>
+                <div class="ppb-metric-icon">🏅</div>
+            </div>
+            <div class="ppb-metric-card">
+                <div class="ppb-metric-info">
+                    <span>Responden Survei</span>
+                    <strong><?php echo esc_html($count_survei); ?></strong>
+                </div>
+                <div class="ppb-metric-icon">📊</div>
+            </div>
+            <div class="ppb-metric-card">
+                <div class="ppb-metric-info">
+                    <span>Inventaris Lab</span>
+                    <strong><?php echo esc_html($count_inventaris); ?></strong>
+                </div>
+                <div class="ppb-metric-icon">🧪</div>
+            </div>
+            <div class="ppb-metric-card">
+                <div class="ppb-metric-info">
                     <span>Modul E-Library</span>
                     <strong><?php echo esc_html($count_elib); ?></strong>
                 </div>
@@ -271,24 +380,17 @@ function ppb_render_portal_hub_dashboard() {
             </div>
             <div class="ppb-metric-card">
                 <div class="ppb-metric-info">
-                    <span>Dokumen Mutu (Drive)</span>
+                    <span>Dokumen Mutu</span>
                     <strong><?php echo esc_html($count_dokumen); ?></strong>
                 </div>
                 <div class="ppb-metric-icon">📂</div>
             </div>
             <div class="ppb-metric-card">
                 <div class="ppb-metric-info">
-                    <span>Jadwal Ujian Aktif</span>
-                    <strong><?php echo esc_html($count_jadwal); ?></strong>
+                    <span>Jadwal &amp; Berita</span>
+                    <strong><?php echo esc_html($count_jadwal + $count_berita); ?></strong>
                 </div>
                 <div class="ppb-metric-icon">📅</div>
-            </div>
-            <div class="ppb-metric-card">
-                <div class="ppb-metric-info">
-                    <span>Berita & Artikel</span>
-                    <strong><?php echo esc_html($count_berita); ?></strong>
-                </div>
-                <div class="ppb-metric-icon">📢</div>
             </div>
         </div>
 
@@ -319,12 +421,81 @@ function ppb_render_portal_hub_dashboard() {
                         <div class="ppb-card-icon green">👥</div>
                         <div class="ppb-card-text">
                             <h3>Data Dosen & Pengajar</h3>
-                            <p>Kelola profil dosen, gelar, NIP, pangkat akademik (Guru Besar, Lektor Kepala, dll.), foto potret 4:5, dan profil SINTA.</p>
+                            <p>Kelola profil dosen, gelar, NIP, pangkat akademik, foto potret 4:5, profil SINTA, serta pilihan mata kuliah yang diampu.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
                     <a href="<?php echo admin_url('admin.php?page=bk-direktori-dosen'); ?>" class="ppb-btn ppb-btn-primary">👨‍🏫 Kelola Data &amp; Direktori Dosen (<?php echo esc_html($count_dosen); ?>)</a>
+                </div>
+            </div>
+
+            <!-- 1b. Mata Kuliah & Auto-Sync Dosen -->
+            <div class="ppb-action-card">
+                <div>
+                    <div class="ppb-card-top">
+                        <div class="ppb-card-icon gold">📖</div>
+                        <div class="ppb-card-text">
+                            <h3>Mata Kuliah OBE &amp; RPS/SAP</h3>
+                            <p>Kelola daftar mata kuliah S1/S2/S3, upload file RPS &amp; SAP, serta kaitkan ke dosen agar otomatis tersinkron ke profil dosen.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-mata-kuliah-manager'); ?>" class="ppb-btn ppb-btn-gold">📚 Kelola Mata Kuliah (<?php echo esc_html($count_matkul); ?>)</a>
+                    <a href="<?php echo esc_url(home_url('/akademik/kurikulum/')); ?>" target="_blank" class="ppb-btn ppb-btn-secondary">↗ Kurikulum Publik</a>
+                </div>
+            </div>
+
+            <!-- 1c. Akreditasi & LAMDIK -->
+            <div class="ppb-action-card">
+                <div>
+                    <div class="ppb-card-top">
+                        <div class="ppb-card-icon dark">🏅</div>
+                        <div class="ppb-card-text">
+                            <h3>Akreditasi &amp; Link Drive LAMDIK</h3>
+                            <p>Atur tautan Google Drive Folder Utama, LED, LKPS, 9 Kriteria Eviden, Renstra/Renop UPM, dan Sertifikat S1/S2/S3.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-lamdik-settings'); ?>" class="ppb-btn ppb-btn-gold">🏅 Atur Link Drive LAMDIK (<?php echo esc_html($lamdik_filled); ?>/9)</a>
+                    <a href="<?php echo esc_url(home_url('/akreditasi/')); ?>" target="_blank" class="ppb-btn ppb-btn-secondary">↗ Hub Akreditasi</a>
+                </div>
+            </div>
+
+            <!-- 1d. Dokumen Akademik, Hibah PNBP & Jurnal -->
+            <div class="ppb-action-card">
+                <div>
+                    <div class="ppb-card-top">
+                        <div class="ppb-card-icon blue">⚖️</div>
+                        <div class="ppb-card-text">
+                            <h3>Akademik, Hibah PNBP &amp; Jurnal</h3>
+                            <p>Kelola tautan Buku Kurikulum, SK Senat, Rubrik OBE, MoA, Roadmap Riset, serta data Hibah PNBP &amp; Jurnal Prodi BK.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-akademik-settings&tab=tautan'); ?>" class="ppb-btn ppb-btn-primary">⚖️ Tautan &amp; MoA</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-akademik-settings&tab=pnbp'); ?>" class="ppb-btn ppb-btn-secondary">🔬 Hibah PNBP</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-akademik-settings&tab=jurnal'); ?>" class="ppb-btn ppb-btn-secondary">📰 Jurnal BK</a>
+                </div>
+            </div>
+
+            <!-- 1e. Survei Kepuasan Mahasiswa GPM -->
+            <div class="ppb-action-card">
+                <div>
+                    <div class="ppb-card-top">
+                        <div class="ppb-card-icon green">📊</div>
+                        <div class="ppb-card-text">
+                            <h3>Survei Kepuasan Mahasiswa (GPM)</h3>
+                            <p>Pantau IKM (<?php echo esc_html(number_format((float) ($survei_summary['ikm_pct'] ?? 0), 1)); ?>%), kelola periode kuesioner /survei/, lihat saran mahasiswa, dan ekspor CSV UTF-8 untuk AMI.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-survei-manager'); ?>" class="ppb-btn ppb-btn-primary">📊 Analitik Survei (<?php echo esc_html($count_survei); ?>)</a>
+                    <a href="<?php echo esc_url(home_url('/survei/')); ?>" target="_blank" class="ppb-btn ppb-btn-secondary">↗ Buka /survei/</a>
                 </div>
             </div>
 
@@ -335,7 +506,7 @@ function ppb_render_portal_hub_dashboard() {
                         <div class="ppb-card-icon gold">📚</div>
                         <div class="ppb-card-text">
                             <h3>E-Library &amp; Kurasi Naskah</h3>
-                            <p>Kelola katalog modul praktikum (ELB-01..ELB-xx), buku pedoman PPL/Skripsi, tautan jurnal JKBK/PJEC, dan antrean usulan unggah modul dosen.</p>
+                            <p>Kelola katalog modul praktikum (ELB-01..ELB-xx), unggah PDF lewat Pustaka Media, tautan jurnal, dan kurasi naskah masuk.</p>
                         </div>
                     </div>
                 </div>
@@ -351,13 +522,13 @@ function ppb_render_portal_hub_dashboard() {
                     <div class="ppb-card-top">
                         <div class="ppb-card-icon gold">📂</div>
                         <div class="ppb-card-text">
-                            <h3>Dokumen Mutu & Link Drive</h3>
-                            <p>Publikasikan link Google Drive berkas Renstra, SK, dan Regulasi tanpa membebani server hosting.</p>
+                            <h3>Dokumen Mutu &amp; Link Drive</h3>
+                            <p>Publikasikan link Google Drive atau unggah berkas Renstra, SK, dan Regulasi tanpa membebani server hosting.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
-                    <a href="<?php echo admin_url('post-new.php?post_type=ppb_dokumen'); ?>" class="ppb-btn ppb-btn-gold">➕ Tambah Link Drive</a>
+                    <a href="<?php echo admin_url('post-new.php?post_type=ppb_dokumen'); ?>" class="ppb-btn ppb-btn-gold">➕ Tambah Link / File</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_dokumen'); ?>" class="ppb-btn ppb-btn-secondary">📋 Semua Dokumen</a>
                 </div>
             </div>
@@ -368,7 +539,7 @@ function ppb_render_portal_hub_dashboard() {
                     <div class="ppb-card-top">
                         <div class="ppb-card-icon blue">📅</div>
                         <div class="ppb-card-text">
-                            <h3>Jadwal Seminar & Ujian</h3>
+                            <h3>Jadwal Seminar &amp; Ujian</h3>
                             <p>Publikasikan jadwal seminar proposal, hasil, dan ujian tutup skripsi mahasiswa secara berkala.</p>
                         </div>
                     </div>
@@ -379,37 +550,41 @@ function ppb_render_portal_hub_dashboard() {
                 </div>
             </div>
 
-            <!-- 5. Kemahasiswaan -->
+            <!-- 5. Kemahasiswaan, Maba & MBKM -->
             <div class="ppb-action-card">
                 <div>
                     <div class="ppb-card-top">
                         <div class="ppb-card-icon purple">🏆</div>
                         <div class="ppb-card-text">
-                            <h3>Prestasi & Karya Mahasiswa</h3>
-                            <p>Publikasikan rekam jejak juara mahasiswa dan etalase karya inovasi/konseling bimbingan mahasiswa.</p>
+                            <h3>Kemahasiswaan, Maba &amp; MBKM</h3>
+                            <p>Kelola prestasi, karya inovasi, statistik mahasiswa, Tracer Study, tren daya tampung Maba, dan Pameran MBKM / Kemanusiaan.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=statistik'); ?>" class="ppb-btn ppb-btn-primary">📊 Maba &amp; Tracer</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=mbkm'); ?>" class="ppb-btn ppb-btn-secondary">🤝 MBKM</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_prestasi'); ?>" class="ppb-btn ppb-btn-secondary">🏅 Prestasi</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_karya'); ?>" class="ppb-btn ppb-btn-secondary">🎨 Karya</a>
                 </div>
             </div>
 
-            <!-- 6. Layanan & SOP -->
+            <!-- 6. Layanan, Lab BK & Sarpras -->
             <div class="ppb-action-card">
                 <div>
                     <div class="ppb-card-top">
                         <div class="ppb-card-icon orange">📋</div>
                         <div class="ppb-card-text">
-                            <h3>Layanan & Template SOP</h3>
-                            <p>Kelola formulir download surat permohonan, alur prosedur SOP layanan mahasiswa, dan inventaris lab.</p>
+                            <h3>Layanan, Lab BK &amp; Sarpras</h3>
+                            <p>Kelola hotline &amp; SIPADU, kegiatan &amp; lomba Lab BK, fasilitas &amp; foto Sarpras, inventaris alat tes, template surat, dan SOP.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
-                    <a href="<?php echo admin_url('edit.php?post_type=ppb_template_dok'); ?>" class="ppb-btn ppb-btn-secondary">📄 Template Surat</a>
-                    <a href="<?php echo admin_url('edit.php?post_type=ppb_alur_sop'); ?>" class="ppb-btn ppb-btn-secondary">🔄 Alur SOP</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-layanan-settings&tab=umum'); ?>" class="ppb-btn ppb-btn-primary">⚙️ Layanan</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-layanan-settings&tab=lab_kegiatan'); ?>" class="ppb-btn ppb-btn-secondary">🧪 Kegiatan &amp; Lomba</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-layanan-settings&tab=sarpras'); ?>" class="ppb-btn ppb-btn-secondary">🏛️ Sarpras</a>
+                    <a href="<?php echo admin_url('edit.php?post_type=ppb_inventaris_lab'); ?>" class="ppb-btn ppb-btn-secondary">🔬 Alat Lab</a>
                 </div>
             </div>
 

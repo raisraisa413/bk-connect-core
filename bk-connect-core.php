@@ -286,10 +286,15 @@ add_action('admin_footer', function() {
 });
 
 require_once __DIR__ . '/bk-fonts.php';
+require_once __DIR__ . '/ppb-admin-helpers.php';
 require_once __DIR__ . '/ppb-portal-hub.php';
+require_once __DIR__ . '/ppb-admin-matkul.php';
+require_once __DIR__ . '/ppb-admin-lamdik.php';
 require_once __DIR__ . '/ppb-admin-akademik.php';
 require_once __DIR__ . '/ppb-admin-berita.php';
 require_once __DIR__ . '/ppb-admin-spotlight.php';
 require_once __DIR__ . '/ppb-admin-data.php';
 require_once __DIR__ . '/ppb-admin-kemahasiswaan.php';
 require_once __DIR__ . '/ppb-admin-layanan.php';
+require_once __DIR__ . '/ppb-admin-survei.php';
+

@@ -354,57 +354,789 @@ function ppb_akademik_register_settings_page() {
 // Handled by ppb-portal-hub
 // add_action('admin_menu', 'ppb_akademik_register_settings_page');
 
-if (!function_exists('ppb_akademik_render_settings_page')) {
-function ppb_akademik_render_settings_page() {
-    if (isset($_POST['ppb_save_akademik_options']) && check_admin_referer('ppb_akademik_options_verify')) {
-        update_option('ppb_link_buku_kurikulum', esc_url_raw($_POST['ppb_link_buku_kurikulum']));
-        update_option('ppb_link_sk_kurikulum', esc_url_raw($_POST['ppb_link_sk_kurikulum']));
-        update_option('ppb_link_pedoman_penilaian', esc_url_raw($_POST['ppb_link_pedoman_penilaian']));
-        update_option('ppb_link_pedoman_skripsi', esc_url_raw($_POST['ppb_link_pedoman_skripsi']));
-        echo '<div class="notice notice-success is-dismissible"><p><strong>Tautan Dokumen Akademik berhasil diperbarui!</strong></p></div>';
+if (!function_exists('ppb_akademik_get_all_links')) {
+function ppb_akademik_get_all_links() {
+    $defs = [
+        'buku_kurikulum'    => ['ppb_link_buku_kurikulum', 'https://drive.google.com/file/d/1_Buku_Kurikulum_OBE_BK_UNM/view?usp=sharing'],
+        'sk_kurikulum'      => ['ppb_link_sk_kurikulum', 'https://drive.google.com/file/d/1_SK_Senat_Kurikulum_OBE/view?usp=sharing'],
+        'pedoman_penilaian' => ['ppb_link_pedoman_penilaian', 'https://drive.google.com/file/d/1_Panduan_Penilaian_OBE_BK/view?usp=sharing'],
+        'pedoman_skripsi'   => ['ppb_link_pedoman_skripsi', 'https://drive.google.com/drive/folders/1_Pedoman_Skripsi_BK_UNM?usp=sharing'],
+        'rubrik_konseling'  => ['ppb_link_rubrik_konseling', ''],
+        'rubrik_project'    => ['ppb_link_rubrik_project', ''],
+        'sk_kepakaran'      => ['ppb_link_sk_kepakaran', ''],
+        'moa_pendidikan'    => ['ppb_link_moa_pendidikan', ''],
+        'moa_penelitian'    => ['ppb_link_moa_penelitian', ''],
+        'moa_pkm'           => ['ppb_link_moa_pkm', ''],
+        'roadmap_p1_sk'     => ['ppb_link_roadmap_pilar1_sk', 'https://drive.google.com/file/d/1_Pengesahan_Roadmap_Pilar1/view?usp=sharing'],
+        'roadmap_p1_doc'    => ['ppb_link_roadmap_pilar1_doc', 'https://drive.google.com/file/d/1_Dokumen_Roadmap_Riset_Pilar1/view?usp=sharing'],
+        'roadmap_p2_sk'     => ['ppb_link_roadmap_pilar2_sk', 'https://drive.google.com/file/d/1_Pengesahan_Roadmap_Pilar2/view?usp=sharing'],
+        'roadmap_p2_doc'    => ['ppb_link_roadmap_pilar2_doc', 'https://drive.google.com/file/d/1_Dokumen_Roadmap_Riset_Pilar2/view?usp=sharing'],
+        'roadmap_p3_sk'     => ['ppb_link_roadmap_pilar3_sk', 'https://drive.google.com/file/d/1_Pengesahan_Roadmap_Pilar3/view?usp=sharing'],
+        'roadmap_p3_doc'    => ['ppb_link_roadmap_pilar3_doc', 'https://drive.google.com/file/d/1_Dokumen_Roadmap_Riset_Pilar3/view?usp=sharing'],
+    ];
+
+    $out = [];
+    foreach ($defs as $k => $pair) {
+        $opt_name = $pair[0];
+        $default  = $pair[1];
+        $val = get_option($opt_name, null);
+        if ($val === null) {
+            $val = $default;
+        }
+        $out[$k] = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($val) : esc_url_raw((string) $val);
     }
+    return $out;
+}
+}
 
-    $link_kurikulum = get_option('ppb_link_buku_kurikulum', 'https://drive.google.com/file/d/1_Buku_Kurikulum_OBE_BK_UNM/view?usp=sharing');
-    $link_sk        = get_option('ppb_link_sk_kurikulum', 'https://drive.google.com/file/d/1_SK_Senat_Kurikulum_OBE/view?usp=sharing');
-    $link_pedoman   = get_option('ppb_link_pedoman_penilaian', 'https://drive.google.com/file/d/1_Panduan_Penilaian_OBE_BK/view?usp=sharing');
-    $link_skripsi   = get_option('ppb_link_pedoman_skripsi', 'https://drive.google.com/drive/folders/1_Pedoman_Skripsi_BK_UNM?usp=sharing');
+if (!function_exists('ppb_get_mis_pnbp_defaults')) {
+function ppb_get_mis_pnbp_defaults() {
+    return [
+        'riset' => [
+            [
+                'tahun'       => '2024',
+                'skema'       => 'Penelitian Unggulan PNBP',
+                'judul'       => 'Pengembangan Platform Asesmen Karier Digital Berbasis Kecerdasan Emosional Mahasiswa Generasi Z',
+                'ketua'       => 'Prof. Dr. Abdullah Pandang, M.Pd',
+                'anggota'     => 'Dr. Kartika Sari, M.Pd., 3 Mahasiswa',
+                'dana'        => 'Rp 45.000.000',
+                'luaran'      => 'Artikel Sinta 2 & Aplikasi Web HKI',
+                'dokumen_url' => '',
+            ],
+            [
+                'tahun'       => '2024',
+                'skema'       => 'Penelitian Terapan PNBP',
+                'judul'       => 'Model Konseling Kelompok Pendekatan Mindful Self-Compassion untuk Menurunkan Stres Akademik Mahasiswa Skripsi',
+                'ketua'       => 'Dr. Farida Aryani, M.Pd',
+                'anggota'     => 'Suciani Latif, S.Pd., M.Pd',
+                'dana'        => 'Rp 32.500.000',
+                'luaran'      => 'Modul Intervensi Ber-ISBN & Jurnal Terindeks',
+                'dokumen_url' => '',
+            ],
+            [
+                'tahun'       => '2023',
+                'skema'       => 'Penelitian Dasar Keilmuan',
+                'judul'       => 'Validasi Instrumen Asesmen Literasi Kesehatan Mental Siswa SMA/SMK Se-Sulawesi Selatan',
+                'ketua'       => 'Dr. Muhammad Anas, M.Si',
+                'anggota'     => 'Dr. Akhmad Harum, S.Pd., M.Pd',
+                'dana'        => 'Rp 28.000.000',
+                'luaran'      => 'Skala Psikometrik Baku & Hak Cipta',
+                'dokumen_url' => '',
+            ],
+        ],
+        'pkm' => [
+            [
+                'tahun'       => '2024',
+                'skema'       => 'PkM Kemitraan Sekolah',
+                'judul'       => 'Pelatihan Peer-Counselor Anti-Bullying & Psychological First Aid Bagi Guru BK SMA/SMK Kota Makassar',
+                'ketua'       => 'Dr. Suciani Latif, S.Pd., M.Pd',
+                'mitra'       => 'MGBK Kota Makassar (25 Sekolah)',
+                'dana'        => 'Rp 25.000.000',
+                'luaran'      => 'Panduan Anti-Bullying & Sertifikasi Peer Counselor',
+                'dokumen_url' => '',
+            ],
+            [
+                'tahun'       => '2024',
+                'skema'       => 'PkM Wilayah 3T',
+                'judul'       => 'Pendampingan Manajemen Bimbingan Karier Terpadu Berbasis Potensi Daerah di Kepulauan Pangkep',
+                'ketua'       => 'Dr. Nur Fadhilah Umar, S.Pd., M.Pd',
+                'mitra'       => 'SMAN 3 & SMKN 2 Pangkajene Kepulauan',
+                'dana'        => 'Rp 22.000.000',
+                'luaran'      => 'Publikasi Jurnal Pengabdian & Video Dokumentasi',
+                'dokumen_url' => '',
+            ],
+            [
+                'tahun'       => '2023',
+                'skema'       => 'PkM Pemberdayaan Masyarakat',
+                'judul'       => 'Workshop Kesehatan Mental Keluarga dan Pola Asuh Positif di Era Digital Bagi Orang Tua Siswa SMP',
+                'ketua'       => 'Prof. Dr. Sidin Ali, M.Pd',
+                'mitra'       => 'Komite Sekolah SMPN 6 Makassar',
+                'dana'        => 'Rp 20.000.000',
+                'luaran'      => 'Booklet Parenting Digital & Laporan PkM',
+                'dokumen_url' => '',
+            ],
+        ],
+    ];
+}
+}
+
+if (!function_exists('ppb_get_mis_pnbp_data')) {
+function ppb_get_mis_pnbp_data() {
+    $defaults = ppb_get_mis_pnbp_defaults();
+    $saved = get_option('ppb_mis_pnbp_data', null);
+    if (!is_array($saved) || (!isset($saved['riset']) && !isset($saved['pkm']))) {
+        return $defaults;
+    }
+    return [
+        'riset' => (isset($saved['riset']) && is_array($saved['riset'])) ? array_values($saved['riset']) : $defaults['riset'],
+        'pkm'   => (isset($saved['pkm']) && is_array($saved['pkm'])) ? array_values($saved['pkm']) : $defaults['pkm'],
+    ];
+}
+}
+
+if (!function_exists('ppb_get_jurnal_bk_defaults')) {
+function ppb_get_jurnal_bk_defaults() {
+    return [
+        [
+            'badge'      => '🏅 Jurnal Resmi Prodi',
+            'tema'       => 'green',
+            'issn'       => 'ISSN (Online): 2620-xxxx',
+            'nama'       => 'Jurnal Bimbingan dan Konseling (JBK)',
+            'deskripsi'  => 'Berkala ilmiah resmi Program Studi Bimbingan dan Konseling FIP UNM yang menerbitkan naskah hasil penelitian eksperimen konseling, asesmen psikologis pendidikan, dan inovasi bimbingan karier.',
+            'penerbit'   => 'Prodi Bimbingan dan Konseling FIP UNM',
+            'frekuensi'  => '2 Kali Setahun (Mei & November)',
+            'pengindeks' => 'SINTA, Google Scholar, Garuda, Crossref DOI',
+            'ojs_url'    => 'https://ojs.unm.ac.id/JKBK',
+            'submit_url' => 'https://ojs.unm.ac.id/JKBK/about/submissions',
+        ],
+        [
+            'badge'      => '🤝 Jurnal Pengabdian & Hilirisasi',
+            'tema'       => 'gold',
+            'issn'       => 'ISSN (Online): 2745-xxxx',
+            'nama'       => 'Jurnal Pengabdian Konseling Nusantara (JPKN)',
+            'deskripsi'  => 'Wadah diseminasi program pengabdian kepada masyarakat, inovasi intervensi psikoedukatif, dan kolaborasi pemberdayaan konselor di sekolah serta masyarakat luas.',
+            'penerbit'   => 'Laboratorium & Prodi BK FIP UNM',
+            'frekuensi'  => '2 Kali Setahun (Juni & Desember)',
+            'pengindeks' => 'Google Scholar, Garuda Kemdikbud, Dimensions',
+            'ojs_url'    => 'https://ojs.unm.ac.id/index',
+            'submit_url' => '',
+        ],
+    ];
+}
+}
+
+if (!function_exists('ppb_get_jurnal_bk_data')) {
+function ppb_get_jurnal_bk_data() {
+    $saved = get_option('ppb_jurnal_bk_data', null);
+    if (!is_array($saved) || empty($saved)) {
+        return ppb_get_jurnal_bk_defaults();
+    }
+    return array_values($saved);
+}
+}
+
+if (!function_exists('ppb_render_jurnal_cards_grid_html')) {
+function ppb_render_jurnal_cards_grid_html($jurnal_list = null) {
+    if (!is_array($jurnal_list)) {
+        $jurnal_list = ppb_get_jurnal_bk_data();
+    }
+    $themes = [
+        'green' => ['bg' => '#DCFCE7', 'fg' => '#166534', 'bd' => '#86EFAC'],
+        'gold'  => ['bg' => '#FEF3C7', 'fg' => '#92400E', 'bd' => '#FCD34D'],
+        'blue'  => ['bg' => '#E0E7FF', 'fg' => '#3730A3', 'bd' => '#A5B4FC'],
+    ];
+    ob_start();
     ?>
-    <div class="wrap" style="max-width:850px;font-family:'Plus Jakarta Sans',sans-serif;">
-        <h1 style="font-family:'Fraunces',Georgia,serif;color:#0D3B22;font-size:26px;margin-bottom:8px;">Pengaturan Tautan Google Drive Dokumen Akademik</h1>
-        <p style="color:#64748b;font-size:13px;margin-bottom:24px;">Admin dapat memperbarui link Google Drive untuk Buku Kurikulum OBE, SK Senat, dan Pedoman Penilaian yang tampil di seluruh tombol website.</p>
-
-        <form method="post" action="">
-            <?php wp_nonce_field('ppb_akademik_options_verify'); ?>
-            <div style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:24px;box-shadow:0 4px 12px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:18px;">
+    <div id="ppbJurnalGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:24px;margin-bottom:36px;">
+        <?php foreach ($jurnal_list as $jr) :
+            $tm         = $themes[$jr['tema'] ?? 'green'] ?? $themes['green'];
+            $ojs_url    = !empty($jr['ojs_url']) && function_exists('ppb_clean_document_url')
+                ? ppb_clean_document_url($jr['ojs_url'])
+                : trim((string) ($jr['ojs_url'] ?? ''));
+            $submit_url = !empty($jr['submit_url']) && function_exists('ppb_clean_document_url')
+                ? ppb_clean_document_url($jr['submit_url'])
+                : trim((string) ($jr['submit_url'] ?? ''));
+        ?>
+            <div style="background:#ffffff;border:1.5px solid #D4E3D8;border-radius:18px;padding:26px;box-shadow:0 6px 20px rgba(0,0,0,0.04);display:flex;flex-direction:column;justify-content:space-between;">
                 <div>
-                    <label style="display:block;font-weight:600;font-size:13px;color:#1e293b;margin-bottom:6px;">📘 Tautan Google Drive: Buku Kurikulum OBE Lengkap</label>
-                    <input type="url" name="ppb_link_buku_kurikulum" value="<?php echo esc_attr($link_kurikulum); ?>" style="width:100%;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" required />
-                    <span style="font-size:11px;color:#64748b;">Tampil pada tombol utama halaman /akademik/kurikulum/</span>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                        <span style="background:<?php echo esc_attr($tm['bg']); ?>;color:<?php echo esc_attr($tm['fg']); ?>;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:6px;border:1px solid <?php echo esc_attr($tm['bd']); ?>;">
+                            <?php echo esc_html($jr['badge'] ?? '🏅 Jurnal Resmi Prodi'); ?>
+                        </span>
+                        <span style="font-size:12px;color:#6B7280;font-weight:600;"><?php echo esc_html($jr['issn'] ?? ''); ?></span>
+                    </div>
+                    <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#0D3B22;margin:0 0 10px;line-height:1.3;">
+                        <?php echo esc_html($jr['nama'] ?? ''); ?>
+                    </h3>
+                    <p style="font-size:13.5px;color:#4B5563;line-height:1.6;margin:0 0 16px;">
+                        <?php echo esc_html($jr['deskripsi'] ?? ''); ?>
+                    </p>
+                    <div style="font-size:12.5px;background:#FAF8F5;padding:12px 14px;border-radius:10px;border:1px solid #E5E7EB;margin-bottom:18px;line-height:1.6;color:#374151;">
+                        <div><strong>Penerbit:</strong> <?php echo esc_html($jr['penerbit'] ?? '-'); ?></div>
+                        <div><strong>Frekuensi:</strong> <?php echo esc_html($jr['frekuensi'] ?? '-'); ?></div>
+                        <div><strong>Pengindeks:</strong> <?php echo esc_html($jr['pengindeks'] ?? '-'); ?></div>
+                    </div>
                 </div>
-
-                <div>
-                    <label style="display:block;font-weight:600;font-size:13px;color:#1e293b;margin-bottom:6px;">🏛️ Tautan Google Drive: SK Senat Pengesahan Kurikulum</label>
-                    <input type="url" name="ppb_link_sk_kurikulum" value="<?php echo esc_attr($link_sk); ?>" style="width:100%;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" required />
-                    <span style="font-size:11px;color:#64748b;">Tampil pada tombol SK Senat halaman /akademik/kurikulum/</span>
-                </div>
-
-                <div>
-                    <label style="display:block;font-weight:600;font-size:13px;color:#1e293b;margin-bottom:6px;">⚖️ Tautan Google Drive: Dokumen Resmi Pedoman Penilaian OBE</label>
-                    <input type="url" name="ppb_link_pedoman_penilaian" value="<?php echo esc_attr($link_pedoman); ?>" style="width:100%;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" required />
-                    <span style="font-size:11px;color:#64748b;">Tampil pada tombol utama halaman /akademik/panduan/</span>
-                </div>
-
-                <div>
-                    <label style="display:block;font-weight:600;font-size:13px;color:#1e293b;margin-bottom:6px;">📁 Tautan Google Drive: Folder Pedoman & Template Skripsi</label>
-                    <input type="url" name="ppb_link_pedoman_skripsi" value="<?php echo esc_attr($link_skripsi); ?>" style="width:100%;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" required />
-                    <span style="font-size:11px;color:#64748b;">Tampil pada repositori unduh formulir dan panduan skripsi</span>
-                </div>
-
-                <div style="margin-top:10px;">
-                    <button type="submit" name="ppb_save_akademik_options" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;padding:6px 20px;height:auto;font-size:13px;font-weight:700;border-radius:8px;">💾 Simpan Pengaturan Tautan</button>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <?php if ($ojs_url !== '') : ?>
+                        <a href="<?php echo esc_url($ojs_url); ?>" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:13px;font-weight:700;padding:11px 16px;border-radius:10px;text-decoration:none;white-space:nowrap;">
+                            Kunjungi Portal Jurnal OJS &rarr;
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($submit_url !== '') : ?>
+                        <a href="<?php echo esc_url($submit_url); ?>" target="_blank" rel="noopener noreferrer" style="background:#FAF8F5;color:#0D3B22;border:1px solid #D4E3D8;font-size:13px;font-weight:600;padding:11px 14px;border-radius:10px;text-decoration:none;white-space:nowrap;">
+                            Pedoman Submit &#8599;
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
-        </form>
+        <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+}
+
+if (!function_exists('ppb_akademik_render_settings_page')) {
+function ppb_akademik_render_settings_page() {
+    if (!current_user_can('edit_posts')) {
+        wp_die('Anda tidak memiliki izin mengakses halaman ini.');
+    }
+    if (function_exists('ppb_admin_enqueue_media_assets')) {
+        ppb_admin_enqueue_media_assets();
+    }
+
+    $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'tautan';
+    if (!in_array($active_tab, ['tautan', 'pnbp', 'jurnal'], true)) {
+        $active_tab = 'tautan';
+    }
+
+    $option_keys = [
+        'ppb_link_buku_kurikulum',
+        'ppb_link_sk_kurikulum',
+        'ppb_link_pedoman_penilaian',
+        'ppb_link_pedoman_skripsi',
+        'ppb_link_rubrik_konseling',
+        'ppb_link_rubrik_project',
+        'ppb_link_sk_kepakaran',
+        'ppb_link_moa_pendidikan',
+        'ppb_link_moa_penelitian',
+        'ppb_link_moa_pkm',
+        'ppb_link_roadmap_pilar1_sk',
+        'ppb_link_roadmap_pilar1_doc',
+        'ppb_link_roadmap_pilar2_sk',
+        'ppb_link_roadmap_pilar2_doc',
+        'ppb_link_roadmap_pilar3_sk',
+        'ppb_link_roadmap_pilar3_doc',
+    ];
+
+    $notice = '';
+    if (isset($_POST['ppb_save_akademik_options']) && check_admin_referer('ppb_akademik_options_verify')) {
+        $active_tab = 'tautan';
+        foreach ($option_keys as $opt_key) {
+            $raw_val = isset($_POST[$opt_key]) ? wp_unslash($_POST[$opt_key]) : '';
+            $clean_val = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw_val) : esc_url_raw((string) $raw_val);
+            update_option($opt_key, $clean_val, false);
+        }
+        delete_post_meta(13, '_elementor_element_cache');
+        delete_post_meta(16, '_elementor_element_cache');
+        delete_post_meta(31, '_elementor_element_cache');
+        delete_post_meta(35, '_elementor_element_cache');
+        if (class_exists('\\Elementor\\Plugin')) {
+            \Elementor\Plugin::$instance->files_manager->clear_cache();
+        }
+        $notice = '<div class="notice notice-success is-dismissible"><p><strong>✅ Seluruh Tautan &amp; Berkas Dokumen Akademik berhasil diperbarui!</strong></p></div>';
+    }
+
+    // Tab 2: Simpan / Reset MIS PNBP
+    if (isset($_POST['ppb_save_mis_pnbp']) && check_admin_referer('ppb_pnbp_nonce_action', 'ppb_pnbp_nonce')) {
+        $active_tab = 'pnbp';
+        $riset_clean = [];
+        $raw_riset = isset($_POST['riset']) && is_array($_POST['riset']) ? wp_unslash($_POST['riset']) : [];
+        foreach ($raw_riset as $row) {
+            if (!empty($row['delete']) || empty(trim((string) ($row['judul'] ?? '')))) continue;
+            $dok = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($row['dokumen_url'] ?? '') : esc_url_raw((string) ($row['dokumen_url'] ?? ''));
+            $riset_clean[] = [
+                'tahun'       => sanitize_text_field($row['tahun'] ?? date('Y')),
+                'skema'       => sanitize_text_field($row['skema'] ?? 'Penelitian PNBP'),
+                'judul'       => sanitize_text_field($row['judul']),
+                'ketua'       => sanitize_text_field($row['ketua'] ?? ''),
+                'anggota'     => sanitize_text_field($row['anggota'] ?? ''),
+                'dana'        => sanitize_text_field($row['dana'] ?? ''),
+                'luaran'      => sanitize_text_field($row['luaran'] ?? ''),
+                'dokumen_url' => $dok,
+            ];
+        }
+        if (!empty($_POST['new_riset']['judul']) && trim((string) $_POST['new_riset']['judul']) !== '') {
+            $nr = wp_unslash($_POST['new_riset']);
+            $dok = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($nr['dokumen_url'] ?? '') : esc_url_raw((string) ($nr['dokumen_url'] ?? ''));
+            $riset_clean[] = [
+                'tahun'       => sanitize_text_field($nr['tahun'] ?? date('Y')),
+                'skema'       => sanitize_text_field($nr['skema'] ?? 'Penelitian PNBP'),
+                'judul'       => sanitize_text_field($nr['judul']),
+                'ketua'       => sanitize_text_field($nr['ketua'] ?? ''),
+                'anggota'     => sanitize_text_field($nr['anggota'] ?? ''),
+                'dana'        => sanitize_text_field($nr['dana'] ?? ''),
+                'luaran'      => sanitize_text_field($nr['luaran'] ?? ''),
+                'dokumen_url' => $dok,
+            ];
+        }
+
+        $pkm_clean = [];
+        $raw_pkm = isset($_POST['pkm']) && is_array($_POST['pkm']) ? wp_unslash($_POST['pkm']) : [];
+        foreach ($raw_pkm as $row) {
+            if (!empty($row['delete']) || empty(trim((string) ($row['judul'] ?? '')))) continue;
+            $dok = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($row['dokumen_url'] ?? '') : esc_url_raw((string) ($row['dokumen_url'] ?? ''));
+            $pkm_clean[] = [
+                'tahun'       => sanitize_text_field($row['tahun'] ?? date('Y')),
+                'skema'       => sanitize_text_field($row['skema'] ?? 'PkM PNBP'),
+                'judul'       => sanitize_text_field($row['judul']),
+                'ketua'       => sanitize_text_field($row['ketua'] ?? ''),
+                'mitra'       => sanitize_text_field($row['mitra'] ?? ''),
+                'dana'        => sanitize_text_field($row['dana'] ?? ''),
+                'luaran'      => sanitize_text_field($row['luaran'] ?? ''),
+                'dokumen_url' => $dok,
+            ];
+        }
+        if (!empty($_POST['new_pkm']['judul']) && trim((string) $_POST['new_pkm']['judul']) !== '') {
+            $np = wp_unslash($_POST['new_pkm']);
+            $dok = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($np['dokumen_url'] ?? '') : esc_url_raw((string) ($np['dokumen_url'] ?? ''));
+            $pkm_clean[] = [
+                'tahun'       => sanitize_text_field($np['tahun'] ?? date('Y')),
+                'skema'       => sanitize_text_field($np['skema'] ?? 'PkM PNBP'),
+                'judul'       => sanitize_text_field($np['judul']),
+                'ketua'       => sanitize_text_field($np['ketua'] ?? ''),
+                'mitra'       => sanitize_text_field($np['mitra'] ?? ''),
+                'dana'        => sanitize_text_field($np['dana'] ?? ''),
+                'luaran'      => sanitize_text_field($np['luaran'] ?? ''),
+                'dokumen_url' => $dok,
+            ];
+        }
+
+        update_option('ppb_mis_pnbp_data', [
+            'riset' => array_values($riset_clean),
+            'pkm'   => array_values($pkm_clean),
+        ], false);
+        if (class_exists('\\Elementor\\Plugin')) {
+            \Elementor\Plugin::$instance->files_manager->clear_cache();
+        }
+        $notice = '<div class="notice notice-success is-dismissible"><p><strong>🔬 Data MIS PNBP (' . count($riset_clean) . ' Hibah Penelitian &amp; ' . count($pkm_clean) . ' PkM) berhasil disimpan dan langsung tersinkron ke frontend!</strong></p></div>';
+    }
+    if (isset($_POST['ppb_reset_mis_pnbp']) && check_admin_referer('ppb_pnbp_nonce_action', 'ppb_pnbp_nonce')) {
+        $active_tab = 'pnbp';
+        delete_option('ppb_mis_pnbp_data');
+        $notice = '<div class="notice notice-warning is-dismissible"><p>Data Hibah Penelitian &amp; PkM MIS PNBP dikembalikan ke data bawaan.</p></div>';
+    }
+
+    // Tab 3: Simpan / Reset Jurnal Prodi BK
+    if (isset($_POST['ppb_save_jurnal_bk']) && check_admin_referer('ppb_jurnal_nonce_action', 'ppb_jurnal_nonce')) {
+        $active_tab = 'jurnal';
+        $jurnal_clean = [];
+        $raw_j = isset($_POST['jurnal']) && is_array($_POST['jurnal']) ? wp_unslash($_POST['jurnal']) : [];
+        foreach ($raw_j as $row) {
+            if (!empty($row['delete']) || empty(trim((string) ($row['nama'] ?? '')))) continue;
+            $ojs = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($row['ojs_url'] ?? '') : esc_url_raw((string) ($row['ojs_url'] ?? ''));
+            $sub = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($row['submit_url'] ?? '') : esc_url_raw((string) ($row['submit_url'] ?? ''));
+            $tema = in_array(($row['tema'] ?? ''), ['green', 'gold', 'blue'], true) ? $row['tema'] : 'green';
+            $jurnal_clean[] = [
+                'badge'      => sanitize_text_field($row['badge'] ?? '🏅 Jurnal Resmi Prodi'),
+                'tema'       => $tema,
+                'issn'       => sanitize_text_field($row['issn'] ?? ''),
+                'nama'       => sanitize_text_field($row['nama']),
+                'deskripsi'  => sanitize_textarea_field($row['deskripsi'] ?? ''),
+                'penerbit'   => sanitize_text_field($row['penerbit'] ?? ''),
+                'frekuensi'  => sanitize_text_field($row['frekuensi'] ?? ''),
+                'pengindeks' => sanitize_text_field($row['pengindeks'] ?? ''),
+                'ojs_url'    => $ojs,
+                'submit_url' => $sub,
+            ];
+        }
+        if (!empty($_POST['new_jurnal']['nama']) && trim((string) $_POST['new_jurnal']['nama']) !== '') {
+            $nj = wp_unslash($_POST['new_jurnal']);
+            $ojs = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($nj['ojs_url'] ?? '') : esc_url_raw((string) ($nj['ojs_url'] ?? ''));
+            $sub = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($nj['submit_url'] ?? '') : esc_url_raw((string) ($nj['submit_url'] ?? ''));
+            $tema = in_array(($nj['tema'] ?? ''), ['green', 'gold', 'blue'], true) ? $nj['tema'] : 'green';
+            $jurnal_clean[] = [
+                'badge'      => sanitize_text_field($nj['badge'] ?? '🏅 Jurnal Prodi'),
+                'tema'       => $tema,
+                'issn'       => sanitize_text_field($nj['issn'] ?? ''),
+                'nama'       => sanitize_text_field($nj['nama']),
+                'deskripsi'  => sanitize_textarea_field($nj['deskripsi'] ?? ''),
+                'penerbit'   => sanitize_text_field($nj['penerbit'] ?? ''),
+                'frekuensi'  => sanitize_text_field($nj['frekuensi'] ?? ''),
+                'pengindeks' => sanitize_text_field($nj['pengindeks'] ?? ''),
+                'ojs_url'    => $ojs,
+                'submit_url' => $sub,
+            ];
+        }
+
+        update_option('ppb_jurnal_bk_data', array_values($jurnal_clean), false);
+        if (class_exists('\\Elementor\\Plugin')) {
+            \Elementor\Plugin::$instance->files_manager->clear_cache();
+        }
+        $notice = '<div class="notice notice-success is-dismissible"><p><strong>📰 Data Jurnal Prodi BK (' . count($jurnal_clean) . ' jurnal) berhasil disimpan!</strong></p></div>';
+    }
+    if (isset($_POST['ppb_reset_jurnal_bk']) && check_admin_referer('ppb_jurnal_nonce_action', 'ppb_jurnal_nonce')) {
+        $active_tab = 'jurnal';
+        delete_option('ppb_jurnal_bk_data');
+        $notice = '<div class="notice notice-warning is-dismissible"><p>Daftar Jurnal Prodi BK dikembalikan ke data bawaan.</p></div>';
+    }
+
+    $links = ppb_akademik_get_all_links();
+
+    $render_field = function($name, $label, $val, $hint) {
+        echo '<div style="padding-bottom:14px;border-bottom:1px dashed #e2e8f0;">';
+        echo '<label for="' . esc_attr($name) . '" style="display:block;font-weight:700;font-size:13px;color:#1e293b;margin-bottom:6px;">' . esc_html($label) . '</label>';
+        if (function_exists('ppb_render_media_url_control')) {
+            ppb_render_media_url_control([
+                'id'          => $name,
+                'name'        => $name,
+                'value'       => $val,
+                'placeholder' => 'https://drive.google.com/... atau upload berkas WP Media',
+                'title'       => 'Pilih / Upload Dokumen PDF (' . $label . ')',
+                'btn_label'   => '📁 Upload / Pilih PDF',
+            ]);
+        } else {
+            echo '<input type="url" id="' . esc_attr($name) . '" name="' . esc_attr($name) . '" value="' . esc_attr($val) . '" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" />';
+        }
+        echo '<span style="display:block;font-size:11.5px;color:#64748b;margin-top:5px;">' . esc_html($hint) . '</span>';
+        echo '</div>';
+    };
+
+    $tabs = [
+        'tautan' => '⚖️ Tautan Drive, MoA & Roadmap',
+        'pnbp'   => '🔬 Hibah Penelitian & PkM (MIS PNBP)',
+        'jurnal' => '📰 Jurnal & Pengabdian Prodi BK',
+    ];
+    ?>
+    <div class="wrap" style="max-width:1120px;margin:20px auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e293b;">
+        <div style="background:linear-gradient(135deg,#0D3B22 0%,#185333 100%);color:#fff;border-radius:16px;padding:24px 28px;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+            <div>
+                <h1 style="margin:0 0 6px;color:#fff;font-size:23px;font-weight:800;">⚖️ Pusat Tautan Akademik, Hibah PNBP &amp; Jurnal Prodi BK</h1>
+                <p style="margin:0;color:rgba(255,255,255,0.86);font-size:13px;">Kelola link Drive/PDF Kurikulum, MoA &amp; Roadmap, daftar Hibah Penelitian/PkM MIS PNBP, serta portal OJS Jurnal Prodi BK.</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <a href="<?php echo esc_url(home_url('/mis-pnbp/')); ?>" target="_blank" class="button" style="border-radius:8px;">↗ Lihat /mis-pnbp/</a>
+                <a href="<?php echo esc_url(home_url('/jurnal-bk/')); ?>" target="_blank" class="button" style="border-radius:8px;">↗ Lihat /jurnal-bk/</a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-portal-hub')); ?>" class="button" style="border-radius:8px;">← Pusat Kendali</a>
+            </div>
+        </div>
+
+        <nav class="nav-tab-wrapper" style="margin-bottom:20px;">
+            <?php foreach ($tabs as $tk => $tl) : ?>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-akademik-settings&tab=' . $tk)); ?>" class="nav-tab <?php echo $active_tab === $tk ? 'nav-tab-active' : ''; ?>" style="<?php echo $active_tab === $tk ? 'background:#0D3B22;color:#fff;border-color:#0D3B22;' : ''; ?>font-weight:700;">
+                    <?php echo esc_html($tl); ?>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+
+        <?php echo $notice; ?>
+
+        <?php if ($active_tab === 'tautan') : ?>
+            <form method="post" action="">
+                <?php wp_nonce_field('ppb_akademik_options_verify'); ?>
+
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 3px 10px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:14px;">
+                    <h2 style="margin:0;color:#0D3B22;font-size:17px;border-bottom:2px solid #E8F0EA;padding-bottom:8px;">📘 1. Dokumen Kurikulum OBE &amp; Pedoman Akademik</h2>
+                    <?php
+                    $render_field('ppb_link_buku_kurikulum', 'Buku Kurikulum OBE Lengkap', $links['buku_kurikulum'], 'Tampil pada tombol utama di halaman /akademik/kurikulum/.');
+                    $render_field('ppb_link_sk_kurikulum', 'SK Senat Pengesahan Kurikulum', $links['sk_kurikulum'], 'Tampil pada tombol SK Senat di halaman /akademik/kurikulum/.');
+                    $render_field('ppb_link_pedoman_penilaian', 'Dokumen Resmi Pedoman Penilaian OBE', $links['pedoman_penilaian'], 'Tampil pada halaman /akademik/panduan/.');
+                    $render_field('ppb_link_pedoman_skripsi', 'Folder Pedoman & Template Skripsi', $links['pedoman_skripsi'], 'Tampil pada tombol utama di halaman /akademik/panduan/.');
+                    ?>
+                </div>
+
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 3px 10px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:14px;">
+                    <h2 style="margin:0;color:#0D3B22;font-size:17px;border-bottom:2px solid #E8F0EA;padding-bottom:8px;">⚖️ 2. Lembar Rubrik Penilaian OBE &amp; SK Kepakaran Dosen</h2>
+                    <?php
+                    $render_field('ppb_link_rubrik_konseling', 'Lembar Rubrik Kinerja Simulasi Konseling', $links['rubrik_konseling'], 'Tampil pada Tab Rubrik Penilaian di shortcode [ppb_kurikulum_rps_sap].');
+                    $render_field('ppb_link_rubrik_project', 'Lembar Rubrik Penilaian Team-Based Project', $links['rubrik_project'], 'Tampil pada Tab Rubrik Penilaian di shortcode [ppb_kurikulum_rps_sap].');
+                    $render_field('ppb_link_sk_kepakaran', 'Dokumen SK Kepakaran & Konsentrasi Dosen', $links['sk_kepakaran'], 'Tampil pada halaman /profil/kepakaran-dosen/.');
+                    ?>
+                </div>
+
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 3px 10px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:14px;">
+                    <h2 style="margin:0;color:#0D3B22;font-size:17px;border-bottom:2px solid #E8F0EA;padding-bottom:8px;">🤝 3. Rekapitulasi MoA Kerjasama Tridharma (/profil/kerjasama-tridharma/)</h2>
+                    <?php
+                    $render_field('ppb_link_moa_pendidikan', 'Rekap MoA Bidang Pendidikan & MBKM (PDF)', $links['moa_pendidikan'], 'Menggantikan tombol Rekap MoA Pendidikan PDF di /profil/kerjasama-tridharma/.');
+                    $render_field('ppb_link_moa_penelitian', 'Rekap MoA Bidang Penelitian Kolaboratif (PDF)', $links['moa_penelitian'], 'Menggantikan tombol Rekap MoA Penelitian PDF di /profil/kerjasama-tridharma/.');
+                    $render_field('ppb_link_moa_pkm', 'Rekap MoA Bidang Pengabdian Masyarakat / PkM (PDF)', $links['moa_pkm'], 'Menggantikan tombol Rekap MoA PkM PDF di /profil/kerjasama-tridharma/.');
+                    ?>
+                </div>
+
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:14px;">
+                    <h2 style="margin:0;color:#0D3B22;font-size:17px;border-bottom:2px solid #E8F0EA;padding-bottom:8px;">🧭 4. Dokumen &amp; SK Roadmap Riset &amp; PkM (/profil/roadmap/)</h2>
+                    <?php
+                    $render_field('ppb_link_roadmap_pilar1_sk', 'Pilar 1 — Lembar Pengesahan Senat', $links['roadmap_p1_sk'], 'Tombol Lihat Lembar Pengesahan Senat (Pilar 1) di /profil/roadmap/.');
+                    $render_field('ppb_link_roadmap_pilar1_doc', 'Pilar 1 — Dokumen Roadmap Riset Lengkap', $links['roadmap_p1_doc'], 'Tombol Dokumen Roadmap Lengkap (Pilar 1) di /profil/roadmap/.');
+                    $render_field('ppb_link_roadmap_pilar2_sk', 'Pilar 2 — Lembar Pengesahan Senat', $links['roadmap_p2_sk'], 'Tombol Lihat Lembar Pengesahan Senat (Pilar 2) di /profil/roadmap/.');
+                    $render_field('ppb_link_roadmap_pilar2_doc', 'Pilar 2 — Dokumen Roadmap Riset Lengkap', $links['roadmap_p2_doc'], 'Tombol Dokumen Roadmap Lengkap (Pilar 2) di /profil/roadmap/.');
+                    $render_field('ppb_link_roadmap_pilar3_sk', 'Pilar 3 — Lembar Pengesahan Senat', $links['roadmap_p3_sk'], 'Tombol Lihat Lembar Pengesahan Senat (Pilar 3) di /profil/roadmap/.');
+                    $render_field('ppb_link_roadmap_pilar3_doc', 'Pilar 3 — Dokumen Roadmap Riset Lengkap', $links['roadmap_p3_doc'], 'Tombol Dokumen Roadmap Lengkap (Pilar 3) di /profil/roadmap/.');
+                    ?>
+                </div>
+
+                <div style="position:sticky;bottom:14px;background:rgba(255,255,255,0.96);border:1px solid #cbd5e1;border-radius:12px;padding:14px 18px;box-shadow:0 4px 14px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                    <span style="font-size:12.5px;color:#475569;">Kosongkan URL jika dokumen belum tersedia (halaman publik otomatis menandai <em>Segera Tersedia</em> alih-alih tautan mati).</span>
+                    <button type="submit" name="ppb_save_akademik_options" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;padding:7px 22px;height:auto;font-size:13.5px;font-weight:700;border-radius:8px;">💾 Simpan Pengaturan Tautan</button>
+                </div>
+            </form>
+
+        <?php elseif ($active_tab === 'pnbp') :
+            $pnbp_data  = ppb_get_mis_pnbp_data();
+            $riset_list = $pnbp_data['riset'];
+            $pkm_list   = $pnbp_data['pkm'];
+        ?>
+            <form method="post" action="">
+                <?php wp_nonce_field('ppb_pnbp_nonce_action', 'ppb_pnbp_nonce'); ?>
+
+                <!-- Seksi 1: Hibah Penelitian PNBP -->
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;border-bottom:2px solid #E8F0EA;padding-bottom:10px;">
+                        <div>
+                            <h2 style="margin:0;color:#0D3B22;font-size:18px;">🔬 Hibah Penelitian PNBP (<?php echo count($riset_list); ?>)</h2>
+                            <span style="font-size:12px;color:#64748b;">Tampil pada shortcode <code>[ppb_mis_pnbp]</code> dan halaman <code>/mis-pnbp/</code>.</span>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button type="submit" name="ppb_save_mis_pnbp" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan Data MIS PNBP</button>
+                            <button type="submit" name="ppb_reset_mis_pnbp" class="button" onclick="return confirm('Kembalikan data Riset & PkM PNBP ke bawaan?');">↺ Reset Default</button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;gap:12px;margin-bottom:16px;">
+                        <?php foreach ($riset_list as $idx => $r) : ?>
+                            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;background:#fcfdfd;">
+                                <div style="display:grid;grid-template-columns:80px 1fr 1.6fr;gap:10px;margin-bottom:8px;">
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;display:block;margin-bottom:2px;">Tahun</label>
+                                        <input type="text" name="riset[<?php echo $idx; ?>][tahun]" value="<?php echo esc_attr($r['tahun'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;display:block;margin-bottom:2px;">Skema Hibah</label>
+                                        <input type="text" name="riset[<?php echo $idx; ?>][skema]" value="<?php echo esc_attr($r['skema'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;display:block;margin-bottom:2px;">Judul Penelitian</label>
+                                        <input type="text" name="riset[<?php echo $idx; ?>][judul]" value="<?php echo esc_attr($r['judul'] ?? ''); ?>" class="widefat" style="font-weight:600;">
+                                    </div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Ketua Peneliti</label>
+                                        <input type="text" name="riset[<?php echo $idx; ?>][ketua]" value="<?php echo esc_attr($r['ketua'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Anggota / Kolaborator</label>
+                                        <input type="text" name="riset[<?php echo $idx; ?>][anggota]" value="<?php echo esc_attr($r['anggota'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Besaran Dana</label>
+                                        <input type="text" name="riset[<?php echo $idx; ?>][dana]" value="<?php echo esc_attr($r['dana'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Luaran Wajib</label>
+                                        <input type="text" name="riset[<?php echo $idx; ?>][luaran]" value="<?php echo esc_attr($r['luaran'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;">
+                                    <?php ppb_render_media_url_control([
+                                        'id'          => 'riset_dok_' . $idx,
+                                        'name'        => "riset[$idx][dokumen_url]",
+                                        'value'       => $r['dokumen_url'] ?? '',
+                                        'placeholder' => 'Link SK / Laporan Akhir Riset (Google Drive atau Upload PDF)',
+                                        'title'       => 'Pilih / Upload Laporan atau SK Hibah Penelitian',
+                                        'btn_label'   => '📁 Upload / Drive SK',
+                                    ]); ?>
+                                    <label style="color:#b91c1c;font-size:11.5px;font-weight:600;white-space:nowrap;"><input type="checkbox" name="riset[<?php echo $idx; ?>][delete]" value="1"> Hapus</label>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div style="background:#f0fdf4;border:1.5px dashed #166534;border-radius:10px;padding:14px;">
+                        <strong style="display:block;color:#0D3B22;margin-bottom:8px;">➕ Tambah Hibah Penelitian Baru</strong>
+                        <div style="display:grid;grid-template-columns:80px 1fr 1.6fr;gap:10px;margin-bottom:8px;">
+                            <input type="text" name="new_riset[tahun]" placeholder="2025" class="widefat">
+                            <input type="text" name="new_riset[skema]" placeholder="Skema (mis. Penelitian Terapan PNBP)" class="widefat">
+                            <input type="text" name="new_riset[judul]" placeholder="Judul Hibah Penelitian baru (isi untuk menambah)..." class="widefat">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+                            <input type="text" name="new_riset[ketua]" placeholder="Nama Ketua Peneliti" class="widefat">
+                            <input type="text" name="new_riset[anggota]" placeholder="Kolaborator / Mhs" class="widefat">
+                            <input type="text" name="new_riset[dana]" placeholder="Rp ..." class="widefat">
+                            <input type="text" name="new_riset[luaran]" placeholder="Luaran (Artikel/HKI)" class="widefat">
+                        </div>
+                        <?php ppb_render_media_url_control([
+                            'id'          => 'riset_dok_new',
+                            'name'        => 'new_riset[dokumen_url]',
+                            'value'       => '',
+                            'placeholder' => 'Link SK / Laporan Penelitian (opsional)',
+                            'btn_label'   => '📁 Upload / Drive SK',
+                        ]); ?>
+                    </div>
+                </div>
+
+                <!-- Seksi 2: Hibah PkM PNBP -->
+                <div style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;margin-bottom:20px;">
+                    <h2 style="margin:0 0 14px;color:#0D3B22;font-size:18px;border-bottom:2px solid #E8F0EA;padding-bottom:10px;">🤝 Pengabdian kepada Masyarakat (PkM) PNBP (<?php echo count($pkm_list); ?>)</h2>
+
+                    <div style="display:grid;gap:12px;margin-bottom:16px;">
+                        <?php foreach ($pkm_list as $idx => $p) : ?>
+                            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;background:#fcfdfd;">
+                                <div style="display:grid;grid-template-columns:80px 1fr 1.6fr;gap:10px;margin-bottom:8px;">
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;display:block;margin-bottom:2px;">Tahun</label>
+                                        <input type="text" name="pkm[<?php echo $idx; ?>][tahun]" value="<?php echo esc_attr($p['tahun'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;display:block;margin-bottom:2px;">Skema PkM</label>
+                                        <input type="text" name="pkm[<?php echo $idx; ?>][skema]" value="<?php echo esc_attr($p['skema'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:700;display:block;margin-bottom:2px;">Judul Pengabdian</label>
+                                        <input type="text" name="pkm[<?php echo $idx; ?>][judul]" value="<?php echo esc_attr($p['judul'] ?? ''); ?>" class="widefat" style="font-weight:600;">
+                                    </div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Ketua Pelaksana</label>
+                                        <input type="text" name="pkm[<?php echo $idx; ?>][ketua]" value="<?php echo esc_attr($p['ketua'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Mitra Kegiatan</label>
+                                        <input type="text" name="pkm[<?php echo $idx; ?>][mitra]" value="<?php echo esc_attr($p['mitra'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Besaran Dana</label>
+                                        <input type="text" name="pkm[<?php echo $idx; ?>][dana]" value="<?php echo esc_attr($p['dana'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Luaran Kegiatan</label>
+                                        <input type="text" name="pkm[<?php echo $idx; ?>][luaran]" value="<?php echo esc_attr($p['luaran'] ?? ''); ?>" class="widefat">
+                                    </div>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;">
+                                    <?php ppb_render_media_url_control([
+                                        'id'          => 'pkm_dok_' . $idx,
+                                        'name'        => "pkm[$idx][dokumen_url]",
+                                        'value'       => $p['dokumen_url'] ?? '',
+                                        'placeholder' => 'Link SK / Laporan Akhir PkM (Google Drive atau Upload PDF)',
+                                        'title'       => 'Pilih / Upload Laporan atau SK PkM',
+                                        'btn_label'   => '📁 Upload / Drive SK',
+                                    ]); ?>
+                                    <label style="color:#b91c1c;font-size:11.5px;font-weight:600;white-space:nowrap;"><input type="checkbox" name="pkm[<?php echo $idx; ?>][delete]" value="1"> Hapus</label>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div style="background:#fefce8;border:1.5px dashed #ca8a04;border-radius:10px;padding:14px;">
+                        <strong style="display:block;color:#854d0e;margin-bottom:8px;">➕ Tambah Hibah PkM Baru</strong>
+                        <div style="display:grid;grid-template-columns:80px 1fr 1.6fr;gap:10px;margin-bottom:8px;">
+                            <input type="text" name="new_pkm[tahun]" placeholder="2025" class="widefat">
+                            <input type="text" name="new_pkm[skema]" placeholder="Skema (mis. PkM Kemitraan)" class="widefat">
+                            <input type="text" name="new_pkm[judul]" placeholder="Judul Kegiatan PkM baru (isi untuk menambah)..." class="widefat">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+                            <input type="text" name="new_pkm[ketua]" placeholder="Nama Ketua Pelaksana" class="widefat">
+                            <input type="text" name="new_pkm[mitra]" placeholder="Mitra Sekolah / Desa" class="widefat">
+                            <input type="text" name="new_pkm[dana]" placeholder="Rp ..." class="widefat">
+                            <input type="text" name="new_pkm[luaran]" placeholder="Luaran PkM" class="widefat">
+                        </div>
+                        <?php ppb_render_media_url_control([
+                            'id'          => 'pkm_dok_new',
+                            'name'        => 'new_pkm[dokumen_url]',
+                            'value'       => '',
+                            'placeholder' => 'Link SK / Laporan PkM (opsional)',
+                            'btn_label'   => '📁 Upload / Drive SK',
+                        ]); ?>
+                    </div>
+                </div>
+
+                <div style="text-align:right;">
+                    <button type="submit" name="ppb_save_mis_pnbp" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;padding:7px 22px;height:auto;font-size:13.5px;font-weight:700;border-radius:8px;">💾 Simpan Semua Data Hibah PNBP</button>
+                </div>
+            </form>
+
+        <?php elseif ($active_tab === 'jurnal') :
+            $jurnal_list = ppb_get_jurnal_bk_data();
+        ?>
+            <form method="post" action="" style="background:#fff;border:1px solid #cbd5e1;border-radius:14px;padding:22px;">
+                <?php wp_nonce_field('ppb_jurnal_nonce_action', 'ppb_jurnal_nonce'); ?>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;border-bottom:2px solid #E8F0EA;padding-bottom:10px;">
+                    <div>
+                        <h2 style="margin:0;color:#0D3B22;font-size:18px;">📰 Daftar Jurnal &amp; Pengabdian Prodi BK (<?php echo count($jurnal_list); ?>)</h2>
+                        <span style="font-size:12px;color:#64748b;">Otomatis tersinkron ke <code>/jurnal-bk/</code> dan shortcode <code>[ppb_jurnal_bk]</code>.</span>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button type="submit" name="ppb_save_jurnal_bk" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan Jurnal BK</button>
+                        <button type="submit" name="ppb_reset_jurnal_bk" class="button" onclick="return confirm('Reset Daftar Jurnal ke bawaan?');">↺ Reset Default</button>
+                    </div>
+                </div>
+
+                <div style="display:grid;gap:14px;margin-bottom:18px;">
+                    <?php foreach ($jurnal_list as $idx => $jr) : ?>
+                        <div style="border:1px solid #cbd5e1;border-radius:12px;padding:16px;background:#fcfdfd;">
+                            <div style="display:grid;grid-template-columns:1.5fr 1fr 120px 1fr;gap:10px;margin-bottom:10px;">
+                                <div>
+                                    <label style="font-size:11px;font-weight:700;display:block;margin-bottom:2px;">Nama Jurnal</label>
+                                    <input type="text" name="jurnal[<?php echo $idx; ?>][nama]" value="<?php echo esc_attr($jr['nama'] ?? ''); ?>" class="widefat" style="font-weight:700;">
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Badge / Akreditasi</label>
+                                    <input type="text" name="jurnal[<?php echo $idx; ?>][badge]" value="<?php echo esc_attr($jr['badge'] ?? ''); ?>" class="widefat">
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Warna Badge</label>
+                                    <select name="jurnal[<?php echo $idx; ?>][tema]" class="widefat">
+                                        <option value="green" <?php selected($jr['tema'] ?? 'green', 'green'); ?>>Hijau</option>
+                                        <option value="gold" <?php selected($jr['tema'] ?? '', 'gold'); ?>>Emas</option>
+                                        <option value="blue" <?php selected($jr['tema'] ?? '', 'blue'); ?>>Biru</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">ISSN / E-ISSN</label>
+                                    <input type="text" name="jurnal[<?php echo $idx; ?>][issn]" value="<?php echo esc_attr($jr['issn'] ?? ''); ?>" class="widefat">
+                                </div>
+                            </div>
+                            <div style="margin-bottom:10px;">
+                                <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Deskripsi &amp; Fokus Ruang Lingkup</label>
+                                <textarea name="jurnal[<?php echo $idx; ?>][deskripsi]" rows="2" class="widefat"><?php echo esc_textarea($jr['deskripsi'] ?? ''); ?></textarea>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-bottom:10px;">
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Penerbit</label>
+                                    <input type="text" name="jurnal[<?php echo $idx; ?>][penerbit]" value="<?php echo esc_attr($jr['penerbit'] ?? ''); ?>" class="widefat">
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Frekuensi Terbit</label>
+                                    <input type="text" name="jurnal[<?php echo $idx; ?>][frekuensi]" value="<?php echo esc_attr($jr['frekuensi'] ?? ''); ?>" class="widefat">
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">Pengindeks (SINTA/DOAJ/Garuda)</label>
+                                    <input type="text" name="jurnal[<?php echo $idx; ?>][pengindeks]" value="<?php echo esc_attr($jr['pengindeks'] ?? ''); ?>" class="widefat">
+                                </div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">URL Portal OJS Utama</label>
+                                    <?php ppb_render_media_url_control(['id' => 'jr_ojs_' . $idx, 'name' => "jurnal[$idx][ojs_url]", 'value' => $jr['ojs_url'] ?? '', 'placeholder' => 'https://ojs.unm.ac.id/...', 'btn_label' => '🌐 Pilih / Tes']); ?>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px;font-weight:600;display:block;margin-bottom:2px;">URL Pedoman Submit / Author Guidelines</label>
+                                    <?php ppb_render_media_url_control(['id' => 'jr_sub_' . $idx, 'name' => "jurnal[$idx][submit_url]", 'value' => $jr['submit_url'] ?? '', 'placeholder' => 'URL Submit OJS atau upload PDF panduan penulis', 'btn_label' => '📁 Upload / Drive']); ?>
+                                </div>
+                                <label style="color:#b91c1c;font-size:11.5px;font-weight:600;white-space:nowrap;padding-bottom:8px;"><input type="checkbox" name="jurnal[<?php echo $idx; ?>][delete]" value="1"> Hapus</label>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div style="background:#f0fdf4;border:1.5px dashed #166534;border-radius:12px;padding:16px;">
+                    <strong style="display:block;color:#0D3B22;margin-bottom:10px;">➕ Tambah Jurnal Ilmiah / Pengabdian Baru</strong>
+                    <div style="display:grid;grid-template-columns:1.5fr 1fr 120px 1fr;gap:10px;margin-bottom:8px;">
+                        <input type="text" name="new_jurnal[nama]" placeholder="Nama Jurnal Baru (isi untuk menambah)..." class="widefat">
+                        <input type="text" name="new_jurnal[badge]" placeholder="🏅 Terakreditasi SINTA ..." class="widefat">
+                        <select name="new_jurnal[tema]" class="widefat">
+                            <option value="green">Hijau</option>
+                            <option value="gold">Emas</option>
+                            <option value="blue">Biru</option>
+                        </select>
+                        <input type="text" name="new_jurnal[issn]" placeholder="E-ISSN: ..." class="widefat">
+                    </div>
+                    <textarea name="new_jurnal[deskripsi]" rows="2" placeholder="Deskripsi singkat ruang lingkup jurnal..." class="widefat" style="margin-bottom:8px;"></textarea>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;margin-bottom:8px;">
+                        <input type="text" name="new_jurnal[penerbit]" placeholder="Penerbit" class="widefat">
+                        <input type="text" name="new_jurnal[frekuensi]" placeholder="2 Kali / Tahun" class="widefat">
+                        <input type="text" name="new_jurnal[pengindeks]" placeholder="SINTA, Google Scholar, Garuda" class="widefat">
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <?php ppb_render_media_url_control(['id' => 'jr_ojs_new', 'name' => 'new_jurnal[ojs_url]', 'value' => '', 'placeholder' => 'URL Portal OJS', 'btn_label' => '🌐 Pilih URL']); ?>
+                        <?php ppb_render_media_url_control(['id' => 'jr_sub_new', 'name' => 'new_jurnal[submit_url]', 'value' => '', 'placeholder' => 'URL Panduan Submit / PDF', 'btn_label' => '📁 Upload / Drive']); ?>
+                    </div>
+                </div>
+            </form>
+        <?php endif; ?>
     </div>
     <?php
 }
@@ -1129,6 +1861,77 @@ add_shortcode('ppb_jadwal_ujian_list', 'ppb_shortcode_jadwal_ujian_list');
 /* ========================================================================== */
 if (!function_exists('ppb_shortcode_kurikulum_rps_sap')) {
 function ppb_shortcode_kurikulum_rps_sap($atts = []) {
+    $all_courses = function_exists('ppb_get_mata_kuliah_list') ? ppb_get_mata_kuliah_list(true) : [];
+    $dosen_list  = function_exists('ppb_get_dosen_directory_cached') ? ppb_get_dosen_directory_cached() : [];
+    $acad_links  = function_exists('ppb_akademik_get_all_links') ? ppb_akademik_get_all_links() : [];
+
+    $dosen_map = [];
+    foreach ($dosen_list as $d) {
+        $sl = sanitize_title($d['slug'] ?? '');
+        if ($sl !== '') {
+            $dosen_map[$sl] = [
+                'slug' => $sl,
+                'nama' => (string) ($d['nama_lengkap'] ?? ($d['nama'] ?? $sl)),
+                'url'  => home_url('/profil/dosen/' . $sl . '/'),
+            ];
+        }
+    }
+
+    // Kelompokkan MK S1 berdasarkan semester (1–8), sekaligus dukung jenjang S2/S3
+    $semesters = [];
+    $extra_degrees = [];
+    $rps_cards = [];
+    $sap_cards = [];
+
+    foreach ($all_courses as $c) {
+        $jenjang = strtoupper(trim((string) ($c['jenjang'] ?? 'S1')));
+        $sem = max(1, min(8, (int) ($c['semester'] ?? 1)));
+        $sks = (int) ($c['sks'] ?? 3);
+
+        if ($jenjang === 'S1' || $jenjang === '') {
+            if (!isset($semesters[$sem])) {
+                $semesters[$sem] = [];
+            }
+            $semesters[$sem][] = $c;
+        } else {
+            $extra_degrees[] = $c;
+        }
+
+        if (!empty($c['rps_url']) || !empty($c['cpmk']) || !empty($c['in_kurikulum'])) {
+            $rps_cards[] = $c;
+        }
+        if (!empty($c['sap_url'])) {
+            $sap_cards[] = $c;
+        }
+    }
+    ksort($semesters);
+
+    // Urutkan RPS cards: yang sudah ada file RPS atau dosen pengampu muncul lebih dulu
+    usort($rps_cards, function($a, $b) {
+        $scoreA = (!empty($a['rps_url']) ? 4 : 0) + (!empty($a['sap_url']) ? 2 : 0) + (!empty($a['dosen_slugs']) ? 1 : 0);
+        $scoreB = (!empty($b['rps_url']) ? 4 : 0) + (!empty($b['sap_url']) ? 2 : 0) + (!empty($b['dosen_slugs']) ? 1 : 0);
+        if ($scoreA !== $scoreB) return $scoreB - $scoreA;
+        return strcmp((string) ($a['kode'] ?? ''), (string) ($b['kode'] ?? ''));
+    });
+
+    $render_dosen_pills = function($slugs) use ($dosen_map) {
+        if (empty($slugs) || !is_array($slugs)) {
+            return '<span style="font-size:11px;color:#9CA3AF;font-style:italic;">Tim Dosen Prodi BK</span>';
+        }
+        $out = [];
+        foreach ($slugs as $sl) {
+            $sl = sanitize_title($sl);
+            if ($sl === '') continue;
+            $label = isset($dosen_map[$sl]) ? $dosen_map[$sl]['nama'] : ucwords(str_replace('-', ' ', $sl));
+            $url   = isset($dosen_map[$sl]) ? $dosen_map[$sl]['url'] : home_url('/profil/dosen/' . $sl . '/');
+            $out[] = '<a href="' . esc_url($url) . '" style="display:inline-flex;align-items:center;gap:3px;background:#E8F0EA;color:#0D3B22;border:1px solid #C5DACB;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;text-decoration:none;margin:2px 3px 2px 0;">👨‍🏫 ' . esc_html($label) . '</a>';
+        }
+        return !empty($out) ? implode('', $out) : '<span style="font-size:11px;color:#9CA3AF;">Tim Dosen Prodi BK</span>';
+    };
+
+    $rubrik_konseling_url = $acad_links['rubrik_konseling'] ?? '';
+    $rubrik_project_url   = $acad_links['rubrik_project'] ?? '';
+
     ob_start();
     ?>
     <section class="ppb-kurikulum-suite" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
@@ -1136,7 +1939,7 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
         <!-- Tab Navigation Bar -->
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:25px;border-bottom:2px solid #E5E7EB;padding-bottom:12px;">
             <button type="button" class="ppb-cur-tab-btn is-active" data-tab="tab-mk" style="padding:10px 20px;border-radius:10px;border:none;background:#0D3B22;color:#ffffff;font-size:13.5px;font-weight:700;cursor:pointer;transition:all 0.2s;">
-                📚 Struktur Mata Kuliah (Sem 1–8)
+                📚 Struktur Mata Kuliah (<?php echo count($all_courses); ?> MK)
             </button>
             <button type="button" class="ppb-cur-tab-btn" data-tab="tab-rps" style="padding:10px 20px;border-radius:10px;border:1px solid #D1D5DB;background:#ffffff;color:#374151;font-size:13.5px;font-weight:600;cursor:pointer;transition:all 0.2s;">
                 📑 Repositori RPS Lengkap
@@ -1153,117 +1956,83 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
         <div id="tab-mk" class="ppb-cur-pane" style="display:block;">
             <div style="background:#FAF8F5;border:1px solid #D4E3D8;border-radius:16px;padding:24px;margin-bottom:25px;">
                 <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#0D3B22;margin:0 0 8px;">
-                    Daftar Mata Kuliah Kurikulum OBE 2025 (144 SKS)
+                    Daftar Mata Kuliah Kurikulum OBE 2025 &amp; Dosen Pengampu
                 </h3>
                 <p style="font-size:13px;color:#4B5563;margin:0;line-height:1.6;">
-                    Kurikulum Program Studi Bimbingan dan Konseling FIP UNM mengacu pada Kerangka Kualifikasi Nasional Indonesia (KKNI Level 6) dan Standar Asosiasi Bimbingan dan Konseling Indonesia (ABKIN).
+                    Kurikulum Program Studi Bimbingan dan Konseling FIP UNM mengacu pada KKNI Level 6–9 serta Standar ABKIN. Setiap mata kuliah terhubung otomatis ke profil dosen pengampu dan dokumen RPS/SAP.
                 </p>
+                <?php if (!empty($acad_links['buku_kurikulum']) || !empty($acad_links['sk_kurikulum'])) : ?>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+                        <?php if (!empty($acad_links['buku_kurikulum'])) : ?>
+                            <a href="<?php echo esc_url($acad_links['buku_kurikulum']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;">📘 Unduh Buku Kurikulum OBE ↗</a>
+                        <?php endif; ?>
+                        <?php if (!empty($acad_links['sk_kurikulum'])) : ?>
+                            <a href="<?php echo esc_url($acad_links['sk_kurikulum']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#ffffff;color:#0D3B22;border:1px solid #D4E3D8;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;">🏛️ SK Senat Kurikulum ↗</a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <?php
-            $semesters = [
-                1 => [
-                    ['kode' => 'UNM101', 'nama' => 'Pendidikan Pancasila & Kewarganegaraan', 'sks' => 2, 'jenis' => 'Wajib Universitas'],
-                    ['kode' => 'FIP102', 'nama' => 'Pengantar Ilmu Pendidikan', 'sks' => 3, 'jenis' => 'Wajib Fakultas'],
-                    ['kode' => 'BK101', 'nama' => 'Dasar-Dasar Bimbingan dan Konseling', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK102', 'nama' => 'Psikologi Umum & Perkembangan Individu', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK103', 'nama' => 'Filsafat Pendidikan & Antropologi Budaya', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK104', 'nama' => 'Komunikasi Antarpribadi dalam Konseling', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'UNM102', 'nama' => 'Bahasa Indonesia Keilmuan', 'sks' => 2, 'jenis' => 'Wajib Universitas'],
-                ],
-                2 => [
-                    ['kode' => 'BK201', 'nama' => 'Teori-Teori Kepribadian', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK202', 'nama' => 'Pemahaman Individu Teknik Non-Tes', 'sks' => 3, 'jenis' => 'Wajib Prodi / Praktik'],
-                    ['kode' => 'BK203', 'nama' => 'Keterampilan Dasar Konseling (Attending & Empathy)', 'sks' => 3, 'jenis' => 'Wajib Prodi / Praktik'],
-                    ['kode' => 'BK204', 'nama' => 'Profesi Bimbingan dan Konseling & Etika Konselor', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK205', 'nama' => 'Statistika Deskriptif untuk Pendidikan', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'FIP201', 'nama' => 'Perkembangan Belajar Peserta Didik', 'sks' => 2, 'jenis' => 'Wajib Fakultas'],
-                    ['kode' => 'UNM201', 'nama' => 'Bahasa Inggris Akademik & Konseling', 'sks' => 2, 'jenis' => 'Wajib Universitas'],
-                ],
-                3 => [
-                    ['kode' => 'BK301', 'nama' => 'Teori & Pendekatan Konseling Individual', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK302', 'nama' => 'Pemahaman Individu Teknik Tes (Asesmen Psikologi)', 'sks' => 3, 'jenis' => 'Wajib Prodi / Lab'],
-                    ['kode' => 'BK303', 'nama' => 'Dinamika Kelompok & Bimbingan Kelompok', 'sks' => 3, 'jenis' => 'Wajib Prodi / Praktik'],
-                    ['kode' => 'BK304', 'nama' => 'Pengembangan Program BK Komprehensif di Sekolah', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK305', 'nama' => 'Statistika Inferensial untuk Riset Pendidikan', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK306', 'nama' => 'Kesehatan Mental & Pertolongan Pertama Psikologis', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                ],
-                4 => [
-                    ['kode' => 'BK401', 'nama' => 'Praktikum Konseling Individual (Micro-Counseling)', 'sks' => 3, 'jenis' => 'Wajib Prodi / Lab'],
-                    ['kode' => 'BK402', 'nama' => 'Konseling Kelompok & Intervensi Psikososial', 'sks' => 3, 'jenis' => 'Wajib Prodi / Lab'],
-                    ['kode' => 'BK403', 'nama' => 'Bimbingan dan Konseling Karir Komprehensif', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK404', 'nama' => 'Media & Teknologi Informasi dalam BK', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK405', 'nama' => 'Metodologi Penelitian Bimbingan dan Konseling', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK406', 'nama' => 'Konseling Lintas Budaya & Nilai-Nilai Kearifan Lokal', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK407', 'nama' => 'Pendidikan Inklusi & Kebutuhan Khusus', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                ],
-                5 => [
-                    ['kode' => 'BK501', 'nama' => 'Konseling Keluarga & Pengasuhan Anak', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK502', 'nama' => 'Manajemen & Organisasi Layanan BK', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK503', 'nama' => 'Evaluasi & Akuntabilitas Program BK', 'sks' => 3, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK504', 'nama' => 'Praktikum Asesmen & Diagnostik Kesulitan Belajar', 'sks' => 3, 'jenis' => 'Wajib Prodi / Lab'],
-                    ['kode' => 'BK505', 'nama' => 'Konseling Krisis, Trauma & Bencana', 'sks' => 3, 'jenis' => 'Pilihan Keahlian'],
-                    ['kode' => 'BK506', 'nama' => 'Kewirausahaan Layanan Konseling & Edukasi', 'sks' => 2, 'jenis' => 'Wajib Universitas'],
-                    ['kode' => 'BK507', 'nama' => 'Pencegahan & Penanganan Kekerasan di Sekolah', 'sks' => 2, 'jenis' => 'Pilihan Keahlian'],
-                ],
-                6 => [
-                    ['kode' => 'BK601', 'nama' => 'Praktik Lapangan BK Persekolahan (PPL/Magang I)', 'sks' => 4, 'jenis' => 'Wajib Lapangan / MBKM'],
-                    ['kode' => 'BK602', 'nama' => 'Seminar Proposal Penelitian Skripsi BK', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'BK603', 'nama' => 'Konseling Komunitas & Pemberdayaan Sosial', 'sks' => 3, 'jenis' => 'Pilihan Keahlian'],
-                    ['kode' => 'BK604', 'nama' => 'Studi Kasus Klinis & Supervisi Konseling', 'sks' => 3, 'jenis' => 'Wajib Prodi / Lab'],
-                    ['kode' => 'BK605', 'nama' => 'Teknologi Asesmen Digital & BK Connect', 'sks' => 2, 'jenis' => 'Pilihan Keahlian'],
-                    ['kode' => 'BK606', 'nama' => 'Publikasi Ilmiah & Penulisan Artikel Jurnal', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                ],
-                7 => [
-                    ['kode' => 'BK701', 'nama' => 'Praktik Kerja Lapangan MBKM / PPL Terpadu II', 'sks' => 6, 'jenis' => 'Wajib Lapangan / MBKM'],
-                    ['kode' => 'BK702', 'nama' => 'Proyek Kemanusiaan & Pengabdian Masyarakat', 'sks' => 4, 'jenis' => 'Pilihan MBKM'],
-                    ['kode' => 'BK703', 'nama' => 'Kapita Selekta Bimbingan dan Konseling Kontemporer', 'sks' => 2, 'jenis' => 'Wajib Prodi'],
-                    ['kode' => 'UNM701', 'nama' => 'Kuliah Kerja Nyata (KKN) Tematik / Reguler', 'sks' => 4, 'jenis' => 'Wajib Universitas'],
-                ],
-                8 => [
-                    ['kode' => 'BK801', 'nama' => 'Skripsi / Tugas Akhir Karya Ilmiah', 'sks' => 6, 'jenis' => 'Wajib Kelulusan'],
-                    ['kode' => 'BK802', 'nama' => 'Ujian Komprehensif Keahlian Konseling', 'sks' => 0, 'jenis' => 'Prasyarat Yudisium'],
-                ]
-            ];
-            ?>
-
             <div class="ppb-mk-sem-filter" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:20px;">
-                <span style="font-size:12px;font-weight:700;color:#4B5563;margin-right:4px;">Filter Semester:</span>
-                <button type="button" class="ppb-mk-sem-pill is-active" data-mk-sem="all" style="padding:7px 14px;border-radius:9999px;border:1px solid #0D3B22;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.16s;">Semua (8 Sem)</button>
+                <span style="font-size:12px;font-weight:700;color:#4B5563;margin-right:4px;">Filter Semester (S1):</span>
+                <button type="button" class="ppb-mk-sem-pill is-active" data-mk-sem="all" style="padding:7px 14px;border-radius:9999px;border:1px solid #0D3B22;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.16s;">Semua</button>
                 <?php foreach (array_keys($semesters) as $sem_num) : ?>
-                    <button type="button" class="ppb-mk-sem-pill" data-mk-sem="<?php echo (int)$sem_num; ?>" style="padding:7px 13px;border-radius:9999px;border:1px solid #D1D5DB;background:#ffffff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.16s;">Sem <?php echo (int)$sem_num; ?></button>
+                    <button type="button" class="ppb-mk-sem-pill" data-mk-sem="<?php echo (int) $sem_num; ?>" style="padding:7px 13px;border-radius:9999px;border:1px solid #D1D5DB;background:#ffffff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.16s;">Sem <?php echo (int) $sem_num; ?></button>
                 <?php endforeach; ?>
+                <?php if (!empty($extra_degrees)) : ?>
+                    <button type="button" class="ppb-mk-sem-pill" data-mk-sem="pasca" style="padding:7px 13px;border-radius:9999px;border:1px solid #D1D5DB;background:#ffffff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.16s;">S2 / S3 Pascasarjana</button>
+                <?php endif; ?>
             </div>
 
             <div id="ppb-mk-sem-list" style="display:flex;flex-direction:column;gap:18px;">
-                <?php foreach ($semesters as $sem => $mks) : 
-                    $total_sks = array_sum(array_column($mks, 'sks'));
+                <?php foreach ($semesters as $sem => $mks) :
+                    $total_sks = 0;
+                    foreach ($mks as $m) {
+                        $total_sks += (int) ($m['sks'] ?? 0);
+                    }
                 ?>
-                    <div class="ppb-mk-sem-card" data-mk-sem-card="<?php echo (int)$sem; ?>" style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                    <div class="ppb-mk-sem-card" data-mk-sem-card="<?php echo (int) $sem; ?>" style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
                         <div style="background:#0D3B22;color:#ffffff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">
-                            <strong style="font-size:14px;letter-spacing:0.02em;">Semester <?php echo $sem; ?></strong>
-                            <span style="font-size:12px;background:rgba(245,184,46,0.25);color:#F5B82E;padding:2px 10px;border-radius:6px;font-weight:700;">Total: <?php echo $total_sks; ?> SKS</span>
+                            <strong style="font-size:14px;letter-spacing:0.02em;">Semester <?php echo (int) $sem; ?> (S1 Sarjana)</strong>
+                            <span style="font-size:12px;background:rgba(245,184,46,0.25);color:#F5B82E;padding:2px 10px;border-radius:6px;font-weight:700;">Total: <?php echo (int) $total_sks; ?> SKS</span>
                         </div>
                         <div style="overflow-x:auto;">
                             <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">
                                 <thead>
                                     <tr style="background:#F9FAFB;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:11.5px;text-transform:uppercase;">
                                         <th style="padding:10px 16px;">Kode MK</th>
-                                        <th style="padding:10px 16px;">Nama Mata Kuliah</th>
-                                        <th style="padding:10px 16px;text-align:center;">Bobot SKS</th>
+                                        <th style="padding:10px 16px;">Nama Mata Kuliah &amp; Dosen Pengampu</th>
+                                        <th style="padding:10px 16px;text-align:center;">SKS</th>
                                         <th style="padding:10px 16px;">Kelompok / Sifat</th>
                                         <th style="padding:10px 16px;text-align:center;">Dokumen</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($mks as $mk) : ?>
+                                    <?php foreach ($mks as $mk) :
+                                        $rps_u = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($mk['rps_url'] ?? '') : '';
+                                        $sap_u = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($mk['sap_url'] ?? '') : '';
+                                    ?>
                                         <tr style="border-bottom:1px solid #F3F4F6;">
-                                            <td style="padding:10px 16px;font-family:monospace;font-weight:700;color:#0D3B22;"><?php echo esc_html($mk['kode']); ?></td>
-                                            <td style="padding:10px 16px;font-weight:600;color:#1F2937;"><?php echo esc_html($mk['nama']); ?></td>
-                                            <td style="padding:10px 16px;text-align:center;font-weight:700;color:#0D3B22;"><?php echo (int)$mk['sks']; ?></td>
-                                            <td style="padding:10px 16px;color:#4B5563;font-size:12px;"><?php echo esc_html($mk['jenis']); ?></td>
-                                            <td style="padding:10px 16px;text-align:center;">
-                                                <a href="#tab-rps" onclick="window.ppbSwitchCurTab('tab-rps')" style="font-size:11px;font-weight:700;color:#0D3B22;background:#E8F0EA;padding:3px 8px;border-radius:4px;text-decoration:none;">RPS/SAP &rarr;</a>
+                                            <td style="padding:10px 16px;font-family:monospace;font-weight:700;color:#0D3B22;white-space:nowrap;"><?php echo esc_html($mk['kode'] ?? ''); ?></td>
+                                            <td style="padding:10px 16px;">
+                                                <div style="font-weight:600;color:#1F2937;margin-bottom:4px;"><?php echo esc_html($mk['nama'] ?? ''); ?></div>
+                                                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;"><?php echo $render_dosen_pills($mk['dosen_slugs'] ?? []); ?></div>
+                                            </td>
+                                            <td style="padding:10px 16px;text-align:center;font-weight:700;color:#0D3B22;"><?php echo (int) ($mk['sks'] ?? 0); ?></td>
+                                            <td style="padding:10px 16px;color:#4B5563;font-size:12px;"><?php echo esc_html($mk['rumpun'] ?? 'Wajib Prodi'); ?></td>
+                                            <td style="padding:10px 16px;text-align:center;white-space:nowrap;">
+                                                <?php if ($rps_u !== '' || $sap_u !== '') : ?>
+                                                    <div style="display:inline-flex;gap:5px;flex-wrap:wrap;justify-content:center;">
+                                                        <?php if ($rps_u !== '') : ?>
+                                                            <a href="<?php echo esc_url($rps_u); ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:700;color:#ffffff;background:#0D3B22;padding:4px 9px;border-radius:6px;text-decoration:none;">📄 RPS ↗</a>
+                                                        <?php endif; ?>
+                                                        <?php if ($sap_u !== '') : ?>
+                                                            <a href="<?php echo esc_url($sap_u); ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:700;color:#0D3B22;background:#FEF3C7;border:1px solid #FCD34D;padding:4px 9px;border-radius:6px;text-decoration:none;">🗓️ SAP ↗</a>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php else : ?>
+                                                    <button type="button" onclick="window.ppbSwitchCurTab('tab-rps')" style="font-size:11px;font-weight:700;color:#0D3B22;background:#E8F0EA;padding:4px 10px;border:none;border-radius:6px;cursor:pointer;">Lihat RPS &rarr;</button>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -1272,6 +2041,59 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
                         </div>
                     </div>
                 <?php endforeach; ?>
+
+                <?php if (!empty($extra_degrees)) : ?>
+                    <div class="ppb-mk-sem-card" data-mk-sem-card="pasca" style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                        <div style="background:#0D3B22;color:#ffffff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">
+                            <strong style="font-size:14px;letter-spacing:0.02em;">Mata Kuliah Magister (S2) &amp; Doktor (S3)</strong>
+                            <span style="font-size:12px;background:rgba(245,184,46,0.25);color:#F5B82E;padding:2px 10px;border-radius:6px;font-weight:700;"><?php echo count($extra_degrees); ?> Mata Kuliah</span>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">
+                                <thead>
+                                    <tr style="background:#F9FAFB;border-bottom:1px solid #E5E7EB;color:#6B7280;font-size:11.5px;text-transform:uppercase;">
+                                        <th style="padding:10px 16px;">Kode / Jenjang</th>
+                                        <th style="padding:10px 16px;">Nama Mata Kuliah &amp; Dosen Pengampu</th>
+                                        <th style="padding:10px 16px;text-align:center;">SKS</th>
+                                        <th style="padding:10px 16px;">Dokumen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($extra_degrees as $mk) :
+                                        $rps_u = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($mk['rps_url'] ?? '') : '';
+                                        $sap_u = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($mk['sap_url'] ?? '') : '';
+                                    ?>
+                                        <tr style="border-bottom:1px solid #F3F4F6;">
+                                            <td style="padding:10px 16px;white-space:nowrap;">
+                                                <span style="font-family:monospace;font-weight:700;color:#0D3B22;"><?php echo esc_html($mk['kode'] ?? ''); ?></span>
+                                                <span style="display:inline-block;margin-left:6px;background:#E8F0EA;color:#0D3B22;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;"><?php echo esc_html($mk['jenjang'] ?? 'S2'); ?></span>
+                                            </td>
+                                            <td style="padding:10px 16px;">
+                                                <div style="font-weight:600;color:#1F2937;margin-bottom:4px;"><?php echo esc_html($mk['nama'] ?? ''); ?></div>
+                                                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;"><?php echo $render_dosen_pills($mk['dosen_slugs'] ?? []); ?></div>
+                                            </td>
+                                            <td style="padding:10px 16px;text-align:center;font-weight:700;color:#0D3B22;"><?php echo (int) ($mk['sks'] ?? 0); ?></td>
+                                            <td style="padding:10px 16px;">
+                                                <?php if ($rps_u !== '' || $sap_u !== '') : ?>
+                                                    <div style="display:inline-flex;gap:5px;">
+                                                        <?php if ($rps_u !== '') : ?>
+                                                            <a href="<?php echo esc_url($rps_u); ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:700;color:#ffffff;background:#0D3B22;padding:4px 9px;border-radius:6px;text-decoration:none;">📄 RPS ↗</a>
+                                                        <?php endif; ?>
+                                                        <?php if ($sap_u !== '') : ?>
+                                                            <a href="<?php echo esc_url($sap_u); ?>" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:700;color:#0D3B22;background:#FEF3C7;border:1px solid #FCD34D;padding:4px 9px;border-radius:6px;text-decoration:none;">🗓️ SAP ↗</a>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php else : ?>
+                                                    <span style="font-size:11px;color:#9CA3AF;">Segera Tersedia</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -1282,35 +2104,45 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
                     Rencana Pembelajaran Semester (RPS) Terstandar OBE
                 </h3>
                 <p style="font-size:13px;color:#4B5563;margin:0;line-height:1.6;">
-                    Dokumen RPS memuat Capaian Pembelajaran Lulusan (CPL), Capaian Pembelajaran Mata Kuliah (CPMK), deskripsi bahan kajian, metode perkuliahan partisipatif/case-method/team-based project, dan sistem penilaian.
+                    Dokumen RPS memuat Capaian Pembelajaran Lulusan (CPL), Capaian Pembelajaran Mata Kuliah (CPMK), deskripsi bahan kajian, metode perkuliahan partisipatif (Case Method &amp; Team-Based Project), dan sistem penilaian.
                 </p>
             </div>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:18px;">
-                <?php
-                $rps_list = [
-                    ['kode' => 'BK101', 'nama' => 'Dasar-Dasar Bimbingan dan Konseling', 'dosen' => 'Dr. Farida Aryani, M.Pd. / Tim', 'rev' => 'Revisi 2024'],
-                    ['kode' => 'BK203', 'nama' => 'Keterampilan Dasar Konseling', 'dosen' => 'Prof. Dr. H. Alimuddin Mahmud, M.Pd.', 'rev' => 'Revisi 2024'],
-                    ['kode' => 'BK301', 'nama' => 'Teori & Pendekatan Konseling Individual', 'dosen' => 'Dr. Abdullah Pandang, M.Pd.', 'rev' => 'Revisi 2024'],
-                    ['kode' => 'BK302', 'nama' => 'Asesmen Psikologi & Pemahaman Individu', 'dosen' => 'Dra. Hj. Sitti Halimah, M.Pd.', 'rev' => 'Revisi 2024'],
-                    ['kode' => 'BK401', 'nama' => 'Praktikum Micro-Counseling', 'dosen' => 'Pakar & Tim Laboratorium BK', 'rev' => 'Revisi 2024'],
-                    ['kode' => 'BK403', 'nama' => 'Bimbingan dan Konseling Karir Komprehensif', 'dosen' => 'Dr. H. Sulaiman, M.Pd.', 'rev' => 'Revisi 2024'],
-                    ['kode' => 'BK405', 'nama' => 'Metodologi Penelitian BK & Skripsi', 'dosen' => 'Prof. Dr. Syamsul Bachri Thalib, M.Si.', 'rev' => 'Revisi 2024'],
-                    ['kode' => 'BK501', 'nama' => 'Konseling Keluarga & Krisis Psikososial', 'dosen' => 'Dr. Muhammad Anas, M.Si.', 'rev' => 'Revisi 2024']
-                ];
-                foreach ($rps_list as $r) : ?>
+                <?php foreach ($rps_cards as $r_idx => $r) :
+                    $rps_u  = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($r['rps_url'] ?? '') : '';
+                    $sap_u  = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($r['sap_url'] ?? '') : '';
+                    $cpmk_text = trim((string) ($r['cpmk'] ?? ''));
+                    if ($cpmk_text === '') {
+                        $cpmk_text = 'Menguasai landasan teoretis, prinsip asesmen, dan praksis bimbingan dan konseling OBE pada mata kuliah ' . ($r['nama'] ?? '') . ' (' . (int) ($r['sks'] ?? 3) . ' SKS, Semester ' . (int) ($r['semester'] ?? 1) . ').';
+                    }
+                    $panel_id = 'ppb-cpmk-panel-' . (int) $r_idx;
+                ?>
                     <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:14px;padding:20px;box-shadow:0 3px 10px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
                         <div>
-                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                                <span style="font-family:monospace;font-size:11px;font-weight:700;color:#0D3B22;background:#E8F0EA;padding:2px 8px;border-radius:4px;"><?php echo esc_html($r['kode']); ?></span>
-                                <span style="font-size:11px;color:#059669;font-weight:600;"><?php echo esc_html($r['rev']); ?></span>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <span style="font-family:monospace;font-size:11px;font-weight:700;color:#0D3B22;background:#E8F0EA;padding:2px 8px;border-radius:4px;"><?php echo esc_html(($r['kode'] ?? '') . ' · ' . ($r['jenjang'] ?? 'S1')); ?></span>
+                                <span style="font-size:11px;color:#059669;font-weight:600;">Sem <?php echo (int) ($r['semester'] ?? 1); ?> · <?php echo (int) ($r['sks'] ?? 3); ?> SKS</span>
                             </div>
-                            <h4 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 6px;line-height:1.4;"><?php echo esc_html($r['nama']); ?></h4>
-                            <p style="font-size:12px;color:#6B7280;margin:0 0 14px;">Koordinator: <?php echo esc_html($r['dosen']); ?></p>
+                            <h4 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 8px;line-height:1.4;"><?php echo esc_html($r['nama'] ?? ''); ?></h4>
+                            <div style="margin:0 0 14px;"><?php echo $render_dosen_pills($r['dosen_slugs'] ?? []); ?></div>
                         </div>
-                        <div style="display:flex;gap:8px;">
-                            <a href="#" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;">📄 Unduh RPS PDF</a>
-                            <a href="#" style="background:#FAF8F5;color:#0D3B22;border:1px solid #D4E3D8;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;">Detail CPMK</a>
+                        <div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <?php if ($rps_u !== '') : ?>
+                                    <a href="<?php echo esc_url($rps_u); ?>" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;">📄 Unduh RPS PDF ↗</a>
+                                <?php else : ?>
+                                    <span style="flex:1;text-align:center;background:#F3F4F6;color:#6B7280;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;">⏳ RPS Segera Diunggah</span>
+                                <?php endif; ?>
+                                <?php if ($sap_u !== '') : ?>
+                                    <a href="<?php echo esc_url($sap_u); ?>" target="_blank" rel="noopener noreferrer" style="background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;text-decoration:none;">🗓️ SAP ↗</a>
+                                <?php endif; ?>
+                                <button type="button" class="ppb-cpmk-toggle" data-cpmk-target="<?php echo esc_attr($panel_id); ?>" style="background:#FAF8F5;color:#0D3B22;border:1px solid #D4E3D8;font-size:12px;font-weight:600;padding:8px 12px;border-radius:8px;cursor:pointer;">Detail CPMK</button>
+                            </div>
+                            <div id="<?php echo esc_attr($panel_id); ?>" style="display:none;margin-top:12px;padding:12px;border-radius:10px;background:#FAF8F5;border:1px solid #D4E3D8;font-size:12px;color:#374151;line-height:1.55;">
+                                <strong style="display:block;color:#0D3B22;margin-bottom:4px;">Capaian Pembelajaran &amp; Rumpun (<?php echo esc_html($r['rumpun'] ?? 'Wajib Prodi'); ?>):</strong>
+                                <?php echo nl2br(esc_html($cpmk_text)); ?>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -1327,8 +2159,8 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
                     Panduan operasional tatap muka per minggu (16 minggu perkuliahan termasuk UTS dan UAS) yang menjabarkan aktivitas dosen dan mahasiswa, media ajar, dan instrumen asesmen harian.
                 </p>
             </div>
-            <div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,0.03);margin-bottom:22px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
                     <strong style="color:#0D3B22;font-size:16px;">Contoh Matriks 16 Pertemuan SAP (Mata Kuliah Inti)</strong>
                     <span style="font-size:12px;color:#6B7280;">Standar Akreditasi LAMDIK Kriteria 6</span>
                 </div>
@@ -1341,6 +2173,24 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
                     <div style="background:#DCFCE7;padding:12px;border-radius:8px;border:1px solid #86EFAC;"><strong style="font-size:12px;color:#166534;display:block;">Minggu 16:</strong><span style="font-size:12px;color:#14532D;">Evaluasi Akhir Semester (UAS) / Uji Keterampilan Portofolio</span></div>
                 </div>
             </div>
+
+            <?php if (!empty($sap_cards)) : ?>
+            <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:14px;padding:22px;">
+                <h4 style="color:#0D3B22;font-size:16px;font-weight:700;margin:0 0 14px;">🗓️ Berkas SAP Tersedia per Mata Kuliah</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px;">
+                    <?php foreach ($sap_cards as $sc) : ?>
+                        <div style="background:#FAF8F5;border:1px solid #D4E3D8;border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
+                            <div>
+                                <span style="font-family:monospace;font-size:11px;font-weight:700;color:#0D3B22;background:#E8F0EA;padding:2px 8px;border-radius:4px;"><?php echo esc_html(($sc['kode'] ?? '') . ' · Sem ' . (int) ($sc['semester'] ?? 1)); ?></span>
+                                <h5 style="font-size:14px;font-weight:700;color:#1F2937;margin:8px 0 6px;"><?php echo esc_html($sc['nama'] ?? ''); ?></h5>
+                                <div><?php echo $render_dosen_pills($sc['dosen_slugs'] ?? []); ?></div>
+                            </div>
+                            <a href="<?php echo esc_url($sc['sap_url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;">🗓️ Unduh Berkas SAP ↗</a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Tab 4: Rubrik Penilaian OBE -->
@@ -1363,7 +2213,11 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
                         <li>Perumusan tujuan intervensi (Bobot 20%)</li>
                         <li>Etika kerahasiaan &amp; terminasi sesi (Bobot 15%)</li>
                     </ul>
-                    <a href="#" style="display:inline-block;background:#0D3B22;color:#ffffff;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;text-decoration:none;">Unduh Lembar Rubrik &rarr;</a>
+                    <?php if ($rubrik_konseling_url !== '') : ?>
+                        <a href="<?php echo esc_url($rubrik_konseling_url); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#0D3B22;color:#ffffff;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;text-decoration:none;">Unduh Lembar Rubrik &rarr;</a>
+                    <?php else : ?>
+                        <span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;">⏳ Lembar Rubrik Segera Tersedia</span>
+                    <?php endif; ?>
                 </div>
 
                 <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:14px;padding:22px;">
@@ -1374,7 +2228,11 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
                         <li>Kolaborasi tim &amp; pembagian kerja (Bobot 20%)</li>
                         <li>Kualitas laporan &amp; video dokumentasi (Bobot 25%)</li>
                     </ul>
-                    <a href="#" style="display:inline-block;background:#0D3B22;color:#ffffff;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;text-decoration:none;">Unduh Lembar Rubrik &rarr;</a>
+                    <?php if ($rubrik_project_url !== '') : ?>
+                        <a href="<?php echo esc_url($rubrik_project_url); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#0D3B22;color:#ffffff;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;text-decoration:none;">Unduh Lembar Rubrik &rarr;</a>
+                    <?php else : ?>
+                        <span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;">⏳ Lembar Rubrik Segera Tersedia</span>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1419,6 +2277,16 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
                 });
             });
         });
+        document.querySelectorAll('.ppb-cpmk-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var id = this.getAttribute('data-cpmk-target');
+                var panel = id ? document.getElementById(id) : null;
+                if (!panel) return;
+                var open = panel.style.display !== 'none';
+                panel.style.display = open ? 'none' : 'block';
+                this.textContent = open ? 'Detail CPMK' : 'Tutup CPMK';
+            });
+        });
         </script>
     </section>
     <?php
@@ -1432,10 +2300,15 @@ add_shortcode('ppb_kurikulum_rps_sap', 'ppb_shortcode_kurikulum_rps_sap');
 /* ========================================================================== */
 if (!function_exists('ppb_shortcode_mis_pnbp')) {
 function ppb_shortcode_mis_pnbp($atts = []) {
+    $atts = shortcode_atts(['show_banner' => '1'], $atts, 'ppb_mis_pnbp');
+    $show_banner = ((string) $atts['show_banner'] !== '0');
+    $pnbp_data   = function_exists('ppb_get_mis_pnbp_data') ? ppb_get_mis_pnbp_data() : ['riset' => [], 'pkm' => []];
+    $riset_list  = $pnbp_data['riset'] ?? [];
+    $pkm_list    = $pnbp_data['pkm'] ?? [];
     ob_start();
     ?>
-    <section class="ppb-mis-pnbp-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
-        
+    <section class="ppb-mis-pnbp-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:<?php echo $show_banner ? '30px 0' : '0 0 30px'; ?>;">
+        <?php if ($show_banner) : ?>
         <!-- Header Banner MIS PNBP -->
         <div style="background:#0D3B22;color:#ffffff;border-radius:20px;padding:30px;margin-bottom:30px;box-shadow:0 8px 25px rgba(13,59,34,0.15);">
             <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,184,46,0.2);color:#F5B82E;padding:4px 14px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:12px;border:1px solid rgba(245,184,46,0.35);">
@@ -1448,66 +2321,46 @@ function ppb_shortcode_mis_pnbp($atts = []) {
                 Pusat data transparansi pendanaan riset keilmuan dan hilirisasi pengabdian kepada masyarakat (PkM) civitas akademika Program Studi Bimbingan dan Konseling berbasis skema Pendapatan Negara Bukan Pajak (PNBP) UNM.
             </p>
         </div>
+        <?php endif; ?>
 
         <!-- Tab Selector -->
-        <div style="display:flex;gap:12px;margin-bottom:25px;">
+        <div style="display:flex;gap:12px;margin-bottom:25px;flex-wrap:wrap;">
             <button type="button" class="ppb-pnbp-btn is-active" data-pnbp="pane-riset" style="padding:11px 22px;border-radius:12px;border:none;background:#0D3B22;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">
-                🔬 Hibah Penelitian PNBP
+                🔬 Hibah Penelitian PNBP (<?php echo count($riset_list); ?>)
             </button>
             <button type="button" class="ppb-pnbp-btn" data-pnbp="pane-pkm" style="padding:11px 22px;border-radius:12px;border:1px solid #D1D5DB;background:#ffffff;color:#374151;font-size:14px;font-weight:600;cursor:pointer;">
-                🤝 Pengabdian kepada Masyarakat (PkM) PNBP
+                🤝 Pengabdian kepada Masyarakat (PkM) PNBP (<?php echo count($pkm_list); ?>)
             </button>
         </div>
 
         <!-- Pane 1: Hibah Penelitian PNBP -->
-        <div id="pane-riset" class="ppb-pnbp-pane" style="display:block;">
+        <div id="pane-riset" data-pnbp-pane="pane-riset" class="ppb-pnbp-pane" style="display:block;">
             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:20px;">
-                <?php
-                $riset_list = [
-                    [
-                        'judul' => 'Model Bimbingan dan Konseling Komprehensif Berbasis Nilai Siri’ na Pacce untuk Mereduksi Perilaku Cyberbullying Siswa SMA di Makassar',
-                        'ketua' => 'Dr. Farida Aryani, M.Pd.',
-                        'anggota' => 'Prof. Dr. H. Alimuddin Mahmud, M.Pd. & 2 Mahasiswa',
-                        'skema' => 'Penelitian Terapan Unggulan UNM (PNBP)',
-                        'tahun' => '2024',
-                        'dana' => 'Rp 45.000.000',
-                        'luaran' => 'Jurnal Internasional Bereputasi & HKI Modul'
-                    ],
-                    [
-                        'judul' => 'Pengembangan Sistem Asesmen Digital BK Connect untuk Diagnostik Dini Problem Kesejahteraan Psikologis Remaja Berbasis Web',
-                        'ketua' => 'Dr. Abdullah Pandang, M.Pd.',
-                        'anggota' => 'Dr. Muhammad Anas, M.Si. & 3 Mahasiswa',
-                        'skema' => 'Penelitian Pengembangan Institusional (PNBP)',
-                        'tahun' => '2024',
-                        'dana' => 'Rp 50.000.000',
-                        'luaran' => 'Aplikasi Web Ber-HKI & Prosiding Internasional'
-                    ],
-                    [
-                        'judul' => 'Efektivitas Konseling Kelompok Cognitive Behavior Therapy (CBT) Teknik Cognitive Restructuring terhadap Academic Burnout Mahasiswa',
-                        'ketua' => 'Prof. Dr. Syamsul Bachri Thalib, M.Si.',
-                        'anggota' => 'Dra. Hj. Sitti Halimah, M.Pd. & 2 Mahasiswa',
-                        'skema' => 'Penelitian Dasar Kolaboratif (PNBP)',
-                        'tahun' => '2023',
-                        'dana' => 'Rp 35.000.000',
-                        'luaran' => 'Jurnal Nasional Terakreditasi SINTA 2'
-                    ]
-                ];
-                foreach ($riset_list as $r) : ?>
+                <?php foreach ($riset_list as $r) :
+                    $dok_url = !empty($r['dokumen_url']) && function_exists('ppb_clean_document_url')
+                        ? ppb_clean_document_url($r['dokumen_url'])
+                        : trim((string) ($r['dokumen_url'] ?? ''));
+                ?>
                     <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
                         <div>
-                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                                <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 8px;border-radius:4px;"><?php echo esc_html($r['skema']); ?></span>
-                                <span style="font-size:12px;font-weight:700;color:#059669;"><?php echo esc_html($r['tahun']); ?></span>
+                            <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                                <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 8px;border-radius:4px;"><?php echo esc_html($r['skema'] ?? 'Penelitian PNBP'); ?></span>
+                                <span style="font-size:12px;font-weight:700;color:#059669;"><?php echo esc_html($r['tahun'] ?? ''); ?></span>
                             </div>
-                            <h4 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 10px;line-height:1.4;"><?php echo esc_html($r['judul']); ?></h4>
+                            <h4 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 10px;line-height:1.4;"><?php echo esc_html($r['judul'] ?? ''); ?></h4>
                             <div style="font-size:12.5px;color:#4B5563;line-height:1.6;margin-bottom:12px;">
-                                <div><strong>Ketua Peneliti:</strong> <?php echo esc_html($r['ketua']); ?></div>
-                                <div><strong>Kolaborator:</strong> <?php echo esc_html($r['anggota']); ?></div>
-                                <div><strong>Dana Hibah:</strong> <?php echo esc_html($r['dana']); ?></div>
+                                <div><strong>Ketua Peneliti:</strong> <?php echo esc_html($r['ketua'] ?? ''); ?></div>
+                                <div><strong>Kolaborator:</strong> <?php echo esc_html($r['anggota'] ?? '-'); ?></div>
+                                <div><strong>Dana Hibah:</strong> <?php echo esc_html($r['dana'] ?? '-'); ?></div>
                             </div>
                         </div>
-                        <div style="font-size:12px;background:#FAF8F5;border:1px solid #E2E8F0;padding:8px 12px;border-radius:8px;color:#0D3B22;font-weight:600;">
-                            🎯 Luaran: <?php echo esc_html($r['luaran']); ?>
+                        <div>
+                            <div style="font-size:12px;background:#FAF8F5;border:1px solid #E2E8F0;padding:8px 12px;border-radius:8px;color:#0D3B22;font-weight:600;">
+                                🎯 Luaran: <?php echo esc_html($r['luaran'] ?? '-'); ?>
+                            </div>
+                            <?php if ($dok_url !== '') : ?>
+                                <a href="<?php echo esc_url($dok_url); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#E8F0EA;color:#0D3B22;border:1px solid #B7D0BE;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;">📄 Laporan / SK Hibah &#8599;</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -1515,54 +2368,33 @@ function ppb_shortcode_mis_pnbp($atts = []) {
         </div>
 
         <!-- Pane 2: PkM PNBP -->
-        <div id="pane-pkm" class="ppb-pnbp-pane" style="display:none;">
+        <div id="pane-pkm" data-pnbp-pane="pane-pkm" class="ppb-pnbp-pane" style="display:none;">
             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:20px;">
-                <?php
-                $pkm_list = [
-                    [
-                        'judul' => 'Peningkatan Kompetensi Guru Bimbingan dan Konseling dalam Penerapan Asesmen Psikososial Digital Siswa Pasca Pandemi di Kabupaten Gowa',
-                        'ketua' => 'Dr. Farida Aryani, M.Pd.',
-                        'mitra' => 'Musyawarah Guru Bimbingan dan Konseling (MGBK) SMP/SMA Gowa',
-                        'skema' => 'Program Kemitraan Masyarakat (PKM-PNBP)',
-                        'tahun' => '2024',
-                        'dana' => 'Rp 30.000.000',
-                        'luaran' => 'Video Kegiatan, Modul Pelatihan, Publikasi Jurnal PkM'
-                    ],
-                    [
-                        'judul' => 'Pendampingan Konseling Sebaya (Peer Counseling) untuk Pencegahan Kekerasan Seksual & Bullying di Pesantren Wilayah Maros',
-                        'ketua' => 'Dr. H. Sulaiman, M.Pd.',
-                        'mitra' => 'Pondok Pesantren & Komunitas Remaja Sebaya',
-                        'skema' => 'Program Pengabdian Desa Binaan (PNBP)',
-                        'tahun' => '2024',
-                        'dana' => 'Rp 35.000.000',
-                        'luaran' => 'Buku Panduan Kader Sebaya & Berita Media Massa'
-                    ],
-                    [
-                        'judul' => 'Pelatihan Terapi Relaksasi dan Manajemen Emosi bagi Konselor Sekolah Inklusif di Kota Makassar',
-                        'ketua' => 'Dra. Hj. Sitti Halimah, M.Pd.',
-                        'mitra' => 'Forum Guru Inklusi & SLB Negeri 1 Makassar',
-                        'skema' => 'Program Kemitraan Masyarakat (PKM-PNBP)',
-                        'tahun' => '2023',
-                        'dana' => 'Rp 25.000.000',
-                        'luaran' => 'Jurnal Pengabdian Nasional & HKI Panduan'
-                    ]
-                ];
-                foreach ($pkm_list as $p) : ?>
+                <?php foreach ($pkm_list as $p) :
+                    $dok_url = !empty($p['dokumen_url']) && function_exists('ppb_clean_document_url')
+                        ? ppb_clean_document_url($p['dokumen_url'])
+                        : trim((string) ($p['dokumen_url'] ?? ''));
+                ?>
                     <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
                         <div>
-                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                                <span style="font-size:11px;font-weight:700;background:#FEF3C7;color:#92400E;padding:3px 8px;border-radius:4px;"><?php echo esc_html($p['skema']); ?></span>
-                                <span style="font-size:12px;font-weight:700;color:#059669;"><?php echo esc_html($p['tahun']); ?></span>
+                            <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                                <span style="font-size:11px;font-weight:700;background:#FEF3C7;color:#92400E;padding:3px 8px;border-radius:4px;"><?php echo esc_html($p['skema'] ?? 'PkM PNBP'); ?></span>
+                                <span style="font-size:12px;font-weight:700;color:#059669;"><?php echo esc_html($p['tahun'] ?? ''); ?></span>
                             </div>
-                            <h4 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 10px;line-height:1.4;"><?php echo esc_html($p['judul']); ?></h4>
+                            <h4 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 10px;line-height:1.4;"><?php echo esc_html($p['judul'] ?? ''); ?></h4>
                             <div style="font-size:12.5px;color:#4B5563;line-height:1.6;margin-bottom:12px;">
-                                <div><strong>Ketua Pelaksana:</strong> <?php echo esc_html($p['ketua']); ?></div>
-                                <div><strong>Mitra Kegiatan:</strong> <?php echo esc_html($p['mitra']); ?></div>
-                                <div><strong>Dana PNBP:</strong> <?php echo esc_html($p['dana']); ?></div>
+                                <div><strong>Ketua Pelaksana:</strong> <?php echo esc_html($p['ketua'] ?? ''); ?></div>
+                                <div><strong>Mitra Kegiatan:</strong> <?php echo esc_html($p['mitra'] ?? '-'); ?></div>
+                                <div><strong>Dana PNBP:</strong> <?php echo esc_html($p['dana'] ?? '-'); ?></div>
                             </div>
                         </div>
-                        <div style="font-size:12px;background:#FAF8F5;border:1px solid #E2E8F0;padding:8px 12px;border-radius:8px;color:#0D3B22;font-weight:600;">
-                            🎯 Luaran: <?php echo esc_html($p['luaran']); ?>
+                        <div>
+                            <div style="font-size:12px;background:#FAF8F5;border:1px solid #E2E8F0;padding:8px 12px;border-radius:8px;color:#0D3B22;font-weight:600;">
+                                🎯 Luaran: <?php echo esc_html($p['luaran'] ?? '-'); ?>
+                            </div>
+                            <?php if ($dok_url !== '') : ?>
+                                <a href="<?php echo esc_url($dok_url); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#E8F0EA;color:#0D3B22;border:1px solid #B7D0BE;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;text-decoration:none;">📄 Laporan / SK PkM &#8599;</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -1570,22 +2402,29 @@ function ppb_shortcode_mis_pnbp($atts = []) {
         </div>
 
         <script>
-        document.querySelectorAll('.ppb-pnbp-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var target = this.getAttribute('data-pnbp');
-                document.querySelectorAll('.ppb-pnbp-pane').forEach(function(pane) { pane.style.display = 'none'; });
-                document.querySelectorAll('.ppb-pnbp-btn').forEach(function(b) {
-                    b.style.background = '#ffffff';
-                    b.style.color = '#374151';
-                    b.style.border = '1px solid #D1D5DB';
+        (function(){
+            var wrappers = document.querySelectorAll('.ppb-mis-pnbp-wrapper');
+            wrappers.forEach(function(wrapper){
+                if (wrapper.getAttribute('data-pnbp-wired') === '1') return;
+                wrapper.setAttribute('data-pnbp-wired', '1');
+                wrapper.querySelectorAll('.ppb-pnbp-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var target = this.getAttribute('data-pnbp');
+                        wrapper.querySelectorAll('.ppb-pnbp-pane').forEach(function(pane) { pane.style.display = 'none'; });
+                        wrapper.querySelectorAll('.ppb-pnbp-btn').forEach(function(b) {
+                            b.style.background = '#ffffff';
+                            b.style.color = '#374151';
+                            b.style.border = '1px solid #D1D5DB';
+                        });
+                        var activePane = wrapper.querySelector('[data-pnbp-pane="' + target + '"]') || document.getElementById(target);
+                        if (activePane) activePane.style.display = 'block';
+                        this.style.background = '#0D3B22';
+                        this.style.color = '#ffffff';
+                        this.style.border = 'none';
+                    });
                 });
-                var activePane = document.getElementById(target);
-                if (activePane) activePane.style.display = 'block';
-                this.style.background = '#0D3B22';
-                this.style.color = '#ffffff';
-                this.style.border = 'none';
             });
-        });
+        })();
         </script>
     </section>
     <?php
@@ -1599,10 +2438,10 @@ add_shortcode('ppb_mis_pnbp', 'ppb_shortcode_mis_pnbp');
 /* ========================================================================== */
 if (!function_exists('ppb_shortcode_jurnal_bk')) {
 function ppb_shortcode_jurnal_bk($atts = []) {
+    $jurnal_list = function_exists('ppb_get_jurnal_bk_data') ? ppb_get_jurnal_bk_data() : [];
     ob_start();
     ?>
     <section class="ppb-jurnal-wrapper" style="font-family:'Plus Jakarta Sans',sans-serif;color:#1F2937;margin:30px 0;">
-        
         <div style="background:#0D3B22;color:#ffffff;border-radius:20px;padding:30px;margin-bottom:30px;box-shadow:0 8px 25px rgba(13,59,34,0.15);">
             <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,184,46,0.2);color:#F5B82E;padding:4px 14px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:12px;border:1px solid rgba(245,184,46,0.35);">
                 <span>Publikasi Ilmiah &amp; Diseminasi Riset</span>
@@ -1611,79 +2450,196 @@ function ppb_shortcode_jurnal_bk($atts = []) {
                 Jurnal &amp; Pengabdian yang Dikelola Program Studi Bimbingan dan Konseling
             </h2>
             <p style="color:rgba(255,255,255,0.85);font-size:14px;max-width:760px;margin:0;line-height:1.6;">
-                Dua jurnal peer-reviewed resmi yang memuat karya riset empiris dan artikel pengabdian masyarakat di bidang bimbingan, konseling, dan psikologi pendidikan terapan.
+                Publikasi ilmiah peer-reviewed resmi yang memuat karya riset empiris dan artikel pengabdian masyarakat di bidang bimbingan, konseling, dan psikologi pendidikan terapan.
             </p>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:24px;">
-            
-            <!-- Jurnal 1: JBK -->
-            <div style="background:#ffffff;border:1.5px solid #D4E3D8;border-radius:18px;padding:26px;box-shadow:0 6px 20px rgba(0,0,0,0.04);display:flex;flex-direction:column;justify-content:space-between;">
-                <div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <span style="background:#DCFCE7;color:#166534;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:6px;border:1px solid #86EFAC;">
-                            🏅 Terakreditasi SINTA 3
-                        </span>
-                        <span style="font-size:12px;color:#6B7280;font-weight:600;">e-ISSN: 2580-0442</span>
-                    </div>
-                    <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#0D3B22;margin:0 0 10px;line-height:1.3;">
-                        Jurnal Bimbingan dan Konseling (JBK)
-                    </h3>
-                    <p style="font-size:13.5px;color:#4B5563;line-height:1.6;margin:0 0 16px;">
-                        Jurnal ilmiah berkala yang mempublikasikan hasil penelitian orisinal mengenai teori konseling, asesmen psikologis, intervensi perilaku, dan konseling lintas budaya.
-                    </p>
-                    <div style="font-size:12.5px;background:#FAF8F5;padding:12px 14px;border-radius:10px;border:1px solid #E5E7EB;margin-bottom:18px;line-height:1.6;color:#374151;">
-                        <div><strong>Penerbit:</strong> Jurusan PPB / Prodi BK FIP UNM</div>
-                        <div><strong>Frekuensi:</strong> 2 Kali Setahun (Juni &amp; Desember)</div>
-                        <div><strong>Pengindeks:</strong> SINTA, Google Scholar, Garuda, Crossref (DOI)</div>
-                    </div>
-                </div>
-                <div style="display:flex;gap:10px;">
-                    <a href="https://ojs.unm.ac.id/JBK" target="_blank" rel="noopener" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:13px;font-weight:700;padding:11px 16px;border-radius:10px;text-decoration:none;">
-                        Kunjungi Portal Jurnal OJS &rarr;
-                    </a>
-                    <a href="https://ojs.unm.ac.id/JBK/about/submissions" target="_blank" rel="noopener" style="background:#FAF8F5;color:#0D3B22;border:1px solid #D4E3D8;font-size:13px;font-weight:600;padding:11px 14px;border-radius:10px;text-decoration:none;">
-                        Pedoman Submit
-                    </a>
-                </div>
-            </div>
-
-            <!-- Jurnal 2: Jurnal Pengabdian Konseling Nusantara (JPKN) -->
-            <div style="background:#ffffff;border:1.5px solid #D4E3D8;border-radius:18px;padding:26px;box-shadow:0 6px 20px rgba(0,0,0,0.04);display:flex;flex-direction:column;justify-content:space-between;">
-                <div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <span style="background:#FEF3C7;color:#92400E;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:6px;border:1px solid #FCD34D;">
-                            🏅 Terindeks SINTA 4 / Garuda
-                        </span>
-                        <span style="font-size:12px;color:#6B7280;font-weight:600;">e-ISSN: 2775-8915</span>
-                    </div>
-                    <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#0D3B22;margin:0 0 10px;line-height:1.3;">
-                        Jurnal Pengabdian Konseling Nusantara (JPKN)
-                    </h3>
-                    <p style="font-size:13.5px;color:#4B5563;line-height:1.6;margin:0 0 16px;">
-                        Media diseminasi aksi nyata pengabdian kepada masyarakat, pendampingan konseling sekolah, pemberdayaan komunitas rentan, dan pelatihan kesehatan mental.
-                    </p>
-                    <div style="font-size:12.5px;background:#FAF8F5;padding:12px 14px;border-radius:10px;border:1px solid #E5E7EB;margin-bottom:18px;line-height:1.6;color:#374151;">
-                        <div><strong>Penerbit:</strong> Prodi BK FIP bekerjasama dengan LP2M UNM</div>
-                        <div><strong>Frekuensi:</strong> 2 Kali Setahun (April &amp; Oktober)</div>
-                        <div><strong>Pengindeks:</strong> Google Scholar, Garuda, Moraref, ROAD</div>
-                    </div>
-                </div>
-                <div style="display:flex;gap:10px;">
-                    <a href="https://ojs.unm.ac.id/JPKN" target="_blank" rel="noopener" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:13px;font-weight:700;padding:11px 16px;border-radius:10px;text-decoration:none;">
-                        Kunjungi Portal Jurnal OJS &rarr;
-                    </a>
-                    <a href="https://ojs.unm.ac.id/JPKN/about/submissions" target="_blank" rel="noopener" style="background:#FAF8F5;color:#0D3B22;border:1px solid #D4E3D8;font-size:13px;font-weight:600;padding:11px 14px;border-radius:10px;text-decoration:none;">
-                        Pedoman Submit
-                    </a>
-                </div>
-            </div>
-
-        </div>
-
+        <?php echo ppb_render_jurnal_cards_grid_html($jurnal_list); ?>
     </section>
     <?php
     return ob_get_clean();
 }
 }
 add_shortcode('ppb_jurnal_bk', 'ppb_shortcode_jurnal_bk');
+
+/* ========================================================================== */
+/* 11. FRONTEND SYNC FILTER: PANDUAN, ROADMAP, KERJASAMA, KEPAKARAN & BUKU    */
+/* ========================================================================== */
+if (!function_exists('ppb_akademik_sync_frontend_content')) {
+function ppb_akademik_sync_frontend_content($content) {
+    if (!is_string($content) || $content === '' || is_admin()) {
+        return $content;
+    }
+    if (!function_exists('is_page') || (!is_page() && !is_singular())) {
+        return $content;
+    }
+
+    $slug_path = function_exists('ppb_get_current_page_slug_path') ? ppb_get_current_page_slug_path() : '';
+
+    $is_panduan   = ($slug_path === 'akademik/panduan' || strpos($content, '1_Pedoman_Skripsi_BK_UNM') !== false);
+    $is_roadmap   = ($slug_path === 'profil/roadmap' || strpos($content, '1_Pengesahan_Roadmap_Pilar1') !== false);
+    $is_kerjasama = ($slug_path === 'profil/kerjasama-tridharma' || strpos($content, 'Rekap MoA Pendidikan PDF') !== false);
+    $is_kepakaran = ($slug_path === 'profil/kepakaran-dosen' || strpos($content, 'Unduh Dokumen SK Kepakaran') !== false);
+    $is_buku      = ($slug_path === 'profil/buku-dosen' || strpos($content, 'Koleksi Buku Karya Dosen') !== false);
+    $is_pnbp_static   = (strpos($content, '<!-- QUICK STATS DASHBOARD -->') !== false && strpos($content, '<!-- TAUTAN PORTAL LP2M RESMI -->') !== false && strpos($content, 'ppb-mis-pnbp-wrapper') === false);
+    $is_jurnal_static = (strpos($content, '<!-- JURNAL CARDS GRID -->') !== false && strpos($content, 'id="ppbJurnalGrid"') === false);
+
+    if (!$is_panduan && !$is_roadmap && !$is_kerjasama && !$is_kepakaran && !$is_buku && !$is_pnbp_static && !$is_jurnal_static) {
+        return $content;
+    }
+
+    $links = ppb_akademik_get_all_links();
+
+    // 1. /akademik/panduan/
+    if ($is_panduan) {
+        $skripsi_url   = $links['pedoman_skripsi'] ?? '';
+        $penilaian_url = $links['pedoman_penilaian'] ?? '';
+
+        $content = preg_replace_callback(
+            '/<div>\s*<a\b[^>]*1_Pedoman_Skripsi_BK_UNM[^>]*>.*?<\/a>\s*<\/div>/is',
+            function() use ($skripsi_url, $penilaian_url) {
+                $btns = '';
+                if ($skripsi_url !== '') {
+                    $btns .= '<a href="' . esc_url($skripsi_url) . '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:9999px;background:#F5B82E;color:#0D3B22;font-size:13px;font-weight:700;text-decoration:none">Buka Folder Template Skripsi &#8599;</a>';
+                } else {
+                    $btns .= '<span style="display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:9999px;background:rgba(255,255,255,0.14);color:rgba(255,255,255,0.82);font-size:13px;font-weight:600">Folder Template Skripsi Segera Tersedia</span>';
+                }
+                if ($penilaian_url !== '') {
+                    $btns .= '<a href="' . esc_url($penilaian_url) . '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:9999px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.35);color:#ffffff;font-size:13px;font-weight:700;text-decoration:none">Pedoman Penilaian OBE &#8599;</a>';
+                }
+                return '<div style="display:flex;flex-wrap:wrap;gap:10px">' . $btns . '</div>';
+            },
+            $content,
+            1
+        );
+    }
+
+    // 2. /profil/roadmap/
+    if ($is_roadmap) {
+        $roadmap_map = [
+            'https://drive.google.com/file/d/1_Pengesahan_Roadmap_Pilar1/view?usp=sharing'    => $links['roadmap_p1_sk'] ?? '',
+            'https://drive.google.com/file/d/1_Dokumen_Roadmap_Riset_Pilar1/view?usp=sharing' => $links['roadmap_p1_doc'] ?? '',
+            'https://drive.google.com/file/d/1_Pengesahan_Roadmap_Pilar2/view?usp=sharing'    => $links['roadmap_p2_sk'] ?? '',
+            'https://drive.google.com/file/d/1_Dokumen_Roadmap_Riset_Pilar2/view?usp=sharing' => $links['roadmap_p2_doc'] ?? '',
+            'https://drive.google.com/file/d/1_Pengesahan_Roadmap_Pilar3/view?usp=sharing'    => $links['roadmap_p3_sk'] ?? '',
+            'https://drive.google.com/file/d/1_Dokumen_Roadmap_Riset_Pilar3/view?usp=sharing' => $links['roadmap_p3_doc'] ?? '',
+        ];
+        foreach ($roadmap_map as $seed_url => $target_url) {
+            if ($target_url !== '') {
+                $content = str_replace($seed_url, esc_url($target_url), $content);
+            } else {
+                $pattern = '/<a\b[^>]*href=(["\'])' . preg_quote($seed_url, '/') . '\1[^>]*>.*?<\/a>/is';
+                $content = preg_replace(
+                    $pattern,
+                    '<span style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9999px;background:#F3F4F6;color:#6B7280;font-size:12px;font-weight:600">Berkas Segera Diunggah</span>',
+                    $content
+                );
+            }
+        }
+    }
+
+    // 3. /profil/kerjasama-tridharma/
+    if ($is_kerjasama) {
+        $moa_map = [
+            'Rekap MoA Pendidikan PDF' => $links['moa_pendidikan'] ?? '',
+            'Rekap MoA Penelitian PDF' => $links['moa_penelitian'] ?? '',
+            'Rekap MoA PkM PDF'        => $links['moa_pkm'] ?? '',
+        ];
+        foreach ($moa_map as $label_txt => $url_val) {
+            $pattern = '/<a\b[^>]*href=(["\'])#\1[^>]*>[^<]*' . preg_quote($label_txt, '/') . '[^<]*<\/a>/is';
+            if ($url_val !== '') {
+                $replacement = '<a href="' . esc_url($url_val) . '" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#0D3B22;color:#ffffff;font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;text-decoration:none;">📄 ' . esc_html($label_txt) . ' &#8599;</a>';
+            } else {
+                $replacement = '<span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid #E5E7EB;">📄 Rekap Segera Diunggah</span>';
+            }
+            $content = preg_replace($pattern, $replacement, $content);
+        }
+    }
+
+    // 4. /profil/kepakaran-dosen/
+    if ($is_kepakaran) {
+        $sk_kep_url = $links['sk_kepakaran'] ?? '';
+        $pattern = '/<a\b[^>]*href=(["\'])#\1[^>]*>\s*[^<]*Unduh Dokumen SK Kepakaran[^<]*<\/a>/is';
+        if ($sk_kep_url !== '') {
+            $replacement = '<a href="' . esc_url($sk_kep_url) . '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#F5B82E;color:#0D3B22;font-size:13px;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none;">📄 Unduh Dokumen SK Kepakaran &#8599;</a>';
+        } else {
+            $replacement = '<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.14);color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;padding:12px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.22);">SK Kepakaran Segera Tersedia</span>';
+        }
+        $content = preg_replace($pattern, $replacement, $content);
+    }
+
+    // 5. /profil/buku-dosen/
+    if ($is_buku) {
+        $valid_slugs = [];
+        if (function_exists('ppb_get_dosen_directory_cached')) {
+            foreach ((array) ppb_get_dosen_directory_cached() as $d_item) {
+                if (!empty($d_item['slug'])) {
+                    $valid_slugs[$d_item['slug']] = true;
+                }
+            }
+        }
+        $target_slugs = ['farida-aryani', 'alimuddin-mahmud', 'abdullah-pandang'];
+        $idx = 0;
+        $content = preg_replace_callback(
+            '/<a\b([^>]*)href=(["\'])#\2([^>]*)>(\s*Lihat Detail\s*(?:&amp;|&)\s*Akses Buku\s*)<\/a>/is',
+            function($m) use (&$idx, $target_slugs, $valid_slugs) {
+                $slug = isset($target_slugs[$idx]) ? $target_slugs[$idx] : '';
+                $idx++;
+                if ($slug !== '' && isset($valid_slugs[$slug])) {
+                    $url = home_url('/profil/dosen/' . $slug . '/');
+                    $label = 'Lihat Profil &amp; Karya Dosen &rarr;';
+                } else {
+                    $url = home_url('/profil/dosen/');
+                    $label = 'Lihat Direktori Dosen &rarr;';
+                }
+                return '<a' . $m[1] . 'href="' . esc_url($url) . '"' . $m[3] . '>' . $label . '</a>';
+            },
+            $content
+        );
+    }
+
+    // 6. Halaman statis /mis-pnbp/ (fallback jika belum pakai shortcode [ppb_mis_pnbp])
+    if ($is_pnbp_static) {
+        $start = strpos($content, '<!-- QUICK STATS DASHBOARD -->');
+        $end   = strpos($content, '<!-- TAUTAN PORTAL LP2M RESMI -->');
+        if ($start !== false && $end !== false && $end > $start) {
+            $pnbp_data  = function_exists('ppb_get_mis_pnbp_data') ? ppb_get_mis_pnbp_data() : ['riset' => [], 'pkm' => []];
+            $cnt_r      = count($pnbp_data['riset'] ?? []);
+            $cnt_p      = count($pnbp_data['pkm'] ?? []);
+            $stats_html = '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;margin-bottom:28px;">'
+                . '<div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:16px;padding:20px;border-left:4px solid #0D3B22;">'
+                . '<span style="font-size:11.5px;color:#64748B;font-weight:700;text-transform:uppercase;">Hibah Penelitian PNBP</span>'
+                . '<div style="font-family:\'Fraunces\',Georgia,serif;font-size:28px;font-weight:700;color:#0D3B22;margin-top:4px;">' . (int) $cnt_r . ' Judul</div>'
+                . '</div>'
+                . '<div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:16px;padding:20px;border-left:4px solid #F5B82E;">'
+                . '<span style="font-size:11.5px;color:#64748B;font-weight:700;text-transform:uppercase;">Hibah Pengabdian (PkM)</span>'
+                . '<div style="font-family:\'Fraunces\',Georgia,serif;font-size:28px;font-weight:700;color:#92400E;margin-top:4px;">' . (int) $cnt_p . ' Judul</div>'
+                . '</div>'
+                . '<div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:16px;padding:20px;border-left:4px solid #0369A1;">'
+                . '<span style="font-size:11.5px;color:#64748B;font-weight:700;text-transform:uppercase;">Total Portofolio Aktif</span>'
+                . '<div style="font-family:\'Fraunces\',Georgia,serif;font-size:28px;font-weight:700;color:#0369A1;margin-top:4px;">' . (int) ($cnt_r + $cnt_p) . ' Program</div>'
+                . '</div>'
+                . '</div>';
+            $content = substr($content, 0, $start)
+                . $stats_html
+                . ppb_shortcode_mis_pnbp(['show_banner' => '0']) . "\n    "
+                . substr($content, $end);
+        }
+    }
+
+    // 7. Halaman statis /jurnal-bk/ (fallback jika belum pakai shortcode [ppb_jurnal_bk])
+    if ($is_jurnal_static && function_exists('ppb_replace_balanced_div_at')) {
+        $marker = strpos($content, '<!-- JURNAL CARDS GRID -->');
+        if ($marker !== false) {
+            $div_start = stripos($content, '<div', $marker);
+            if ($div_start !== false) {
+                $content = ppb_replace_balanced_div_at($content, $div_start, ppb_render_jurnal_cards_grid_html());
+            }
+        }
+    }
+
+    return $content;
+}
+}
+add_filter('the_content', 'ppb_akademik_sync_frontend_content', 12);
+
