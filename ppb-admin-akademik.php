@@ -1227,11 +1227,19 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
             ];
             ?>
 
-            <div style="display:flex;flex-direction:column;gap:18px;">
+            <div class="ppb-mk-sem-filter" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:20px;">
+                <span style="font-size:12px;font-weight:700;color:#4B5563;margin-right:4px;">Filter Semester:</span>
+                <button type="button" class="ppb-mk-sem-pill is-active" data-mk-sem="all" style="padding:7px 14px;border-radius:9999px;border:1px solid #0D3B22;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.16s;">Semua (8 Sem)</button>
+                <?php foreach (array_keys($semesters) as $sem_num) : ?>
+                    <button type="button" class="ppb-mk-sem-pill" data-mk-sem="<?php echo (int)$sem_num; ?>" style="padding:7px 13px;border-radius:9999px;border:1px solid #D1D5DB;background:#ffffff;color:#374151;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.16s;">Sem <?php echo (int)$sem_num; ?></button>
+                <?php endforeach; ?>
+            </div>
+
+            <div id="ppb-mk-sem-list" style="display:flex;flex-direction:column;gap:18px;">
                 <?php foreach ($semesters as $sem => $mks) : 
                     $total_sks = array_sum(array_column($mks, 'sks'));
                 ?>
-                    <div style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+                    <div class="ppb-mk-sem-card" data-mk-sem-card="<?php echo (int)$sem; ?>" style="background:#ffffff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
                         <div style="background:#0D3B22;color:#ffffff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;">
                             <strong style="font-size:14px;letter-spacing:0.02em;">Semester <?php echo $sem; ?></strong>
                             <span style="font-size:12px;background:rgba(245,184,46,0.25);color:#F5B82E;padding:2px 10px;border-radius:6px;font-weight:700;">Total: <?php echo $total_sks; ?> SKS</span>
@@ -1392,6 +1400,23 @@ function ppb_shortcode_kurikulum_rps_sap($atts = []) {
             btn.addEventListener('click', function() {
                 var tab = this.getAttribute('data-tab');
                 window.ppbSwitchCurTab(tab);
+            });
+        });
+        document.querySelectorAll('.ppb-mk-sem-pill').forEach(function(pill) {
+            pill.addEventListener('click', function() {
+                var semVal = this.getAttribute('data-mk-sem') || 'all';
+                document.querySelectorAll('.ppb-mk-sem-pill').forEach(function(b) {
+                    var active = (b === pill);
+                    b.classList.toggle('is-active', active);
+                    b.style.background = active ? '#0D3B22' : '#ffffff';
+                    b.style.color = active ? '#F5B82E' : '#374151';
+                    b.style.borderColor = active ? '#0D3B22' : '#D1D5DB';
+                    b.style.fontWeight = active ? '700' : '600';
+                });
+                document.querySelectorAll('.ppb-mk-sem-card').forEach(function(card) {
+                    var cSem = card.getAttribute('data-mk-sem-card');
+                    card.style.display = (semVal === 'all' || cSem === semVal) ? 'block' : 'none';
+                });
             });
         });
         </script>
