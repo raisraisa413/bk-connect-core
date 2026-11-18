@@ -245,6 +245,36 @@ function ppb_dosen_save_meta($post_id) {
         $clean_foto = function_exists('bk_sanitize_asset_or_url') ? bk_sanitize_asset_or_url($raw_foto) : sanitize_text_field($raw_foto);
         update_post_meta($post_id, '_ppb_dosen_foto_link', $clean_foto);
         update_post_meta($post_id, '_dosen_foto_link', $clean_foto);
+
+        $post_slug = get_post_field('post_name', $post_id);
+        if ($post_slug) {
+            $theme_dir = get_template_directory();
+            $json_file = $theme_dir . '/dosen-data.json';
+            $dosen_list = get_option('bk_dosen_data_cache', array());
+            if ((empty($dosen_list) || !is_array($dosen_list)) && file_exists($json_file)) {
+                $dosen_list = json_decode((string) file_get_contents($json_file), true);
+            }
+            if (is_array($dosen_list)) {
+                $changed = false;
+                foreach ($dosen_list as &$item) {
+                    if (($item['slug'] ?? '') === $post_slug) {
+                        $item['foto_link'] = $clean_foto;
+                        $changed = true;
+                        break;
+                    }
+                }
+                unset($item);
+                if ($changed) {
+                    update_option('bk_dosen_data_cache', $dosen_list, false);
+                    if (file_exists($json_file)) {
+                        @file_put_contents($json_file, json_encode($dosen_list, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+                    }
+                    if (function_exists('bk_fip_rebuild_dosen_roster_html')) {
+                        bk_fip_rebuild_dosen_roster_html($dosen_list);
+                    }
+                }
+            }
+        }
     }
     if (isset($_POST['ppb_dosen_kepakaran'])) {
         update_post_meta($post_id, '_ppb_dosen_kepakaran', sanitize_textarea_field($_POST['ppb_dosen_kepakaran']));
