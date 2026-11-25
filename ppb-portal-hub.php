@@ -22,7 +22,7 @@ function ppb_get_portal_menu_hierarchy() {
             'icon'       => '📊',
             'slug'       => 'ppb-portal-hub',
             'url'        => admin_url('admin.php?page=ppb-portal-hub'),
-            'match_pages'=> array('ppb-portal-hub'),
+            'match_pages'=> array('ppb-portal-hub', 'ppb-unit-registry'),
             'match_cpts' => array(),
             'children'   => array(
                 array(
@@ -30,6 +30,12 @@ function ppb_get_portal_menu_hierarchy() {
                     'url'      => admin_url('admin.php?page=ppb-portal-hub'),
                     'slug'     => 'ppb-portal-hub',
                     'keywords' => 'dashboard beranda pusat kendali ringkasan statistik',
+                ),
+                array(
+                    'label'    => '🏛️ Unit & Prodi Jurusan PPB',
+                    'url'      => admin_url('admin.php?page=ppb-unit-registry'),
+                    'slug'     => 'ppb-unit-registry',
+                    'keywords' => 'jurusan ppb prodi s1 s2 s3 ppg unit kaprodi visi registry jenjang',
                 ),
                 array(
                     'label'    => '📥 Hub Import / Export (16 Dataset)',
@@ -448,6 +454,15 @@ function ppb_register_portal_hub_menu() {
     // =========================================================================
     add_submenu_page(
         'ppb-portal-hub',
+        'Registry Unit & Prodi Jurusan PPB',
+        '🏛️ Unit & Prodi Jurusan PPB',
+        'manage_options',
+        'ppb-unit-registry',
+        'ppb_render_unit_registry_admin_page'
+    );
+
+    add_submenu_page(
+        'ppb-portal-hub',
         'Pengaturan Teks Beranda',
         '⚙️ Teks Beranda',
         'manage_options',
@@ -719,6 +734,7 @@ add_action('admin_head', function() {
     ?>
     <style id="ppb-portal-menu-organizer-css">
         /* Sembunyikan item anak datar di sidebar agar hanya 8 Kategori Induk yang tampil */
+        #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="page=ppb-unit-registry"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="page=bk-pengaturan-beranda"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="page=ppb-mata-kuliah-manager"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="post_type=ppb_jadwal"],
@@ -1320,9 +1336,29 @@ function ppb_render_portal_hub_dashboard() {
     $count_matkul  = is_array($mk_list) ? count($mk_list) : 0;
     $lamdik_cfg    = function_exists('ppb_get_lamdik_settings') ? ppb_get_lamdik_settings() : array();
     $lamdik_filled = 0;
-    if (!empty($lamdik_cfg['kriteria']) && is_array($lamdik_cfg['kriteria'])) {
-        foreach ($lamdik_cfg['kriteria'] as $kr) {
-            if (!empty($kr['drive_url'])) $lamdik_filled++;
+    if (!empty($lamdik_cfg['prodi']) && is_array($lamdik_cfg['prodi'])) {
+        $total_slots = 0;
+        foreach ($lamdik_cfg['prodi'] as $p_cfg) {
+            if (!empty($p_cfg['kriteria']) && is_array($p_cfg['kriteria'])) {
+                foreach ($p_cfg['kriteria'] as $kr) {
+                    $total_slots++;
+                    $has_link = !empty($kr['drive_url']);
+                    if (!$has_link && !empty($kr['eviden_links']) && is_array($kr['eviden_links'])) {
+                        foreach ($kr['eviden_links'] as $ev) {
+                            if (!empty($ev['url'])) { $has_link = true; break; }
+                        }
+                    }
+                    if ($has_link) $lamdik_filled++;
+                }
+            }
+        }
+        $lamdik_total_slots = $total_slots > 0 ? $total_slots : 27;
+    } else {
+        $lamdik_total_slots = 9;
+        if (!empty($lamdik_cfg['kriteria']) && is_array($lamdik_cfg['kriteria'])) {
+            foreach ($lamdik_cfg['kriteria'] as $kr) {
+                if (!empty($kr['drive_url'])) $lamdik_filled++;
+            }
         }
     }
     $elib_items    = function_exists('ppb_get_elibrary_items') ? ppb_get_elibrary_items() : array();
@@ -1448,7 +1484,7 @@ function ppb_render_portal_hub_dashboard() {
             <div class="ppb-metric-card">
                 <div class="ppb-metric-info">
                     <span>Eviden LAMDIK</span>
-                    <strong><?php echo esc_html($lamdik_filled); ?>/9</strong>
+                    <strong><?php echo esc_html($lamdik_filled); ?>/<?php echo esc_html($lamdik_total_slots ?? 27); ?></strong>
                 </div>
                 <div class="ppb-metric-icon">🏅</div>
             </div>
@@ -1491,6 +1527,24 @@ function ppb_render_portal_hub_dashboard() {
 
         <!-- Kartu Aksi Cepat Terpadu -->
         <div class="ppb-actions-grid" id="ppb-dashboard-cards-grid">
+
+            <!-- 00. Registry Unit & Prodi Jurusan PPB -->
+            <div class="ppb-action-card" data-cat="beranda" data-keywords="jurusan ppb prodi s1 s2 s3 ppg unit kaprodi visi registry jenjang">
+                <div>
+                    <span class="ppb-card-cat-badge">🏛️ Fondasi Jurusan PPB</span>
+                    <div class="ppb-card-top">
+                        <div class="ppb-card-icon dark">🏛️</div>
+                        <div class="ppb-card-text">
+                            <h3>Unit &amp; Program Studi Jurusan PPB</h3>
+                            <p>Atur pimpinan &amp; visi payung Jurusan PPB serta daftar Prodi (S1, S2, S3, dan penambahan prodi baru seperti PPG BK).</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="ppb-card-btns">
+                    <a href="<?php echo admin_url('admin.php?page=ppb-unit-registry'); ?>" class="ppb-btn ppb-btn-gold">🏛️ Kelola Unit &amp; Prodi</a>
+                    <a href="<?php echo esc_url(home_url('/profil/struktur/')); ?>" target="_blank" class="ppb-btn ppb-btn-secondary">↗ Struktur Publik</a>
+                </div>
+            </div>
             
             <!-- 0. Spotlight & Media Beranda -->
             <div class="ppb-action-card" data-cat="beranda" data-keywords="beranda spotlight video youtube slider teks sambutan kajur visi misi">
@@ -1572,13 +1626,13 @@ function ppb_render_portal_hub_dashboard() {
                     <div class="ppb-card-top">
                         <div class="ppb-card-icon dark">🏅</div>
                         <div class="ppb-card-text">
-                            <h3>Akreditasi &amp; Link Drive LAMDIK</h3>
-                            <p>Atur tautan Google Drive Folder Utama, LED, LKPS, 9 Kriteria Eviden, Renstra/Renop UPM, dan Sertifikat S1/S2/S3.</p>
+                            <h3>Akreditasi &amp; 9 Kriteria LAMDIK (S1, S2, S3)</h3>
+                            <p>Atur tautan Google Drive Folder Utama, LED, LKPS, 9 Kriteria Eviden terpisah untuk S1, S2, S3, Renstra/Renop Jurusan, dan Sertifikat resmi.</p>
                         </div>
                     </div>
                 </div>
                 <div class="ppb-card-btns">
-                    <a href="<?php echo admin_url('admin.php?page=ppb-lamdik-settings'); ?>" class="ppb-btn ppb-btn-gold">🏅 Link Drive LAMDIK (<?php echo esc_html($lamdik_filled); ?>/9)</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-lamdik-settings'); ?>" class="ppb-btn ppb-btn-gold">🏅 Link Drive LAMDIK (<?php echo esc_html($lamdik_filled); ?>/<?php echo esc_html($lamdik_total_slots ?? 27); ?>)</a>
                     <a href="<?php echo esc_url(home_url('/akreditasi/')); ?>" target="_blank" class="ppb-btn ppb-btn-secondary">↗ Hub Akreditasi</a>
                 </div>
             </div>
@@ -1781,6 +1835,7 @@ if (!function_exists('ppb_get_admin_managed_shortcode_map')) {
 function ppb_get_admin_managed_shortcode_map() {
     return array(
         'ppb_dosen_roster'       => array('label' => 'Direktori Dosen & SINTA',       'url' => admin_url('admin.php?page=bk-direktori-dosen')),
+        'ppb_lamdik_hub'         => array('label' => 'Akreditasi & 9 Kriteria LAMDIK', 'url' => admin_url('admin.php?page=ppb-lamdik-settings')),
         'ppb_kurikulum_rps_sap'  => array('label' => 'Mata Kuliah OBE & RPS/SAP',     'url' => admin_url('admin.php?page=ppb-mata-kuliah-manager')),
         'ppb_jadwal_ujian_list'  => array('label' => 'Jadwal Ujian & Seminar',        'url' => admin_url('edit.php?post_type=ppb_jadwal')),
         'ppb_mis_pnbp'           => array('label' => 'Hibah Riset & PkM PNBP',        'url' => admin_url('admin.php?page=ppb-akademik-settings&tab=pnbp')),

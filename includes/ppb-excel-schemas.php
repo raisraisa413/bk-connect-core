@@ -467,16 +467,18 @@ function ppb_excel_get_datasets() {
             'admin_url'     => 'admin.php?page=ppb-kemahasiswaan-settings&tab=statistik',
             'description'   => 'Tabel data penerimaan mahasiswa baru SNBP, SNBT, dan Mandiri per tahun (/kemahasiswaan/penerimaan/).',
             'columns' => array(
-                array('key' => 'tahun',           'label' => 'Tahun*',          'aliases' => array('year')),
-                array('key' => 'daya_tampung',    'label' => 'Daya Tampung*',   'aliases' => array('kuota')),
-                array('key' => 'peminat_snbp',    'label' => 'Peminat SNBP',    'aliases' => array('snbp')),
-                array('key' => 'peminat_snbt',    'label' => 'Peminat SNBT',    'aliases' => array('snbt')),
-                array('key' => 'peminat_mandiri', 'label' => 'Peminat Mandiri', 'aliases' => array('mandiri')),
+                array('key' => 'jenjang',         'label' => 'Jenjang (s1/s2/s3)', 'aliases' => array('unit', 'prodi', 'program_studi')),
+                array('key' => 'tahun',           'label' => 'Tahun*',             'aliases' => array('year')),
+                array('key' => 'daya_tampung',    'label' => 'Daya Tampung*',      'aliases' => array('kuota')),
+                array('key' => 'peminat_snbp',    'label' => 'Peminat SNBP / Reguler', 'aliases' => array('snbp', 'reguler')),
+                array('key' => 'peminat_snbt',    'label' => 'Peminat SNBT / Kerjasama', 'aliases' => array('snbt', 'kerjasama')),
+                array('key' => 'peminat_mandiri', 'label' => 'Peminat Mandiri / Beasiswa', 'aliases' => array('mandiri', 'beasiswa')),
                 array('key' => 'total_peminat',   'label' => 'Total Peminat (0 = auto)', 'aliases' => array('total')),
                 array('key' => 'keketatan',       'label' => 'Rasio Keketatan (kosong = auto)', 'aliases' => array('rasio')),
             ),
             'sample_rows' => array(
-                array('tahun' => '2025', 'daya_tampung' => 130, 'peminat_snbp' => 510, 'peminat_snbt' => 1210, 'peminat_mandiri' => 320, 'total_peminat' => 2040, 'keketatan' => '1 : 16'),
+                array('jenjang' => 's1', 'tahun' => '2025', 'daya_tampung' => 130, 'peminat_snbp' => 510, 'peminat_snbt' => 1210, 'peminat_mandiri' => 320, 'total_peminat' => 2040, 'keketatan' => '1 : 16'),
+                array('jenjang' => 's2', 'tahun' => '2025', 'daya_tampung' => 30, 'peminat_snbp' => 45, 'peminat_snbt' => 15, 'peminat_mandiri' => 12, 'total_peminat' => 72, 'keketatan' => '1 : 2'),
             ),
         ),
         'mbkm' => array(
@@ -503,7 +505,7 @@ function ppb_excel_get_datasets() {
         ),
         'jadwal' => array(
             'key'           => 'jadwal',
-            'label'         => 'Jadwal Seminar & Ujian Skripsi',
+            'label'         => 'Jadwal Seminar & Ujian (S1/S2/S3)',
             'icon'          => '📅',
             'group'         => 'Akademik & Kurikulum',
             'storage_type'  => 'cpt',
@@ -511,26 +513,27 @@ function ppb_excel_get_datasets() {
             'capability'    => 'edit_posts',
             'allow_replace' => true,
             'admin_url'     => 'edit.php?post_type=ppb_jadwal',
-            'description'   => 'Data mahasiswa peserta Sempro, Semhas, dan Ujian Skripsi beserta dosen pembimbing dan penguji.',
+            'description'   => 'Data mahasiswa peserta Sempro, Semhas, Ujian Skripsi (S1), Tesis (S2), dan Disertasi (S3) beserta dosen pembimbing & penguji.',
             'columns' => array(
+                array('key' => 'jenjang',          'label' => 'Jenjang (s1/s2/s3)', 'aliases' => array('unit', 'prodi', 'program_studi')),
                 array('key' => 'nama_mahasiswa',   'label' => 'Nama Mahasiswa*',  'aliases' => array('nama', 'mahasiswa')),
                 array('key' => 'nim',              'label' => 'NIM*',             'aliases' => array('no_induk')),
                 array('key' => 'angkatan',         'label' => 'Angkatan',         'aliases' => array('tahun_masuk')),
-                array('key' => 'jenis_ujian',      'label' => 'Jenis Ujian (seminar_proposal/seminar_hasil/ujian_skripsi)', 'aliases' => array('jenis', 'tahapan')),
+                array('key' => 'jenis_ujian',      'label' => 'Jenis Ujian (seminar_proposal/seminar_hasil/ujian_skripsi/seminar_tesis/ujian_tesis/ujian_kualifikasi/seminar_proposal_s3/ujian_tertutup/ujian_terbuka)', 'aliases' => array('jenis', 'tahapan')),
                 array('key' => 'status',           'label' => 'Status (terjadwal/sedang_berlangsung/selesai)', 'aliases' => array('status_ujian')),
                 array('key' => 'tanggal',          'label' => 'Tanggal (YYYY-MM-DD)*', 'aliases' => array('tgl', 'date')),
                 array('key' => 'jam_mulai',        'label' => 'Jam Mulai',        'aliases' => array('mulai')),
                 array('key' => 'jam_selesai',      'label' => 'Jam Selesai',      'aliases' => array('selesai')),
                 array('key' => 'ruangan',          'label' => 'Ruangan / Lokasi', 'aliases' => array('tempat', 'lokasi')),
                 array('key' => 'judul_penelitian', 'label' => 'Judul Penelitian', 'aliases' => array('judul', 'title')),
-                array('key' => 'pembimbing_1',     'label' => 'Pembimbing 1',     'aliases' => array('p1')),
-                array('key' => 'pembimbing_2',     'label' => 'Pembimbing 2',     'aliases' => array('p2')),
+                array('key' => 'pembimbing_1',     'label' => 'Pembimbing 1',     'aliases' => array('p1', 'promotor')),
+                array('key' => 'pembimbing_2',     'label' => 'Pembimbing 2',     'aliases' => array('p2', 'kopromotor')),
                 array('key' => 'penguji_1',        'label' => 'Penguji 1',        'aliases' => array('u1')),
                 array('key' => 'penguji_2',        'label' => 'Penguji 2',        'aliases' => array('u2')),
                 array('key' => 'link_daring',      'label' => 'Link Daring (Opsional)', 'aliases' => array('zoom', 'link_zoom', 'url')),
             ),
             'sample_rows' => array(
-                array('nama_mahasiswa' => 'Nurul Aulia Rahmah', 'nim' => '220404501012', 'angkatan' => '2022', 'jenis_ujian' => 'seminar_proposal', 'status' => 'terjadwal', 'tanggal' => '2026-05-20', 'jam_mulai' => '09:00', 'jam_selesai' => '10:30', 'ruangan' => 'Ruang Sidang FIP UNM Lt. 2', 'judul_penelitian' => 'Efektivitas Konseling Kelompok Solution-Focused untuk Resiliensi Akademik Mahasiswa', 'pembimbing_1' => 'Prof. Dr. Farida Aryani, M.Pd.', 'pembimbing_2' => 'Dr. Suciani Latif, S.Pd., M.Pd.', 'penguji_1' => 'Prof. Dr. Abdullah Pandang, M.Pd.', 'penguji_2' => 'Dr. Nur Fadhilah Umar, M.Pd.', 'link_daring' => ''),
+                array('jenjang' => 's1', 'nama_mahasiswa' => 'Nurul Aulia Rahmah', 'nim' => '220404501012', 'angkatan' => '2022', 'jenis_ujian' => 'seminar_proposal', 'status' => 'terjadwal', 'tanggal' => '2026-05-20', 'jam_mulai' => '09:00', 'jam_selesai' => '10:30', 'ruangan' => 'Ruang Sidang FIP UNM Lt. 2', 'judul_penelitian' => 'Efektivitas Konseling Kelompok Solution-Focused untuk Resiliensi Akademik Mahasiswa', 'pembimbing_1' => 'Prof. Dr. Farida Aryani, M.Pd.', 'pembimbing_2' => 'Dr. Suciani Latif, S.Pd., M.Pd.', 'penguji_1' => 'Prof. Dr. Abdullah Pandang, M.Pd.', 'penguji_2' => 'Dr. Nur Fadhilah Umar, M.Pd.', 'link_daring' => ''),
             ),
         ),
         'prestasi' => array(
@@ -543,8 +546,9 @@ function ppb_excel_get_datasets() {
             'capability'    => 'edit_posts',
             'allow_replace' => true,
             'admin_url'     => 'edit.php?post_type=ppb_prestasi',
-            'description'   => 'Rekapitulasi juara lomba, penghargaan, sertifikat Drive, dan status unggulan mahasiswa BK.',
+            'description'   => 'Rekapitulasi juara lomba, penghargaan, sertifikat Drive, dan status unggulan mahasiswa S1/S2/S3.',
             'columns' => array(
+                array('key' => 'jenjang',               'label' => 'Jenjang (s1/s2/s3)',    'aliases' => array('unit', 'prodi')),
                 array('key' => 'nama_mahasiswa',        'label' => 'Nama Mahasiswa / Tim*', 'aliases' => array('nama', 'mahasiswa')),
                 array('key' => 'nim',                   'label' => 'NIM',                  'aliases' => array('no_induk')),
                 array('key' => 'angkatan',              'label' => 'Angkatan',             'aliases' => array('tahun_masuk')),
@@ -560,7 +564,7 @@ function ppb_excel_get_datasets() {
                 array('key' => 'is_featured',           'label' => 'Unggulan (1/0)',       'aliases' => array('featured')),
             ),
             'sample_rows' => array(
-                array('nama_mahasiswa' => 'Fathurrahman Alim', 'nim' => '220404501033', 'angkatan' => '2022', 'capaian' => 'Juara 1 Poster Edukasi Mental Health', 'tingkat' => 'nasional', 'tahun' => '2025', 'nama_kegiatan' => 'Festival Konseling Nasional', 'penyelenggara' => 'ABKIN & Universitas Negeri Malang', 'dosen_pembimbing' => 'Dr. Suciani Latif, M.Pd.', 'deskripsi' => 'Desain kampanye kesehatan mental berbasis budaya Bugis-Makassar.', 'drive_sertifikat_link' => '', 'drive_foto_link' => '', 'is_featured' => 1),
+                array('jenjang' => 's1', 'nama_mahasiswa' => 'Fathurrahman Alim', 'nim' => '220404501033', 'angkatan' => '2022', 'capaian' => 'Juara 1 Poster Edukasi Mental Health', 'tingkat' => 'nasional', 'tahun' => '2025', 'nama_kegiatan' => 'Festival Konseling Nasional', 'penyelenggara' => 'ABKIN & Universitas Negeri Malang', 'dosen_pembimbing' => 'Dr. Suciani Latif, M.Pd.', 'deskripsi' => 'Desain kampanye kesehatan mental berbasis budaya Bugis-Makassar.', 'drive_sertifikat_link' => '', 'drive_foto_link' => '', 'is_featured' => 1),
             ),
         ),
         'karya' => array(
@@ -575,6 +579,7 @@ function ppb_excel_get_datasets() {
             'admin_url'     => 'edit.php?post_type=ppb_karya',
             'description'   => 'Produk media bimbingan, modul psikoedukasi, instrumen, aplikasi digital, dan video karya mahasiswa.',
             'columns' => array(
+                array('key' => 'jenjang',          'label' => 'Jenjang (s1/s2/s3)',  'aliases' => array('unit', 'prodi')),
                 array('key' => 'judul',            'label' => 'Judul Produk Karya*', 'aliases' => array('title', 'nama', 'karya_judul')),
                 array('key' => 'kategori',         'label' => 'Kategori (media_bimbingan/modul_psikoedukasi/instrumen_asesmen/aplikasi_digital/video_podcast)', 'aliases' => array('kat')),
                 array('key' => 'badge_unggulan',   'label' => 'Badge Unggulan (HKI/dll)', 'aliases' => array('badge')),
@@ -590,7 +595,7 @@ function ppb_excel_get_datasets() {
                 array('key' => 'drive_file_link',  'label' => 'URL Berkas / Produk', 'aliases' => array('file_url', 'url', 'link')),
             ),
             'sample_rows' => array(
-                array('judul' => 'Kartu Eksplorasi Karier Sipakatau', 'kategori' => 'media_bimbingan', 'badge_unggulan' => 'Terdaftar Hak Cipta HKI', 'tahun' => '2025', 'pembuat' => 'Andi Nurfaizah, Muh. Ilham', 'nim_ketua' => '220404501045', 'angkatan' => '2022', 'dosen_pembimbing' => 'Dr. Suciani Latif, M.Pd.', 'mata_kuliah' => 'Pengembangan Media BK', 'deskripsi' => 'Set 48 kartu refleksi minat karier berbasis nilai lokal Sulawesi Selatan.', 'manfaat' => 'Diuji pada 3 SMA mitra di Kota Makassar.', 'foto_karya_link' => '', 'drive_file_link' => ''),
+                array('jenjang' => 's1', 'judul' => 'Kartu Eksplorasi Karier Sipakatau', 'kategori' => 'media_bimbingan', 'badge_unggulan' => 'Terdaftar Hak Cipta HKI', 'tahun' => '2025', 'pembuat' => 'Andi Nurfaizah, Muh. Ilham', 'nim_ketua' => '220404501045', 'angkatan' => '2022', 'dosen_pembimbing' => 'Dr. Suciani Latif, M.Pd.', 'mata_kuliah' => 'Pengembangan Media BK', 'deskripsi' => 'Set 48 kartu refleksi minat karier berbasis nilai lokal Sulawesi Selatan.', 'manfaat' => 'Diuji pada 3 SMA mitra di Kota Makassar.', 'foto_karya_link' => '', 'drive_file_link' => ''),
             ),
         ),
         'dokumen' => array(
@@ -603,8 +608,9 @@ function ppb_excel_get_datasets() {
             'capability'    => 'edit_posts',
             'allow_replace' => true,
             'admin_url'     => 'edit.php?post_type=ppb_dokumen',
-            'description'   => 'Dokumen Renstra, Renop, SK Senat, Pedoman Penilaian, Akreditasi, dan link Drive resmi.',
+            'description'   => 'Dokumen Renstra, Renop, SK Senat, Pedoman Penilaian, Akreditasi, dan link Drive resmi per unit/jenjang.',
             'columns' => array(
+                array('key' => 'unit',      'label' => 'Unit / Jenjang (jurusan/s1/s2/s3/semua)', 'aliases' => array('jenjang', 'prodi')),
                 array('key' => 'judul',     'label' => 'Judul Dokumen*',  'aliases' => array('title', 'nama', 'nama_dokumen')),
                 array('key' => 'kategori',  'label' => 'Kategori (renstra/renop/sk_senat/pedoman_penilaian/sk_mahasiswa_aktif/perlindungan_mahasiswa/akreditasi/lainnya)', 'aliases' => array('kat')),
                 array('key' => 'nomor',     'label' => 'Nomor SK / Dokumen', 'aliases' => array('nomor_sk', 'no_dokumen')),
@@ -615,7 +621,7 @@ function ppb_excel_get_datasets() {
                 array('key' => 'link',      'label' => 'URL Drive / PDF*', 'aliases' => array('url', 'drive_link', 'file_url')),
             ),
             'sample_rows' => array(
-                array('judul' => 'Rencana Strategis (Renstra) Jurusan PPB 2025-2029', 'kategori' => 'renstra', 'nomor' => 'RENSTRA-PPB/UN36.2/2025', 'tahun' => '2025', 'pengesah' => 'Dekan FIP UNM', 'size' => '3.4 MB', 'deskripsi' => 'Arah kebijakan mutu dan pengembangan Prodi BK.', 'link' => 'https://drive.google.com/file/d/CONTOH_RENSTRA/view'),
+                array('unit' => 'jurusan', 'judul' => 'Rencana Strategis (Renstra) Jurusan PPB 2025-2029', 'kategori' => 'renstra', 'nomor' => 'RENSTRA-PPB/UN36.2/2025', 'tahun' => '2025', 'pengesah' => 'Dekan FIP UNM', 'size' => '3.4 MB', 'deskripsi' => 'Arah kebijakan mutu dan pengembangan Jurusan PPB serta Prodi S1/S2/S3.', 'link' => 'https://drive.google.com/file/d/CONTOH_RENSTRA/view'),
             ),
         ),
         'template_dok' => array(
@@ -628,10 +634,11 @@ function ppb_excel_get_datasets() {
             'capability'    => 'edit_posts',
             'allow_replace' => true,
             'admin_url'     => 'edit.php?post_type=ppb_template_dok',
-            'description'   => 'Katalog template surat skripsi, izin penelitian, bebas lab, peninjauan UKT, dan PPL.',
+            'description'   => 'Katalog template surat skripsi, tesis, disertasi, izin penelitian, bebas lab, peninjauan UKT, dan PPL.',
             'columns' => array(
+                array('key' => 'unit',         'label' => 'Unit / Jenjang (semua/jurusan/s1/s2/s3)', 'aliases' => array('jenjang', 'prodi')),
                 array('key' => 'judul',        'label' => 'Nama Template*',    'aliases' => array('title', 'nama')),
-                array('key' => 'kategori',     'label' => 'Kategori (skripsi/izin_penelitian/bebas_lab/peninjauan_ukt/akademik_umum)', 'aliases' => array('kat')),
+                array('key' => 'kategori',     'label' => 'Kategori (skripsi/tesis/disertasi/izin_penelitian/bebas_lab/peninjauan_ukt/akademik_umum)', 'aliases' => array('kat')),
                 array('key' => 'format_file',  'label' => 'Format (DOCX/PDF/XLSX)', 'aliases' => array('format')),
                 array('key' => 'ukuran_kb',    'label' => 'Ukuran (KB)',       'aliases' => array('ukuran')),
                 array('key' => 'nomor_revisi', 'label' => 'Kode / Revisi',     'aliases' => array('kode_form', 'revisi')),
@@ -639,7 +646,7 @@ function ppb_excel_get_datasets() {
                 array('key' => 'file_link',    'label' => 'URL Berkas Template*', 'aliases' => array('url', 'link', 'file_url')),
             ),
             'sample_rows' => array(
-                array('judul' => 'Formulir Pendaftaran Seminar Proposal Skripsi', 'kategori' => 'skripsi', 'format_file' => 'DOCX', 'ukuran_kb' => 180, 'nomor_revisi' => 'REV-2026/A', 'deskripsi' => 'Diisi dan ditandatangani Pembimbing I & II sebelum diunggah di SIPADU.', 'file_link' => 'https://drive.google.com/file/d/CONTOH_FORM_SEMPRO/view'),
+                array('unit' => 's1', 'judul' => 'Formulir Pendaftaran Seminar Proposal Skripsi', 'kategori' => 'skripsi', 'format_file' => 'DOCX', 'ukuran_kb' => 180, 'nomor_revisi' => 'REV-2026/A', 'deskripsi' => 'Diisi dan ditandatangani Pembimbing I & II sebelum diunggah di SIPADU.', 'file_link' => 'https://drive.google.com/file/d/CONTOH_FORM_SEMPRO/view'),
             ),
         ),
         'dosen' => array(

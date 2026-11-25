@@ -287,6 +287,7 @@ add_action('admin_footer', function() {
 
 require_once __DIR__ . '/bk-fonts.php';
 require_once __DIR__ . '/ppb-admin-helpers.php';
+require_once __DIR__ . '/ppb-unit-registry.php';
 require_once __DIR__ . '/ppb-portal-hub.php';
 require_once __DIR__ . '/ppb-admin-matkul.php';
 require_once __DIR__ . '/ppb-admin-lamdik.php';

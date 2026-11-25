@@ -108,12 +108,63 @@ function ppb_get_survei_submissions() {
 }
 }
 
+if (!function_exists('ppb_survei_normalize_prodi_slug')) {
+function ppb_survei_normalize_prodi_slug($raw) {
+    if (function_exists('ppb_normalize_unit_slug')) {
+        return ppb_normalize_unit_slug($raw, 's1');
+    }
+    $s = strtolower((string) $raw);
+    if (strpos($s, 's3') !== false || strpos($s, 'doktor') !== false) return 's3';
+    if (strpos($s, 's2') !== false || strpos($s, 'magister') !== false) return 's2';
+    return 's1';
+}
+}
+
 if (!function_exists('ppb_calculate_survei_summary')) {
-function ppb_calculate_survei_summary($subs, $periode_filter = '') {
-    $questions = ppb_get_survei_questions();
-    $filtered  = array();
+function ppb_calculate_survei_summary($subs, $periode_filter = '', $prodi_filter = '') {
+    $questions    = ppb_get_survei_questions();
+    $prodi_filter = $prodi_filter !== '' ? sanitize_key($prodi_filter) : '';
+    $filtered     = array();
+    $by_prodi_acc = array();
+
+    $prodi_units = function_exists('ppb_get_prodi_units') ? ppb_get_prodi_units(true) : array(
+        's1' => array('nama' => 'S1 Bimbingan dan Konseling', 'tab_label' => 'S1 Sarjana'),
+        's2' => array('nama' => 'S2 Bimbingan dan Konseling', 'tab_label' => 'S2 Magister'),
+        's3' => array('nama' => 'S3 Ilmu Pendidikan (BK)', 'tab_label' => 'S3 Doktoral'),
+    );
+    foreach ($prodi_units as $pu_slug => $pu_row) {
+        $by_prodi_acc[$pu_slug] = array(
+            'label' => $pu_row['tab_label'] ?? $pu_row['nama'],
+            'count' => 0,
+            'sum'   => 0.0,
+            'cnt'   => 0,
+        );
+    }
+
     foreach ((array) $subs as $row) {
         if ($periode_filter !== '' && ($row['periode'] ?? '') !== $periode_filter) {
+            continue;
+        }
+        $p_slug = !empty($row['prodi_slug']) ? sanitize_key($row['prodi_slug']) : ppb_survei_normalize_prodi_slug($row['prodi'] ?? '');
+        if (!isset($by_prodi_acc[$p_slug])) {
+            $by_prodi_acc[$p_slug] = array(
+                'label' => (string) ($row['prodi'] ?? strtoupper($p_slug)),
+                'count' => 0,
+                'sum'   => 0.0,
+                'cnt'   => 0,
+            );
+        }
+        $by_prodi_acc[$p_slug]['count']++;
+        $row_answers = isset($row['answers']) && is_array($row['answers']) ? $row['answers'] : array();
+        foreach ($questions as $qk => $qmeta) {
+            $qv = isset($row_answers[$qk]) ? (int) $row_answers[$qk] : 0;
+            if ($qv >= 1 && $qv <= 4) {
+                $by_prodi_acc[$p_slug]['sum'] += $qv;
+                $by_prodi_acc[$p_slug]['cnt']++;
+            }
+        }
+
+        if ($prodi_filter !== '' && $p_slug !== $prodi_filter) {
             continue;
         }
         $filtered[] = $row;
@@ -158,6 +209,18 @@ function ppb_calculate_survei_summary($subs, $periode_filter = '') {
         $sec_avg[$sec] = $cnt > 0 ? round($sum / $cnt, 2) : 0;
     }
 
+    $by_prodi = array();
+    foreach ($by_prodi_acc as $p_slug => $acc) {
+        $p_avg = $acc['cnt'] > 0 ? round($acc['sum'] / $acc['cnt'], 2) : 0;
+        $p_ikm = $acc['cnt'] > 0 ? round(($p_avg / 4) * 100, 1) : 0;
+        $by_prodi[$p_slug] = array(
+            'label'     => $acc['label'],
+            'count'     => $acc['count'],
+            'avg_total' => $p_avg,
+            'ikm_pct'   => $p_ikm,
+        );
+    }
+
     ksort($by_angkatan);
 
     return array(
@@ -166,6 +229,7 @@ function ppb_calculate_survei_summary($subs, $periode_filter = '') {
         'ikm_pct'     => $ikm_pct,
         'sections'    => $sec_avg,
         'by_angkatan' => $by_angkatan,
+        'by_prodi'    => $by_prodi,
         'periodes'    => array_keys($periodes),
     );
 }
@@ -229,13 +293,17 @@ function ppb_ajax_submit_survey() {
     $ip_hash   = $ip_raw !== '' ? substr(hash('sha256', $ip_raw . '|' . $salt), 0, 12) : '';
     $now       = current_time('mysql');
 
+    $prodi_val  = $prodi ?: 'S1 Bimbingan dan Konseling';
+    $prodi_slug = ppb_survei_normalize_prodi_slug($prodi_val);
+
     $entry = array(
         'ticket'       => $ticket,
         'submitted_at' => $now,
         'periode'      => $periode,
         'nim'          => $nim,
         'nama'         => $nama,
-        'prodi'        => $prodi ?: 'S1 Bimbingan dan Konseling',
+        'prodi'        => $prodi_val,
+        'prodi_slug'   => $prodi_slug,
         'angkatan'     => $angkatan ?: '-',
         'answers'      => $answers,
         'avg_score'    => $avg_score,
@@ -269,8 +337,9 @@ add_action('wp_ajax_nopriv_ppb_submit_survey', 'ppb_ajax_submit_survey');
 /* ========================================================================== */
 
 if (!function_exists('ppb_build_survei_csv_rows')) {
-function ppb_build_survei_csv_rows($subs, $periode_filter = '', $angkatan_filter = '') {
-    $questions = ppb_get_survei_questions();
+function ppb_build_survei_csv_rows($subs, $periode_filter = '', $angkatan_filter = '', $prodi_filter = '') {
+    $questions    = ppb_get_survei_questions();
+    $prodi_filter = $prodi_filter !== '' ? sanitize_key($prodi_filter) : '';
     $header = array(
         'Tiket',
         'Waktu Kirim',
@@ -293,6 +362,12 @@ function ppb_build_survei_csv_rows($subs, $periode_filter = '', $angkatan_filter
         }
         if ($angkatan_filter !== '' && ($item['angkatan'] ?? '') !== $angkatan_filter) {
             continue;
+        }
+        if ($prodi_filter !== '') {
+            $p_slug = !empty($item['prodi_slug']) ? sanitize_key($item['prodi_slug']) : ppb_survei_normalize_prodi_slug($item['prodi'] ?? '');
+            if ($p_slug !== $prodi_filter) {
+                continue;
+            }
         }
         $answers = isset($item['answers']) && is_array($item['answers']) ? $item['answers'] : array();
         $row = array(
@@ -325,9 +400,10 @@ function ppb_handle_export_survei_csv() {
 
     $periode_filter  = isset($_GET['periode']) ? sanitize_text_field(wp_unslash($_GET['periode'])) : '';
     $angkatan_filter = isset($_GET['angkatan']) ? sanitize_text_field(wp_unslash($_GET['angkatan'])) : '';
+    $prodi_filter    = isset($_GET['prodi']) ? sanitize_key(wp_unslash($_GET['prodi'])) : '';
 
     $subs = ppb_get_survei_submissions();
-    $rows = ppb_build_survei_csv_rows($subs, $periode_filter, $angkatan_filter);
+    $rows = ppb_build_survei_csv_rows($subs, $periode_filter, $angkatan_filter, $prodi_filter);
 
     $filename = 'rekap-survei-kepuasan-bk-unm-' . gmdate('Ymd-His') . '.csv';
     nocache_headers();
@@ -389,13 +465,15 @@ function ppb_render_survei_admin_page() {
 
     // 3. Filter tampilan
     $periode_filter  = isset($_GET['f_periode']) ? sanitize_text_field(wp_unslash($_GET['f_periode'])) : '';
+    $prodi_filter    = isset($_GET['f_prodi']) ? sanitize_key(wp_unslash($_GET['f_prodi'])) : '';
     $angkatan_filter = isset($_GET['f_angkatan']) ? sanitize_text_field(wp_unslash($_GET['f_angkatan'])) : '';
     $search_kw       = isset($_GET['f_q']) ? strtolower(trim(sanitize_text_field(wp_unslash($_GET['f_q'])))) : '';
 
-    $settings = ppb_get_survei_settings();
-    $subs     = ppb_get_survei_submissions();
-    $summary  = ppb_calculate_survei_summary($subs, $periode_filter);
-    $questions = ppb_get_survei_questions();
+    $settings    = ppb_get_survei_settings();
+    $subs        = ppb_get_survei_submissions();
+    $summary     = ppb_calculate_survei_summary($subs, $periode_filter, $prodi_filter);
+    $questions   = ppb_get_survei_questions();
+    $prodi_units = function_exists('ppb_get_prodi_units') ? ppb_get_prodi_units(true) : array();
 
     $visible_subs = array();
     $all_angkatans = array();
@@ -404,9 +482,13 @@ function ppb_render_survei_admin_page() {
             $all_angkatans[$s['angkatan']] = true;
         }
         if ($periode_filter !== '' && ($s['periode'] ?? '') !== $periode_filter) continue;
+        if ($prodi_filter !== '') {
+            $s_pslug = !empty($s['prodi_slug']) ? sanitize_key($s['prodi_slug']) : ppb_survei_normalize_prodi_slug($s['prodi'] ?? '');
+            if ($s_pslug !== $prodi_filter) continue;
+        }
         if ($angkatan_filter !== '' && ($s['angkatan'] ?? '') !== $angkatan_filter) continue;
         if ($search_kw !== '') {
-            $blob = strtolower(($s['ticket'] ?? '') . ' ' . ($s['nim'] ?? '') . ' ' . ($s['nama'] ?? '') . ' ' . ($s['saran'] ?? ''));
+            $blob = strtolower(($s['ticket'] ?? '') . ' ' . ($s['nim'] ?? '') . ' ' . ($s['nama'] ?? '') . ' ' . ($s['prodi'] ?? '') . ' ' . ($s['saran'] ?? ''));
             if (strpos($blob, $search_kw) === false) continue;
         }
         $visible_subs[] = $s;
@@ -417,6 +499,7 @@ function ppb_render_survei_admin_page() {
         add_query_arg(array(
             'action'   => 'ppb_export_survei_csv',
             'periode'  => $periode_filter,
+            'prodi'    => $prodi_filter,
             'angkatan' => $angkatan_filter,
         ), admin_url('admin-post.php')),
         'ppb_export_survei_csv_nonce'
@@ -427,7 +510,7 @@ function ppb_render_survei_admin_page() {
             <div>
                 <span style="display:inline-block;background:rgba(245,184,46,0.2);color:#F5B82E;border:1px solid rgba(245,184,46,0.4);padding:3px 12px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:8px;">SPMI &amp; Evaluasi GPM FIP UNM</span>
                 <h1 style="margin:0 0 6px;color:#fff;font-size:23px;font-weight:800;">📊 Rekap &amp; Analitik Survei Kepuasan Mahasiswa</h1>
-                <p style="margin:0;color:rgba(255,255,255,0.85);font-size:13px;">Data isian instrumen /survei/ tersimpan otomatis di database WordPress dan siap diekspor ke Excel (CSV UTF-8) untuk dokumen LAMDIK &amp; AMI.</p>
+                <p style="margin:0;color:rgba(255,255,255,0.85);font-size:13px;">Data isian instrumen /survei/ tersimpan otomatis di database WordPress dan siap diekspor ke Excel (CSV UTF-8) per Program Studi untuk dokumen LAMDIK &amp; AMI.</p>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <a href="<?php echo esc_url($csv_export_url); ?>" class="button" style="background:#F5B82E;color:#0D3B22;border:none;font-weight:700;padding:6px 15px;border-radius:8px;height:auto;">📥 Export CSV (<?php echo count($visible_subs); ?>)</a>
@@ -439,11 +522,11 @@ function ppb_render_survei_admin_page() {
         <?php echo $notice; ?>
 
         <!-- KPI Ringkas GPM -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px;">
             <div style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:16px 18px;">
                 <span style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;display:block;">Total Responden</span>
                 <strong style="font-size:26px;font-weight:800;color:#0D3B22;display:block;margin-top:4px;"><?php echo (int) $summary['count']; ?></strong>
-                <span style="font-size:11.5px;color:#059669;font-weight:600;"><?php echo $periode_filter ? esc_html($periode_filter) : 'Semua Periode'; ?></span>
+                <span style="font-size:11.5px;color:#059669;font-weight:600;"><?php echo $periode_filter ? esc_html($periode_filter) : 'Semua Periode'; ?><?php echo $prodi_filter ? ' · ' . esc_html(strtoupper($prodi_filter)) : ''; ?></span>
             </div>
             <div style="background:#0D3B22;color:#fff;border-radius:12px;padding:16px 18px;">
                 <span style="font-size:11px;font-weight:700;text-transform:uppercase;color:#F5B82E;display:block;">Indeks Kepuasan (IKM)</span>
@@ -463,6 +546,26 @@ function ppb_render_survei_admin_page() {
                 <strong style="font-size:24px;font-weight:800;color:#0D3B22;display:block;margin-top:4px;"><?php echo esc_html(number_format($summary['sections']['tatapamong'] ?? 0, 2)); ?> · <?php echo esc_html(number_format($summary['sections']['sarpras'] ?? 0, 2)); ?></strong>
             </div>
         </div>
+
+        <!-- Breakdown IKM per Program Studi (S1/S2/S3) -->
+        <?php if (!empty($summary['by_prodi'])) : ?>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:22px;">
+            <?php foreach ($summary['by_prodi'] as $pslug => $pstat) :
+                $is_p_sel = ($prodi_filter === $pslug);
+            ?>
+                <a href="<?php echo esc_url(add_query_arg(array('page' => 'ppb-survei-manager', 'f_periode' => $periode_filter, 'f_prodi' => $is_p_sel ? '' : $pslug, 'f_angkatan' => $angkatan_filter, 'f_q' => $search_kw), admin_url('admin.php'))); ?>" style="text-decoration:none;background:<?php echo $is_p_sel ? '#FAF8F5' : '#ffffff'; ?>;border:<?php echo $is_p_sel ? '2px solid #0D3B22' : '1px solid #cbd5e1'; ?>;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <span style="font-size:11px;font-weight:700;color:#64748b;display:block;"><?php echo esc_html($pstat['label']); ?></span>
+                        <strong style="font-size:15px;color:#0D3B22;"><?php echo (int) $pstat['count']; ?> responden</strong>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="display:inline-block;background:#dcfce7;color:#166534;font-weight:800;font-size:12px;padding:3px 9px;border-radius:999px;">IKM <?php echo esc_html(number_format($pstat['ikm_pct'], 1)); ?>%</span>
+                        <div style="font-size:10.5px;color:#64748b;margin-top:2px;">Skor <?php echo esc_html(number_format($pstat['avg_total'], 2)); ?>/4</div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 
         <!-- Pengaturan Periode Survei -->
         <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:20px 22px;margin-bottom:22px;">
@@ -502,6 +605,12 @@ function ppb_render_survei_admin_page() {
                             <option value="<?php echo esc_attr($per); ?>" <?php selected($periode_filter, $per); ?>><?php echo esc_html($per); ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <select name="f_prodi">
+                        <option value="">Semua Prodi / Jenjang</option>
+                        <?php foreach ($prodi_units as $pu_slug => $pu_row) : ?>
+                            <option value="<?php echo esc_attr($pu_slug); ?>" <?php selected($prodi_filter, $pu_slug); ?>><?php echo esc_html($pu_row['nama']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                     <select name="f_angkatan">
                         <option value="">Semua Angkatan</option>
                         <?php foreach (array_keys($all_angkatans) as $ang) : ?>
@@ -510,7 +619,7 @@ function ppb_render_survei_admin_page() {
                     </select>
                     <input type="search" name="f_q" value="<?php echo esc_attr($search_kw); ?>" placeholder="Cari NIM, nama, saran..." style="min-width:210px;">
                     <button type="submit" class="button">Filter</button>
-                    <?php if ($periode_filter || $angkatan_filter || $search_kw) : ?>
+                    <?php if ($periode_filter || $prodi_filter || $angkatan_filter || $search_kw) : ?>
                         <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-survei-manager')); ?>" class="button">Reset</a>
                     <?php endif; ?>
                 </form>
@@ -690,9 +799,17 @@ function ppb_render_survei_form_bundle_html() {
                     <div style="display:flex;flex-direction:column;gap:6px">
                         <label for="respProdi" style="font-size:12.5px;font-weight:700;color:#1F2937">Program Studi</label>
                         <select id="respProdi" name="prodi" class="ppb-srv-input">
-                            <option value="S1 Bimbingan dan Konseling">S1 Bimbingan dan Konseling</option>
-                            <option value="S2 Bimbingan dan Konseling">S2 Bimbingan dan Konseling (Magister)</option>
-                            <option value="S3 Ilmu Pendidikan (BK)">S3 Bimbingan dan Konseling (Doktoral)</option>
+                            <?php
+                            $srv_prodi_units = function_exists('ppb_get_prodi_units') ? ppb_get_prodi_units(true) : array(
+                                's1' => array('nama' => 'S1 Bimbingan dan Konseling'),
+                                's2' => array('nama' => 'S2 Bimbingan dan Konseling'),
+                                's3' => array('nama' => 'S3 Ilmu Pendidikan (BK)'),
+                            );
+                            foreach ($srv_prodi_units as $pu_slug => $pu_row) :
+                                $opt_val = $pu_row['nama'] ?? strtoupper($pu_slug);
+                            ?>
+                                <option value="<?php echo esc_attr($opt_val); ?>"><?php echo esc_html($opt_val); ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:6px">

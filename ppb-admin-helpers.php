@@ -379,4 +379,46 @@ function ppb_resolve_image_preview_url($url) {
 }
 }
 
+if (!function_exists('ppb_render_unit_badge')) {
+function ppb_render_unit_badge($unit_slug) {
+    $slug = sanitize_key((string) ($unit_slug ?: 's1'));
+    $label = function_exists('ppb_get_unit_label') ? ppb_get_unit_label($slug, true) : strtoupper($slug);
+    $styles = array(
+        'jurusan' => 'background:#0D3B22;color:#F5B82E;border:1px solid #0D3B22;',
+        's1'      => 'background:#E8F0EA;color:#0D3B22;border:1px solid #B7D0BE;',
+        's2'      => 'background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;',
+        's3'      => 'background:#E0E7FF;color:#3730A3;border:1px solid #A5B4FC;',
+    );
+    $style = $styles[$slug] ?? 'background:#F1F5F9;color:#334155;border:1px solid #CBD5E1;';
+    return '<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:9999px;font-size:10.5px;font-weight:700;letter-spacing:0.03em;' . $style . '">' . esc_html($label) . '</span>';
+}
+}
+
+if (!function_exists('ppb_render_unit_segmented_bar')) {
+function ppb_render_unit_segmented_bar($units, $active_slug, $opts = array()) {
+    $mode       = $opts['mode'] ?? 'js'; // 'js' or 'link'
+    $base_url   = $opts['base_url'] ?? '';
+    $attr_name  = $opts['attr_name'] ?? 'data-unit-tab';
+    $control_id = $opts['id'] ?? 'ppb-unit-seg-bar';
+    $pretty_sub = !empty($opts['pretty_suburl']);
+
+    $html = '<div class="bk-seg-control" id="' . esc_attr($control_id) . '" role="tablist" aria-label="Pilih Unit atau Jenjang Studi" style="display:inline-flex;flex-wrap:wrap;gap:4px;">';
+    foreach ($units as $slug => $u) {
+        $is_active = ($slug === $active_slug);
+        $label = is_array($u) ? ($u['tab_label'] ?? ($u['kode'] ?? strtoupper($slug))) : (string) $u;
+        if ($mode === 'link' && $base_url !== '') {
+            $href = $pretty_sub
+                ? trailingslashit($base_url) . rawurlencode($slug) . '/'
+                : add_query_arg('jenjang', $slug, $base_url);
+            $html .= '<a href="' . esc_url($href) . '" class="bk-seg-btn ' . ($is_active ? 'is-active' : '') . '" ' . $attr_name . '="' . esc_attr($slug) . '" role="tab" aria-selected="' . ($is_active ? 'true' : 'false') . '">' . esc_html($label) . '</a>';
+        } else {
+            $html .= '<button type="button" class="bk-seg-btn ' . ($is_active ? 'is-active' : '') . '" ' . $attr_name . '="' . esc_attr($slug) . '" role="tab" aria-selected="' . ($is_active ? 'true' : 'false') . '">' . esc_html($label) . '</button>';
+        }
+    }
+    $html .= '</div>';
+    return $html;
+}
+}
+
+
 

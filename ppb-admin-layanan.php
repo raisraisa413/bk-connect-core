@@ -138,7 +138,7 @@ function ppb_register_cpt_alur_sop() {
 add_action('init', 'ppb_register_cpt_alur_sop');
 
 /* ========================================================================== */
-/* 4. META BOXES UNTUK TEMPLATE DOKUMEN                                       */
+/* 4. META BOXES UNTUK TEMPLATE DOKUMEN & ALUR SOP LAYANAN                    */
 /* ========================================================================== */
 if (!function_exists('ppb_add_template_dok_meta_box')) {
 function ppb_add_template_dok_meta_box() {
@@ -158,11 +158,17 @@ if (!function_exists('ppb_template_dok_render_meta_box')) {
 function ppb_template_dok_render_meta_box($post) {
     wp_nonce_field('ppb_template_dok_save_nonce', 'ppb_template_dok_nonce');
     $kategori     = get_post_meta($post->ID, '_ppb_tpl_kategori', true) ?: 'skripsi';
+    $unit_slug    = sanitize_key(get_post_meta($post->ID, '_ppb_tpl_unit', true)) ?: 'semua';
     $format_file  = get_post_meta($post->ID, '_ppb_tpl_format_file', true) ?: 'DOCX';
     $ukuran_kb    = get_post_meta($post->ID, '_ppb_tpl_ukuran_kb', true) ?: '250';
     $nomor_revisi = get_post_meta($post->ID, '_ppb_tpl_nomor_revisi', true) ?: 'REV-2026/A';
     $file_link    = get_post_meta($post->ID, '_ppb_tpl_file_link', true) ?: '';
     $deskripsi    = get_post_meta($post->ID, '_ppb_tpl_deskripsi', true) ?: '';
+
+    $unit_opts = ['semua' => 'Semua Jenjang & Jurusan (Umum)'];
+    if (function_exists('ppb_get_unit_options')) {
+        $unit_opts = array_merge($unit_opts, ppb_get_unit_options(true));
+    }
     ?>
     <style>
         .ppb-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
@@ -173,13 +179,23 @@ function ppb_template_dok_render_meta_box($post) {
     </style>
     <div class="ppb-form-grid">
         <div class="ppb-form-group">
+            <label for="ppb_tpl_unit">Peruntukan Unit / Jenjang</label>
+            <select name="ppb_tpl_unit" id="ppb_tpl_unit">
+                <?php foreach ($unit_opts as $uslug => $ulabel) : ?>
+                    <option value="<?php echo esc_attr($uslug); ?>" <?php selected($unit_slug, $uslug); ?>><?php echo esc_html($ulabel); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="ppb-form-group">
             <label for="ppb_tpl_kategori">Kategori Dokumen</label>
             <select name="ppb_tpl_kategori" id="ppb_tpl_kategori">
-                <option value="skripsi" <?php selected($kategori, 'skripsi'); ?>>Tugas Akhir / Skripsi</option>
-                <option value="izin_penelitian" <?php selected($kategori, 'izin_penelitian'); ?>>Izin Penelitian & Observasi</option>
+                <option value="skripsi" <?php selected($kategori, 'skripsi'); ?>>Tugas Akhir / Skripsi (S1)</option>
+                <option value="tesis" <?php selected($kategori, 'tesis'); ?>>Tesis Pascasarjana (S2)</option>
+                <option value="disertasi" <?php selected($kategori, 'disertasi'); ?>>Disertasi Doktoral (S3)</option>
+                <option value="izin_penelitian" <?php selected($kategori, 'izin_penelitian'); ?>>Izin Penelitian &amp; Observasi</option>
                 <option value="bebas_lab" <?php selected($kategori, 'bebas_lab'); ?>>Bebas Laboratorium</option>
-                <option value="peninjauan_ukt" <?php selected($kategori, 'peninjauan_ukt'); ?>>Peninjauan & Penyesuaian UKT</option>
-                <option value="akademik_umum" <?php selected($kategori, 'akademik_umum'); ?>>PPL, Magang & Akademik Umum</option>
+                <option value="peninjauan_ukt" <?php selected($kategori, 'peninjauan_ukt'); ?>>Peninjauan &amp; Penyesuaian UKT</option>
+                <option value="akademik_umum" <?php selected($kategori, 'akademik_umum'); ?>>PPL, Magang &amp; Akademik Umum</option>
             </select>
         </div>
         <div class="ppb-form-group">
@@ -192,9 +208,9 @@ function ppb_template_dok_render_meta_box($post) {
         </div>
         <div class="ppb-form-group">
             <label for="ppb_tpl_ukuran_kb">Estimasi Ukuran File (KB)</label>
-            <input type="number" name="ppb_tpl_ukuran_kb" id="ppb_tpl_ukuran_kb" value="<?php echo esc_attr($ukuran_kb); ?>">
+            <input type="text" name="ppb_tpl_ukuran_kb" id="ppb_tpl_ukuran_kb" value="<?php echo esc_attr($ukuran_kb); ?>">
         </div>
-        <div class="ppb-form-group">
+        <div class="ppb-form-group" style="grid-column:1/-1;">
             <label for="ppb_tpl_nomor_revisi">Kode / Nomor Revisi</label>
             <input type="text" name="ppb_tpl_nomor_revisi" id="ppb_tpl_nomor_revisi" value="<?php echo esc_attr($nomor_revisi); ?>" placeholder="REV-2026/A">
         </div>
@@ -216,7 +232,7 @@ function ppb_template_dok_render_meta_box($post) {
         <small>Tautan Google Drive atau unggah langsung file template (.docx / .pdf) via Media Library WordPress.</small>
     </div>
     <div class="ppb-form-group">
-        <label for="ppb_tpl_deskripsi">Deskripsi & Petunjuk Penggunaan Template</label>
+        <label for="ppb_tpl_deskripsi">Deskripsi &amp; Petunjuk Penggunaan Template</label>
         <textarea name="ppb_tpl_deskripsi" id="ppb_tpl_deskripsi" rows="3"><?php echo esc_textarea($deskripsi); ?></textarea>
     </div>
     <?php
@@ -230,6 +246,7 @@ function ppb_template_dok_save_meta_box($post_id) {
     if (!current_user_can('edit_post', $post_id)) return;
 
     $fields = [
+        'ppb_tpl_unit'         => '_ppb_tpl_unit',
         'ppb_tpl_kategori'     => '_ppb_tpl_kategori',
         'ppb_tpl_format_file'  => '_ppb_tpl_format_file',
         'ppb_tpl_ukuran_kb'    => '_ppb_tpl_ukuran_kb',
@@ -241,7 +258,9 @@ function ppb_template_dok_save_meta_box($post_id) {
     foreach ($fields as $key => $meta_key) {
         if (isset($_POST[$key])) {
             $raw = wp_unslash($_POST[$key]);
-            if ($key === 'ppb_tpl_file_link') {
+            if ($key === 'ppb_tpl_unit') {
+                $val = sanitize_key($raw) ?: 'semua';
+            } elseif ($key === 'ppb_tpl_file_link') {
                 $val = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw) : esc_url_raw($raw);
             } elseif ($key === 'ppb_tpl_deskripsi') {
                 $val = sanitize_textarea_field($raw);
@@ -254,6 +273,159 @@ function ppb_template_dok_save_meta_box($post_id) {
 }
 }
 add_action('save_post_ppb_template_dok', 'ppb_template_dok_save_meta_box');
+
+add_filter('manage_ppb_template_dok_posts_columns', function($cols) {
+    return [
+        'cb'       => $cols['cb'],
+        'title'    => 'Nama Template Dokumen',
+        'unit'     => 'Unit / Jenjang',
+        'kategori' => 'Kategori',
+        'revisi'   => 'Kode Revisi',
+        'berkas'   => 'Berkas',
+    ];
+});
+add_action('manage_ppb_template_dok_posts_custom_column', function($col, $post_id) {
+    switch ($col) {
+        case 'unit':
+            $u = get_post_meta($post_id, '_ppb_tpl_unit', true) ?: 'semua';
+            echo function_exists('ppb_render_unit_badge') ? ppb_render_unit_badge($u) : esc_html(strtoupper($u));
+            break;
+        case 'kategori':
+            echo esc_html(get_post_meta($post_id, '_ppb_tpl_kategori', true) ?: '-');
+            break;
+        case 'revisi':
+            echo '<code>' . esc_html(get_post_meta($post_id, '_ppb_tpl_nomor_revisi', true) ?: '-') . '</code>';
+            break;
+        case 'berkas':
+            $l = get_post_meta($post_id, '_ppb_tpl_file_link', true);
+            echo $l ? '<a href="' . esc_url($l) . '" target="_blank" class="button button-small">Unduh</a>' : '<span style="color:#94a3b8;">-</span>';
+            break;
+    }
+}, 10, 2);
+
+/* Meta Boxes & Columns for PPB_ALUR_SOP */
+if (!function_exists('ppb_add_alur_sop_meta_box')) {
+function ppb_add_alur_sop_meta_box() {
+    add_meta_box(
+        'ppb_alur_sop_meta',
+        '🔄 Rincian Alur SOP Layanan Akademik & Laboratorium',
+        'ppb_alur_sop_render_meta_box',
+        'ppb_alur_sop',
+        'normal',
+        'high'
+    );
+}
+}
+add_action('add_meta_boxes', 'ppb_add_alur_sop_meta_box');
+
+if (!function_exists('ppb_alur_sop_render_meta_box')) {
+function ppb_alur_sop_render_meta_box($post) {
+    wp_nonce_field('ppb_alur_sop_save_nonce', 'ppb_alur_sop_nonce');
+    $unit_slug = sanitize_key(get_post_meta($post->ID, '_ppb_sop_unit', true)) ?: 'semua';
+    $nomor     = get_post_meta($post->ID, '_ppb_sop_nomor', true) ?: 'SOP-PPB-AKD-01/2025';
+    $estimasi  = get_post_meta($post->ID, '_ppb_sop_estimasi', true) ?: '1 - 3 Hari Kerja';
+    $dok_link  = get_post_meta($post->ID, '_ppb_sop_dok_link', true) ?: '';
+
+    $unit_opts = ['semua' => 'Semua Jenjang & Jurusan (Umum)'];
+    if (function_exists('ppb_get_unit_options')) {
+        $unit_opts = array_merge($unit_opts, ppb_get_unit_options(true));
+    }
+    ?>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div>
+            <label style="font-weight:700;display:block;margin-bottom:4px;font-size:12.5px;">Peruntukan Unit / Jenjang</label>
+            <select name="ppb_sop_unit" style="width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;">
+                <?php foreach ($unit_opts as $uslug => $ulabel) : ?>
+                    <option value="<?php echo esc_attr($uslug); ?>" <?php selected($unit_slug, $uslug); ?>><?php echo esc_html($ulabel); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label style="font-weight:700;display:block;margin-bottom:4px;font-size:12.5px;">Nomor Dokumen SOP</label>
+            <input type="text" name="ppb_sop_nomor" value="<?php echo esc_attr($nomor); ?>" style="width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;">
+        </div>
+        <div>
+            <label style="font-weight:700;display:block;margin-bottom:4px;font-size:12.5px;">Estimasi SLA Waktu Layanan</label>
+            <input type="text" name="ppb_sop_estimasi" value="<?php echo esc_attr($estimasi); ?>" style="width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;">
+        </div>
+    </div>
+    <div style="margin-bottom:14px;">
+        <label for="ppb_sop_dok_link" style="font-weight:700;display:block;margin-bottom:4px;font-size:12.5px;">Tautan PDF / Flowchart SOP (Drive / Upload WP Media)</label>
+        <?php if (function_exists('ppb_render_media_url_control')) : ?>
+            <?php ppb_render_media_url_control(['id' => 'ppb_sop_dok_link', 'name' => 'ppb_sop_dok_link', 'value' => $dok_link, 'placeholder' => 'https://drive.google.com/... atau upload PDF SOP', 'btn_label' => '📁 Upload / Drive']); ?>
+        <?php else : ?>
+            <input type="url" name="ppb_sop_dok_link" id="ppb_sop_dok_link" value="<?php echo esc_attr($dok_link); ?>" style="width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;">
+        <?php endif; ?>
+    </div>
+    <?php for ($i = 1; $i <= 5; $i++) :
+        $step_val = get_post_meta($post->ID, '_ppb_sop_langkah_' . $i, true) ?: '';
+    ?>
+        <div style="margin-bottom:10px;">
+            <label style="font-weight:600;display:block;margin-bottom:3px;font-size:12px;">Langkah <?php echo $i; ?></label>
+            <input type="text" name="ppb_sop_langkah_<?php echo $i; ?>" value="<?php echo esc_attr($step_val); ?>" style="width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;">
+        </div>
+    <?php endfor;
+}
+}
+
+if (!function_exists('ppb_alur_sop_save_meta_box')) {
+function ppb_alur_sop_save_meta_box($post_id) {
+    if (!isset($_POST['ppb_alur_sop_nonce']) || !wp_verify_nonce($_POST['ppb_alur_sop_nonce'], 'ppb_alur_sop_save_nonce')) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    if (isset($_POST['ppb_sop_unit'])) {
+        update_post_meta($post_id, '_ppb_sop_unit', sanitize_key(wp_unslash($_POST['ppb_sop_unit'])) ?: 'semua');
+    }
+    if (isset($_POST['ppb_sop_nomor'])) {
+        update_post_meta($post_id, '_ppb_sop_nomor', sanitize_text_field(wp_unslash($_POST['ppb_sop_nomor'])));
+    }
+    if (isset($_POST['ppb_sop_estimasi'])) {
+        update_post_meta($post_id, '_ppb_sop_estimasi', sanitize_text_field(wp_unslash($_POST['ppb_sop_estimasi'])));
+    }
+    if (isset($_POST['ppb_sop_dok_link'])) {
+        $raw_u = wp_unslash($_POST['ppb_sop_dok_link']);
+        $val_u = function_exists('ppb_clean_document_url') ? ppb_clean_document_url($raw_u) : esc_url_raw($raw_u);
+        update_post_meta($post_id, '_ppb_sop_dok_link', $val_u);
+    }
+    for ($i = 1; $i <= 5; $i++) {
+        $k = 'ppb_sop_langkah_' . $i;
+        if (isset($_POST[$k])) {
+            update_post_meta($post_id, '_ppb_sop_langkah_' . $i, sanitize_text_field(wp_unslash($_POST[$k])));
+        }
+    }
+}
+}
+add_action('save_post_ppb_alur_sop', 'ppb_alur_sop_save_meta_box');
+
+add_filter('manage_ppb_alur_sop_posts_columns', function($cols) {
+    return [
+        'cb'       => $cols['cb'],
+        'title'    => 'Judul SOP Layanan',
+        'unit'     => 'Unit / Jenjang',
+        'nomor'    => 'Nomor SOP',
+        'estimasi' => 'Estimasi SLA',
+        'berkas'   => 'Dokumen SOP',
+    ];
+});
+add_action('manage_ppb_alur_sop_posts_custom_column', function($col, $post_id) {
+    switch ($col) {
+        case 'unit':
+            $u = get_post_meta($post_id, '_ppb_sop_unit', true) ?: 'semua';
+            echo function_exists('ppb_render_unit_badge') ? ppb_render_unit_badge($u) : esc_html(strtoupper($u));
+            break;
+        case 'nomor':
+            echo '<code>' . esc_html(get_post_meta($post_id, '_ppb_sop_nomor', true) ?: '-') . '</code>';
+            break;
+        case 'estimasi':
+            echo esc_html(get_post_meta($post_id, '_ppb_sop_estimasi', true) ?: '-');
+            break;
+        case 'berkas':
+            $l = get_post_meta($post_id, '_ppb_sop_dok_link', true);
+            echo $l ? '<a href="' . esc_url($l) . '" target="_blank" class="button button-small">Unduh SOP</a>' : '<span style="color:#94a3b8;">-</span>';
+            break;
+    }
+}, 10, 2);
 
 /* ========================================================================== */
 /* 5. META BOXES, NORMALISASI & FRONTEND SYNC INVENTARIS ALAT LAB BK          */
@@ -1731,14 +1903,61 @@ function ppb_shortcode_layanan_persuratan($atts = []) {
             $tlink = function_exists('ppb_clean_document_url')
                 ? ppb_clean_document_url(get_post_meta($tid, '_ppb_tpl_file_link', true))
                 : esc_url_raw((string) get_post_meta($tid, '_ppb_tpl_file_link', true));
+            $tpl_unit = sanitize_key(get_post_meta($tid, '_ppb_tpl_unit', true)) ?: 'semua';
             $tpl_items[] = [
-                'title'  => (string) get_the_title(),
-                'kat'    => (string) get_post_meta($tid, '_ppb_tpl_kategori', true),
-                'revisi' => (string) get_post_meta($tid, '_ppb_tpl_nomor_revisi', true),
-                'link'   => $tlink,
+                'unit'      => $tpl_unit,
+                'title'     => (string) get_the_title(),
+                'kat'       => (string) get_post_meta($tid, '_ppb_tpl_kategori', true),
+                'format'    => (string) (get_post_meta($tid, '_ppb_tpl_format_file', true) ?: 'DOCX'),
+                'revisi'    => (string) get_post_meta($tid, '_ppb_tpl_nomor_revisi', true),
+                'deskripsi' => (string) get_post_meta($tid, '_ppb_tpl_deskripsi', true),
+                'link'      => $tlink,
             ];
         }
         wp_reset_postdata();
+    }
+
+    $sop_items = [];
+    $sop_q = new WP_Query([
+        'post_type'      => 'ppb_alur_sop',
+        'posts_per_page' => -1,
+        'post_status'    => 'publish',
+        'orderby'        => ['menu_order' => 'ASC', 'date' => 'DESC'],
+    ]);
+    if ($sop_q->have_posts()) {
+        while ($sop_q->have_posts()) {
+            $sop_q->the_post();
+            $sid = get_the_ID();
+            $slink = function_exists('ppb_clean_document_url')
+                ? ppb_clean_document_url(get_post_meta($sid, '_ppb_sop_dok_link', true))
+                : esc_url_raw((string) get_post_meta($sid, '_ppb_sop_dok_link', true));
+            $steps = [];
+            for ($si = 1; $si <= 5; $si++) {
+                $st = trim((string) get_post_meta($sid, '_ppb_sop_langkah_' . $si, true));
+                if ($st !== '') $steps[] = $st;
+            }
+            $sop_items[] = [
+                'unit'     => sanitize_key(get_post_meta($sid, '_ppb_sop_unit', true)) ?: 'semua',
+                'title'    => (string) get_the_title(),
+                'nomor'    => (string) get_post_meta($sid, '_ppb_sop_nomor', true),
+                'estimasi' => (string) get_post_meta($sid, '_ppb_sop_estimasi', true),
+                'link'     => $slink,
+                'steps'    => $steps,
+            ];
+        }
+        wp_reset_postdata();
+    }
+
+    $unit_filter_opts = ['semua' => 'Semua Jenjang & Jurusan'];
+    if (function_exists('ppb_get_unit_options')) {
+        $unit_filter_opts = array_merge($unit_filter_opts, ppb_get_unit_options(true));
+    }
+    $init_unit = 'semua';
+    if (isset($_GET['jenjang'])) {
+        $req_u = sanitize_key(wp_unslash($_GET['jenjang']));
+        if ($req_u !== '' && isset($unit_filter_opts[$req_u])) {
+            $init_unit = $req_u;
+        }
     }
 
     $find_tpl_link = function($needles) use ($tpl_items) {
@@ -1912,7 +2131,7 @@ function ppb_shortcode_layanan_persuratan($atts = []) {
         </div>
 
         <!-- Alur 3 Langkah Pengajuan Persuratan -->
-        <div style="background:#F0F6F2;border:1.5px solid #D4E3D8;border-radius:18px;padding:26px;">
+        <div style="background:#F0F6F2;border:1.5px solid #D4E3D8;border-radius:18px;padding:26px;margin-bottom:36px;">
             <h4 style="font-family:'Fraunces',Georgia,serif;font-size:18px;color:#0D3B22;margin:0 0 16px;">
                 Alur Pengajuan &amp; Validasi Nomor Surat Resmi (3 Langkah)
             </h4>
@@ -1934,6 +2153,107 @@ function ppb_shortcode_layanan_persuratan($atts = []) {
                 </div>
             </div>
         </div>
+
+        <?php if (!empty($tpl_items) || !empty($sop_items)) : ?>
+        <!-- Direktori Template Dokumen & SOP per Unit/Jenjang -->
+        <div style="border-top:2px solid #E5E7EB;padding-top:30px;">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;">
+                <div>
+                    <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#854D0E;display:block;margin-bottom:2px;">Repositori Formulir &amp; Standar Operasional</span>
+                    <h3 style="font-family:'Fraunces',Georgia,serif;font-size:22px;color:#0D3B22;margin:0;">Unduh Template Dokumen &amp; Alur SOP</h3>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <?php foreach ($unit_filter_opts as $uslug => $ulabel) :
+                        $is_u = ($init_unit === $uslug);
+                        $short_lbl = ($uslug === 'semua') ? 'Semua Unit' : (function_exists('ppb_get_unit_label') ? ppb_get_unit_label($uslug, true) : $ulabel);
+                    ?>
+                        <button type="button" class="ppb-layanan-unit-btn" data-unit="<?php echo esc_attr($uslug); ?>" style="padding:7px 14px;border-radius:9999px;border:1px solid <?php echo $is_u ? '#0D3B22' : '#D1D5DB'; ?>;background:<?php echo $is_u ? '#0D3B22' : '#ffffff'; ?>;color:<?php echo $is_u ? '#F5B82E' : '#374151'; ?>;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                            <?php echo esc_html($short_lbl); ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <?php if (!empty($tpl_items)) : ?>
+            <h4 style="font-size:16px;font-weight:700;color:#0D3B22;margin:0 0 12px;">📄 Daftar Formulir &amp; Template Resmi (<?php echo count($tpl_items); ?>)</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:16px;margin-bottom:28px;">
+                <?php foreach ($tpl_items as $tpl) :
+                    $u_badge = function_exists('ppb_render_unit_badge') ? ppb_render_unit_badge($tpl['unit']) : '<span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:9999px;background:#E8F0EA;color:#0D3B22;">' . esc_html(strtoupper($tpl['unit'])) . '</span>';
+                    $show_u  = ($init_unit === 'semua' || $tpl['unit'] === $init_unit || $tpl['unit'] === 'semua') ? 'flex' : 'none';
+                ?>
+                <div class="ppb-layanan-unit-card" data-unit="<?php echo esc_attr($tpl['unit']); ?>" style="background:#ffffff;border:1px solid #D4E3D8;border-radius:14px;padding:18px;display:<?php echo $show_u; ?>;flex-direction:column;justify-content:space-between;gap:12px;">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+                            <?php echo $u_badge; ?>
+                            <span style="font-family:monospace;font-size:11px;color:#6B7280;"><?php echo esc_html($tpl['revisi'] ?: $tpl['format']); ?></span>
+                        </div>
+                        <h5 style="font-size:14.5px;font-weight:700;color:#0D3B22;margin:0 0 6px;line-height:1.4;"><?php echo esc_html($tpl['title']); ?></h5>
+                        <?php if ($tpl['deskripsi'] !== '') : ?>
+                            <p style="font-size:12px;color:#4B5563;margin:0;line-height:1.5;"><?php echo esc_html($tpl['deskripsi']); ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ($tpl['link'] !== '') : ?>
+                        <a href="<?php echo esc_url($tpl['link']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;padding:8px 14px;border-radius:8px;text-decoration:none;">Unduh Template (<?php echo esc_html($tpl['format']); ?>) &#8599;</a>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($sop_items)) : ?>
+            <h4 style="font-size:16px;font-weight:700;color:#0D3B22;margin:0 0 12px;">🔄 Standar Operasional Prosedur (SOP) Layanan (<?php echo count($sop_items); ?>)</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:18px;">
+                <?php foreach ($sop_items as $sop) :
+                    $u_badge = function_exists('ppb_render_unit_badge') ? ppb_render_unit_badge($sop['unit']) : '<span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:9999px;background:#E8F0EA;color:#0D3B22;">' . esc_html(strtoupper($sop['unit'])) . '</span>';
+                    $show_u  = ($init_unit === 'semua' || $sop['unit'] === $init_unit || $sop['unit'] === 'semua') ? 'flex' : 'none';
+                ?>
+                <div class="ppb-layanan-unit-card" data-unit="<?php echo esc_attr($sop['unit']); ?>" style="background:#FAF8F5;border:1px solid #D4E3D8;border-radius:14px;padding:20px;display:<?php echo $show_u; ?>;flex-direction:column;justify-content:space-between;gap:12px;">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+                            <?php echo $u_badge; ?>
+                            <span style="font-size:11px;font-weight:700;color:#059669;">⏱ <?php echo esc_html($sop['estimasi']); ?></span>
+                        </div>
+                        <h5 style="font-size:15px;font-weight:700;color:#0D3B22;margin:0 0 8px;line-height:1.4;"><?php echo esc_html($sop['title']); ?></h5>
+                        <?php if (!empty($sop['steps'])) : ?>
+                            <ol style="font-size:12px;color:#374151;line-height:1.55;padding-left:18px;margin:0;">
+                                <?php foreach ($sop['steps'] as $st) : ?>
+                                    <li style="margin-bottom:4px;"><?php echo esc_html($st); ?></li>
+                                <?php endforeach; ?>
+                            </ol>
+                        <?php endif; ?>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:8px;border-top:1px dashed #D4E3D8;">
+                        <code style="font-size:11px;color:#6B7280;"><?php echo esc_html($sop['nomor']); ?></code>
+                        <?php if ($sop['link'] !== '') : ?>
+                            <a href="<?php echo esc_url($sop['link']); ?>" target="_blank" rel="noopener noreferrer" style="font-size:12px;font-weight:700;color:#0D3B22;text-decoration:none;">Unduh SOP PDF &#8599;</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <script>
+        (function(){
+            var btns = document.querySelectorAll('.ppb-layanan-unit-btn');
+            btns.forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    var target = btn.getAttribute('data-unit') || 'semua';
+                    btns.forEach(function(b){
+                        var act = (b === btn);
+                        b.style.background = act ? '#0D3B22' : '#ffffff';
+                        b.style.color = act ? '#F5B82E' : '#374151';
+                        b.style.borderColor = act ? '#0D3B22' : '#D1D5DB';
+                    });
+                    document.querySelectorAll('.ppb-layanan-unit-card').forEach(function(c){
+                        var u = c.getAttribute('data-unit') || 'semua';
+                        c.style.display = (target === 'semua' || u === target || u === 'semua') ? 'flex' : 'none';
+                    });
+                });
+            });
+        })();
+        </script>
+        <?php endif; ?>
 
     </section>
     <?php

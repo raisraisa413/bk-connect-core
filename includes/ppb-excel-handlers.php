@@ -87,6 +87,25 @@ if (!function_exists('ppb_excel_normalize_enum')) {
 function ppb_excel_normalize_enum($dataset_key, $field, $raw) {
     $v = strtolower(trim((string) $raw));
     if ($dataset_key === 'jadwal' && $field === 'jenis_ujian') {
+        $allowed_j = array(
+            'seminar_proposal', 'seminar_hasil', 'ujian_skripsi',
+            'seminar_proposal_tesis', 'seminar_hasil_tesis', 'ujian_tesis',
+            'ujian_kualifikasi', 'seminar_proposal_disertasi', 'seminar_hasil_disertasi', 'ujian_tertutup', 'ujian_terbuka',
+        );
+        if (in_array($v, $allowed_j, true)) return $v;
+        if ($v === 'seminar_tesis') return 'seminar_proposal_tesis';
+        if ($v === 'seminar_proposal_s3') return 'seminar_proposal_disertasi';
+        if (strpos($v, 'kualifikasi') !== false) return 'ujian_kualifikasi';
+        if (strpos($v, 'tertutup') !== false) return 'ujian_tertutup';
+        if (strpos($v, 'terbuka') !== false || strpos($v, 'promosi') !== false) return 'ujian_terbuka';
+        if (strpos($v, 'disertasi') !== false || strpos($v, 's3') !== false) {
+            return (strpos($v, 'hasil') !== false) ? 'seminar_hasil_disertasi' : 'seminar_proposal_disertasi';
+        }
+        if (strpos($v, 'tesis') !== false) {
+            if (strpos($v, 'ujian') !== false || strpos($v, 'akhir') !== false) return 'ujian_tesis';
+            if (strpos($v, 'hasil') !== false) return 'seminar_hasil_tesis';
+            return 'seminar_proposal_tesis';
+        }
         if ($v === 'seminar_hasil' || strpos($v, 'semhas') !== false || strpos($v, 'hasil') !== false) return 'seminar_hasil';
         if ($v === 'ujian_skripsi' || strpos($v, 'skripsi') !== false || strpos($v, 'tutup') !== false) return 'ujian_skripsi';
         return 'seminar_proposal';
@@ -121,6 +140,8 @@ function ppb_excel_normalize_enum($dataset_key, $field, $raw) {
         return $v !== '' ? sanitize_text_field($raw) : 'renstra';
     }
     if ($dataset_key === 'template_dok' && $field === 'kategori') {
+        if ($v === 'tesis' || strpos($v, 'tesis') !== false || strpos($v, 's2') !== false) return 'tesis';
+        if ($v === 'disertasi' || strpos($v, 'disertasi') !== false || strpos($v, 's3') !== false) return 'disertasi';
         if ($v === 'izin_penelitian' || strpos($v, 'izin') !== false || strpos($v, 'penelitian') !== false) return 'izin_penelitian';
         if ($v === 'bebas_lab' || strpos($v, 'lab') !== false) return 'bebas_lab';
         if ($v === 'peninjauan_ukt' || strpos($v, 'ukt') !== false) return 'peninjauan_ukt';
@@ -219,8 +240,22 @@ function ppb_excel_fetch_assoc_rows($dataset_key) {
             return function_exists('ppb_get_sarpras_list') ? ppb_get_sarpras_list() : array();
 
         case 'maba_tren':
-            $m = function_exists('ppb_get_maba_statistik_data') ? ppb_get_maba_statistik_data() : array('tren' => array());
-            return $m['tren'] ?? array();
+            $out = array();
+            if (function_exists('ppb_get_maba_statistik_all_units')) {
+                foreach (ppb_get_maba_statistik_all_units() as $u_slug => $m_data) {
+                    foreach ((array) ($m_data['tren'] ?? array()) as $tr) {
+                        $tr['jenjang'] = $u_slug;
+                        $out[] = $tr;
+                    }
+                }
+            } else {
+                $m = function_exists('ppb_get_maba_statistik_data') ? ppb_get_maba_statistik_data() : array('tren' => array());
+                foreach ((array) ($m['tren'] ?? array()) as $tr) {
+                    $tr['jenjang'] = 's1';
+                    $out[] = $tr;
+                }
+            }
+            return $out;
 
         case 'mbkm':
             $k = function_exists('ppb_get_mbkm_kemanusiaan_data') ? ppb_get_mbkm_kemanusiaan_data() : array('mbkm_items' => array());
@@ -267,6 +302,7 @@ function ppb_excel_fetch_assoc_rows($dataset_key) {
             $out = array();
             foreach (ppb_excel_get_cpt_posts('ppb_jadwal') as $p) {
                 $out[] = array(
+                    'jenjang'          => (string) (get_post_meta($p->ID, '_ppb_jenjang', true) ?: 's1'),
                     'nama_mahasiswa'   => (string) (get_post_meta($p->ID, '_ppb_nama_mahasiswa', true) ?: $p->post_title),
                     'nim'              => (string) get_post_meta($p->ID, '_ppb_nim', true),
                     'angkatan'         => (string) get_post_meta($p->ID, '_ppb_angkatan', true),
@@ -290,6 +326,7 @@ function ppb_excel_fetch_assoc_rows($dataset_key) {
             $out = array();
             foreach (ppb_excel_get_cpt_posts('ppb_prestasi') as $p) {
                 $out[] = array(
+                    'jenjang'               => (string) (get_post_meta($p->ID, '_ppb_jenjang', true) ?: 's1'),
                     'nama_mahasiswa'        => (string) get_post_meta($p->ID, '_ppb_nama_mahasiswa', true),
                     'nim'                   => (string) get_post_meta($p->ID, '_ppb_nim', true),
                     'angkatan'              => (string) get_post_meta($p->ID, '_ppb_angkatan', true),
@@ -311,6 +348,7 @@ function ppb_excel_fetch_assoc_rows($dataset_key) {
             $out = array();
             foreach (ppb_excel_get_cpt_posts('ppb_karya') as $p) {
                 $out[] = array(
+                    'jenjang'          => (string) (get_post_meta($p->ID, '_ppb_jenjang', true) ?: 's1'),
                     'judul'            => (string) (get_post_meta($p->ID, '_ppb_karya_judul', true) ?: $p->post_title),
                     'kategori'         => (string) (get_post_meta($p->ID, '_ppb_kategori', true) ?: 'media_bimbingan'),
                     'badge_unggulan'   => (string) get_post_meta($p->ID, '_ppb_badge_unggulan', true),
@@ -332,6 +370,7 @@ function ppb_excel_fetch_assoc_rows($dataset_key) {
             $out = array();
             foreach (ppb_excel_get_cpt_posts('ppb_dokumen') as $p) {
                 $out[] = array(
+                    'unit'      => (string) (get_post_meta($p->ID, '_ppb_dokumen_unit', true) ?: 'jurusan'),
                     'judul'     => (string) $p->post_title,
                     'kategori'  => (string) (get_post_meta($p->ID, '_ppb_dokumen_kategori', true) ?: 'renstra'),
                     'nomor'     => (string) get_post_meta($p->ID, '_ppb_dokumen_nomor', true),
@@ -348,6 +387,7 @@ function ppb_excel_fetch_assoc_rows($dataset_key) {
             $out = array();
             foreach (ppb_excel_get_cpt_posts('ppb_template_dok') as $p) {
                 $out[] = array(
+                    'unit'         => (string) (get_post_meta($p->ID, '_ppb_tpl_unit', true) ?: 'semua'),
                     'judul'        => (string) $p->post_title,
                     'kategori'     => (string) (get_post_meta($p->ID, '_ppb_tpl_kategori', true) ?: 'skripsi'),
                     'format_file'  => (string) (get_post_meta($p->ID, '_ppb_tpl_format_file', true) ?: 'DOCX'),
@@ -969,13 +1009,37 @@ function ppb_excel_import_option_list($dataset_key, $mapped, $mode) {
         ppb_excel_purge_caches();
         $total = count($list);
     } elseif ($dataset_key === 'maba_tren') {
-        $full = function_exists('ppb_get_maba_statistik_data') ? ppb_get_maba_statistik_data() : array('portal_url' => 'https://penerimaan.unm.ac.id/', 'unm_url' => 'https://unm.ac.id/', 'jalur' => array(), 'tren' => array());
-        $list = ($mode === 'replace') ? array() : array_values($full['tren'] ?? array());
-        $idx_map = array();
-        foreach ($list as $i => $it) $idx_map[trim((string) ($it['tahun'] ?? ''))] = $i;
+        $by_unit = function_exists('ppb_get_maba_statistik_all_units')
+            ? ppb_get_maba_statistik_all_units()
+            : array('s1' => (function_exists('ppb_get_maba_statistik_data') ? ppb_get_maba_statistik_data() : array('portal_url' => 'https://penerimaan.unm.ac.id/', 'unm_url' => 'https://unm.ac.id/', 'jalur' => array(), 'tren' => array())));
+        $norm_unit = function($raw) {
+            if (function_exists('ppb_normalize_unit_slug')) {
+                $u = ppb_normalize_unit_slug($raw, 's1');
+                return ($u === 'jurusan') ? 's1' : $u;
+            }
+            $s = strtolower(trim((string) $raw));
+            if (strpos($s, 's3') !== false || strpos($s, 'doktor') !== false) return 's3';
+            if (strpos($s, 's2') !== false || strpos($s, 'magister') !== false) return 's2';
+            return 's1';
+        };
+        $cleared_units = array();
+        $touched_units = array();
         foreach ($rows as $row) {
             $tahun = sanitize_text_field($row['tahun'] ?? '');
             if ($tahun === '') { $skipped++; continue; }
+            $unit_slug = $norm_unit($row['jenjang'] ?? 's1');
+            if (!isset($by_unit[$unit_slug]) || !is_array($by_unit[$unit_slug])) {
+                $by_unit[$unit_slug] = function_exists('ppb_get_maba_statistik_defaults')
+                    ? ppb_get_maba_statistik_defaults($unit_slug)
+                    : array('portal_url' => 'https://penerimaan.unm.ac.id/', 'unm_url' => 'https://unm.ac.id/', 'jalur' => array(), 'tren' => array());
+            }
+            if ($mode === 'replace' && empty($cleared_units[$unit_slug])) {
+                $by_unit[$unit_slug]['tren'] = array();
+                $cleared_units[$unit_slug]    = true;
+            }
+            $list    = array_values($by_unit[$unit_slug]['tren'] ?? array());
+            $idx_map = array();
+            foreach ($list as $i => $it) $idx_map[trim((string) ($it['tahun'] ?? ''))] = $i;
             $mi   = $idx_map[$tahun] ?? null;
             $prev = $mi !== null ? $list[$mi] : array();
             $dt   = ppb_excel_has_val($row, $pmap, 'daya_tampung')    ? max(0, (int) $row['daya_tampung'])    : (int) ($prev['daya_tampung'] ?? 0);
@@ -996,13 +1060,29 @@ function ppb_excel_import_option_list($dataset_key, $mapped, $mode) {
                 'keketatan'       => $ket,
             );
             if ($mi !== null) { $list[$mi] = $item; $updated++; }
-            else { $list[] = $item; $idx_map[$tahun] = count($list) - 1; $added++; }
+            else { $list[] = $item; $added++; }
+            $by_unit[$unit_slug]['tren'] = $list;
+            $touched_units[$unit_slug]   = true;
         }
         if ($added + $updated === 0) return new WP_Error('no_valid_rows', 'Tidak ada baris Tren Maba valid untuk diimpor.');
-        usort($list, function($a, $b) { return strcmp((string) ($b['tahun'] ?? ''), (string) ($a['tahun'] ?? '')); });
-        $full['tren'] = array_values($list);
+        $total = 0;
+        foreach ($by_unit as $u_slug => $u_data) {
+            $u_list = array_values($u_data['tren'] ?? array());
+            if (!empty($touched_units[$u_slug])) {
+                usort($u_list, function($a, $b) { return strcmp((string) ($b['tahun'] ?? ''), (string) ($a['tahun'] ?? '')); });
+            }
+            $by_unit[$u_slug]['tren'] = $u_list;
+            $total += count($u_list);
+        }
+        $s1_maba = $by_unit['s1'] ?? reset($by_unit);
+        $full = array(
+            'portal_url'   => $s1_maba['portal_url'] ?? 'https://penerimaan.unm.ac.id/',
+            'unm_url'      => $s1_maba['unm_url'] ?? 'https://unm.ac.id/',
+            'jalur'        => $s1_maba['jalur'] ?? array(),
+            'tren'         => $s1_maba['tren'] ?? array(),
+            'maba_by_unit' => $by_unit,
+        );
         update_option('ppb_maba_statistik_data', $full, false);
-        $total = count($list);
     } elseif ($dataset_key === 'mbkm') {
         $full = function_exists('ppb_get_mbkm_kemanusiaan_data') ? ppb_get_mbkm_kemanusiaan_data() : array('mbkm_items' => array(), 'proyek_kemanusiaan' => array());
         $list = ($mode === 'replace') ? array() : array_values($full['mbkm_items'] ?? array());
@@ -1117,12 +1197,31 @@ function ppb_excel_import_cpt($dataset_key, $schema, $mapped, $mode) {
             $jns     = ppb_excel_normalize_enum('jadwal', 'jenis_ujian', $jns_raw);
             $tgl     = ppb_excel_normalize_date($row['tanggal'] ?? '');
             $nim     = sanitize_text_field($row['nim'] ?? '');
-            $j_lbls  = array('seminar_proposal' => 'Seminar Proposal', 'seminar_hasil' => 'Seminar Hasil', 'ujian_skripsi' => 'Ujian Skripsi');
-            $title   = $nama . ' (' . ($j_lbls[$jns] ?? 'Seminar') . ')';
+            $j_lbls  = array(
+                'seminar_proposal'   => 'Seminar Proposal',
+                'seminar_hasil'      => 'Seminar Hasil',
+                'ujian_skripsi'      => 'Ujian Skripsi',
+                'proposal_tesis'     => 'Proposal Tesis',
+                'hasil_tesis'        => 'Seminar Hasil Tesis',
+                'ujian_tesis'        => 'Ujian Tesis',
+                'kualifikasi_doktor' => 'Ujian Kualifikasi Doktor',
+                'ujian_tertutup'     => 'Ujian Tertutup Disertasi',
+                'ujian_terbuka'      => 'Promosi Doktor (Terbuka)',
+            );
+            $j_meta_lbl = function_exists('ppb_jadwal_get_jenis_meta') ? (ppb_jadwal_get_jenis_meta($jns)['label'] ?? '') : '';
+            $title_lbl  = $j_meta_lbl !== '' ? $j_meta_lbl : ($j_lbls[$jns] ?? 'Seminar');
+            $title      = $nama . ' (' . $title_lbl . ')';
             $match_id = ($nim !== '' && isset($idx_primary[strtolower($nim) . '|' . $jns . '|' . $tgl]))
                 ? $idx_primary[strtolower($nim) . '|' . $jns . '|' . $tgl]
                 : ($idx_second[strtolower($nama) . '|' . $jns . '|' . $tgl] ?? 0);
             $meta = array(
+                '_ppb_jenjang'          => array('jenjang', 's1', function($v) {
+                    if (function_exists('ppb_normalize_unit_slug')) {
+                        $u = ppb_normalize_unit_slug($v, 's1');
+                        return ($u === 'jurusan') ? 's1' : $u;
+                    }
+                    return sanitize_key($v ?: 's1');
+                }),
                 '_ppb_jenis_ujian'      => array('jenis_ujian', 'seminar_proposal', function($v) { return ppb_excel_normalize_enum('jadwal', 'jenis_ujian', $v); }),
                 '_ppb_status'           => array('status', 'terjadwal', function($v) { return ppb_excel_normalize_enum('jadwal', 'status', $v); }),
                 '_ppb_nama_mahasiswa'   => array('nama_mahasiswa', $nama, null),
@@ -1147,6 +1246,13 @@ function ppb_excel_import_cpt($dataset_key, $schema, $mapped, $mode) {
             $title    = $cap . ' - ' . $nama;
             $match_id = $idx_primary[strtolower($nama . '|' . $cap . '|' . $thn)] ?? 0;
             $meta = array(
+                '_ppb_jenjang'               => array('jenjang', 's1', function($v) {
+                    if (function_exists('ppb_normalize_unit_slug')) {
+                        $u = ppb_normalize_unit_slug($v, 's1');
+                        return ($u === 'jurusan') ? 's1' : $u;
+                    }
+                    return sanitize_key($v ?: 's1');
+                }),
                 '_ppb_nama_mahasiswa'        => array('nama_mahasiswa', $nama, null),
                 '_ppb_nim'                   => array('nim', '', null),
                 '_ppb_angkatan'              => array('angkatan', '', null),
@@ -1168,6 +1274,13 @@ function ppb_excel_import_cpt($dataset_key, $schema, $mapped, $mode) {
             $title    = $judul;
             $match_id = $idx_primary[strtolower($judul . '|' . $thn)] ?? ($idx_second[strtolower($judul)] ?? 0);
             $meta = array(
+                '_ppb_jenjang'          => array('jenjang', 's1', function($v) {
+                    if (function_exists('ppb_normalize_unit_slug')) {
+                        $u = ppb_normalize_unit_slug($v, 's1');
+                        return ($u === 'jurusan') ? 's1' : $u;
+                    }
+                    return sanitize_key($v ?: 's1');
+                }),
                 '_ppb_karya_judul'      => array('judul', $judul, null),
                 '_ppb_kategori'         => array('kategori', 'media_bimbingan', function($v) { return ppb_excel_normalize_enum('karya', 'kategori', $v); }),
                 '_ppb_badge_unggulan'   => array('badge_unggulan', '', null),
@@ -1189,6 +1302,11 @@ function ppb_excel_import_cpt($dataset_key, $schema, $mapped, $mode) {
             $title    = $judul;
             $match_id = ($nomor !== '' && isset($idx_primary[$nomor])) ? $idx_primary[$nomor] : ($idx_second[strtolower($judul)] ?? 0);
             $meta = array(
+                '_ppb_dokumen_unit'      => array('unit', 'jurusan', function($v) {
+                    $s = strtolower(trim((string) $v));
+                    if ($s === 'semua' || $s === 'all') return 'semua';
+                    return function_exists('ppb_normalize_unit_slug') ? ppb_normalize_unit_slug($v, 'jurusan') : sanitize_key($v ?: 'jurusan');
+                }),
                 '_ppb_dokumen_kategori'  => array('kategori', 'renstra', function($v) { return ppb_excel_normalize_enum('dokumen', 'kategori', $v); }),
                 '_ppb_dokumen_nomor'     => array('nomor', '', null),
                 '_ppb_dokumen_tahun'     => array('tahun', date('Y'), null),
@@ -1206,6 +1324,11 @@ function ppb_excel_import_cpt($dataset_key, $schema, $mapped, $mode) {
                 ? $idx_primary[strtolower($judul) . '|' . $rev]
                 : ($idx_second[strtolower($judul)] ?? 0);
             $meta = array(
+                '_ppb_tpl_unit'         => array('unit', 'semua', function($v) {
+                    $s = strtolower(trim((string) $v));
+                    if ($s === '' || $s === 'semua' || $s === 'all') return 'semua';
+                    return function_exists('ppb_normalize_unit_slug') ? ppb_normalize_unit_slug($v, 'semua') : sanitize_key($v ?: 'semua');
+                }),
                 '_ppb_tpl_kategori'     => array('kategori', 'skripsi', function($v) { return ppb_excel_normalize_enum('template_dok', 'kategori', $v); }),
                 '_ppb_tpl_format_file'  => array('format_file', 'DOCX', function($v) { return ppb_excel_normalize_enum('template_dok', 'format_file', $v); }),
                 '_ppb_tpl_ukuran_kb'    => array('ukuran_kb', '250', null),
