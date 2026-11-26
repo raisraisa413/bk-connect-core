@@ -162,7 +162,7 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                     </div>
                     <div class="p-3 bg-slate-50 rounded-lg text-center border border-slate-100">
                         <span class="text-xs font-bold text-teal block mb-1">LANGKAH 7</span>
-                        <p class="text-xs font-semibold text-slate-700">Audit Desain AI</p>
+                        <p class="text-xs font-semibold text-slate-700">Audit Kelayakan</p>
                     </div>
                     <div class="p-3 bg-slate-50 rounded-lg text-center border border-slate-100">
                         <span class="text-xs font-bold text-teal block mb-1">LANGKAH 8</span>
@@ -240,7 +240,7 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                 </button>
                 <button onclick="app.setStep(7)" id="tab-step-7" class="tab-btn shrink-0 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm border transition flex items-center space-x-2">
                     <span class="w-5 h-5 rounded-full bg-teal/20 text-teal flex items-center justify-center text-xs font-bold">7</span>
-                    <span>Audit Desain AI</span>
+                    <span>Audit Kelayakan</span>
                 </button>
                 <button onclick="app.setStep(8)" id="tab-step-8" class="tab-btn shrink-0 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm border transition flex items-center space-x-2">
                     <span class="w-5 h-5 rounded-full bg-teal/20 text-teal flex items-center justify-center text-xs font-bold">8</span>
@@ -256,10 +256,6 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                             <h3 class="text-lg font-bold text-navy">1. Asesmen Kebutuhan Murid &amp; Identifikasi Masalah</h3>
                             <p class="text-xs text-slate-500">Didasarkan pada data faktual murid, potensi, serta perubahan yang diharapkan.</p>
                         </div>
-                        <button onclick="app.openAiAssistant('asesmen')" class="bg-teal/10 hover:bg-teal/20 text-teal font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sparkles" aria-hidden="true" class="lucide lucide-sparkles w-4 h-4"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
-                            <span>Bantu Asesmen (AI)</span>
-                        </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -420,10 +416,6 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                             <h3 class="text-lg font-bold text-navy">3. Pemilihan 7 Jurus BK Hebat</h3>
                             <p class="text-xs text-slate-500">Pilih 1–2 jurus utama yang paling relevan untuk menjawab kebutuhan murid.</p>
                         </div>
-                        <button onclick="app.recommendJurusAI()" class="bg-teal/10 hover:bg-teal/20 text-teal font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sparkles" aria-hidden="true" class="lucide lucide-sparkles w-4 h-4"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
-                            <span>Rekomendasi Jurus (AI)</span>
-                        </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="jurus-grid">
@@ -514,10 +506,6 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                             <h3 class="text-lg font-bold text-navy">4. Desain Pengalaman Layanan Berbasis Alur ARKA</h3>
                             <p class="text-xs text-slate-500">Aktivitas -&gt; Refleksi -&gt; Konseptualisasi -&gt; Aplikasi (Saling berkesinambungan).</p>
                         </div>
-                        <button onclick="app.generateArkaAI()" class="bg-teal/10 hover:bg-teal/20 text-teal font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sparkles" aria-hidden="true" class="lucide lucide-sparkles w-4 h-4"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
-                            <span>Rancang ARKA Otomatis (AI)</span>
-                        </button>
                     </div>
 
                     <!-- ARKA Tabs/Accordion Layout -->
@@ -605,10 +593,6 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                             <h3 class="text-lg font-bold text-navy">5. Kalibrasi Pembelajaran Mendalam (Deep Learning)</h3>
                             <p class="text-xs text-slate-500">Narasi kontekstual Mindful, Meaningful, dan Joyful Learning khusus topik ini.</p>
                         </div>
-                        <button onclick="app.calibrateDeepLearningAI()" class="bg-teal/10 hover:bg-teal/20 text-teal font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sparkles" aria-hidden="true" class="lucide lucide-sparkles w-4 h-4"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
-                            <span>Kalibrasi Kontekstual (AI)</span>
-                        </button>
                     </div>
 
                     <div class="space-y-4">
@@ -667,13 +651,13 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                 </div>
             </div>
 
-            <!-- STEP 7: AUDIT DESAIN AI -->
+            <!-- STEP 7: AUDIT KELAYAKAN DESAIN -->
             <div id="step-content-7" class="step-panel hidden space-y-6">
                 <div class="canvas-card p-6 border border-slate-200">
                     <div class="flex justify-between items-center mb-4 pb-2 border-b">
                         <div>
-                            <h3 class="text-lg font-bold text-navy">7. AI Design Reviewer &amp; Audit Layanan</h3>
-                            <p class="text-xs text-slate-500">Lakukan audit 8 kriteria untuk menguji kesiapan dan konsistensi rancangan.</p>
+                            <h3 class="text-lg font-bold text-navy">7. Audit Kelayakan Desain Layanan</h3>
+                            <p class="text-xs text-slate-500">Periksa kelengkapan dan konsistensi rancangan layanan sebelum ekspor RPL.</p>
                         </div>
                         <button onclick="app.runAiAudit()" class="bg-navy hover:bg-navy/90 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center space-x-1 shadow">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shield-check" aria-hidden="true" class="lucide lucide-shield-check w-4 h-4 text-gold"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
@@ -684,7 +668,7 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                     <!-- Audit Score & Breakdown Display -->
                     <div id="audit-results-panel" class="space-y-4">
                         <div class="p-4 bg-slate-100 rounded-xl text-center text-slate-500 text-sm">
-                            Tekan tombol <strong>"JALANKAN AUDIT DESAIN SEKARANG"</strong> untuk mendapatkan analisis AI komprehensif.
+                            Tekan tombol <strong>"JALANKAN AUDIT DESAIN SEKARANG"</strong> untuk memeriksa kelengkapan rancangan layanan Anda.
                         </div>
                     </div>
                 </div>

@@ -260,59 +260,7 @@ const EXAMPLE_DATA = {
                 this.populateCanvasUI();
             }
 
-            // AI Helper Simulations (Rule-based Intelligent Generators)
-            recommendJurusAI() {
-                const topic = this.canvasData.topik.toLowerCase();
-                const kebutuhan = this.canvasData.kebutuhan.toLowerCase();
-
-                let recommended = [1, 4];
-                if (topic.includes('emosi') || kebutuhan.includes('kecemasan') || kebutuhan.includes('stres')) {
-                    recommended = [2, 3]; // Kelola Emosi, Resiliensi
-                } else if (topic.includes('sosial') || topic.includes('teman') || kebutuhan.includes('komunikasi')) {
-                    recommended = [5, 6]; // Jalin Koneksi, Kolaborasi
-                } else if (topic.includes('karir') || topic.includes('potensi') || topic.includes('snbp')) {
-                    recommended = [1, 4]; // Kenali Potensi, Jaga Konsistensi
-                }
-
-                this.canvasData.jurusSelected = recommended;
-                this.canvasData.jurusRasional = `Berdasarkan analisis kebutuhan murid pada topik '${this.canvasData.topik || 'Layanan BK'}', AI merekomendasikan Jurus ${recommended.join(' & ')} untuk menunjang pencapaian perkembangan murid secara optimal.`;
-                this.populateCanvasUI();
-                alert('Rekomendasi Jurus AI berhasil diterapkan!');
-            }
-
-            generateArkaAI() {
-                const topic = this.canvasData.topik || 'Pengembangan Diri Murid';
-                this.canvasData.arka = {
-                    a: {
-                        guru: `Guru membuka layanan dengan simulasi interaktif tentang ${topic} dan memutar klip video pemantik.`,
-                        murid: `Murid mengamati klip, mencatat poin penting, dan berpartisipasi dalam diskusi pembuka.`
-                    },
-                    r: {
-                        guru: `Guru memberikan refleksi mendalam melalui pertanyaan: 'Bagaimana isu ${topic} mempengaruhi kehidupan harianmu?'`,
-                        murid: `Murid mengekspresikan perasaannya di Lembar Refleksi LKPD dan mengidentifikasi pemicu utamanya.`
-                    },
-                    k: {
-                        guru: `Guru menyampaikan kerangka konsep BK mengenai ${topic} dan strategi penanganan yang efektif.`,
-                        murid: `Murid menyelaraskan pengalaman pribadinya dengan kerangka teori yang disampaikan guru.`
-                    },
-                    ap: {
-                        guru: `Guru memfasilitasi penyusunan Lembar Komitmen Tindakan Nyata 7 Hari.`,
-                        murid: `Murid merumuskan 1 langkah konkret yang akan diterapkan mulai hari ini.`
-                    }
-                };
-                this.populateCanvasUI();
-                alert('Alur Aktivitas ARKA berhasil dirancang oleh AI!');
-            }
-
-            calibrateDeepLearningAI() {
-                const topic = this.canvasData.topik || 'Pengembangan Diri';
-                this.canvasData.mindful = `Dalam topik ${topic}, murid secara berkesadaran diajak mengenali dorongan internal, emosi, dan pola pikirnya tanpa menghakimi diri sendiri.`;
-                this.canvasData.meaningful = `Materi ${topic} dihubungkan langsung dengan tantangan nyata yang dihadapi murid di sekolah dan lingkungan keluarga, memberikan nilai relevansi yang tinggi.`;
-                this.canvasData.joyful = `Layanan dilaksanakan dengan pendekatan dialogis yang hangat, apresiatif, dan bebas intimidasi, menciptakan pengalaman belajar yang menggembirakan.`;
-                this.populateCanvasUI();
-                alert('Kalibrasi Pembelajaran Mendalam (Deep Learning) berhasil diperbarui!');
-            }
-
+            // Local Design Completeness Audit (Rule-based Rubric)
             runAiAudit() {
                 const d = this.canvasData;
                 let score = 0;
