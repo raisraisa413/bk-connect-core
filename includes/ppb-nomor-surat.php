@@ -322,6 +322,25 @@ function ppb_surat_lookup_dosen_by_nip($nip_input) {
             }
         }
     }
+
+    // Fallback: cek juga pada dosen-data.json di theme aktif
+    $json_path = function_exists('get_template_directory') ? (get_template_directory() . '/dosen-data.json') : '';
+    if ($json_path !== '' && file_exists($json_path)) {
+        $list = json_decode((string) file_get_contents($json_path), true);
+        if (is_array($list)) {
+            foreach ($list as $d) {
+                $raw_nip = (string) ($d['nip'] ?? '');
+                if ($raw_nip !== '' && ppb_surat_normalize_id($raw_nip) === $norm) {
+                    return [
+                        'found' => true,
+                        'name'  => (string) ($d['nama'] ?? ($d['nama_lengkap'] ?? '')),
+                        'nip'   => $raw_nip,
+                    ];
+                }
+            }
+        }
+    }
+
     return ['found' => false, 'name' => '', 'nip' => ''];
 }
 }
@@ -335,90 +354,6 @@ function ppb_surat_get_pending_count() {
         return 0;
     }
     return (int) $wpdb->get_var("SELECT COUNT(DISTINCT tracking_code) FROM {$table} WHERE status = 'pending'");
-}
-}
-
-/* ========================================================================== */
-/* 3. EMAIL NOTIFICATIONS                                                     */
-/* ========================================================================== */
-
-if (!function_exists('ppb_surat_send_notification')) {
-function ppb_surat_send_notification($tracking_code, $event = 'submitted') {
-    global $wpdb;
-    $table = ppb_surat_table_name();
-    $rows  = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$table} WHERE tracking_code = %s ORDER BY batch_index ASC, id ASC",
-        $tracking_code
-    ), ARRAY_A);
-
-    if (empty($rows)) {
-        return;
-    }
-
-    $first    = $rows[0];
-    $settings = ppb_surat_get_settings();
-    $site     = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
-    $portal   = home_url('/layanan/persuratan/');
-    $headers  = ['Content-Type: text/plain; charset=UTF-8'];
-
-    $nomor_lines = [];
-    foreach ($rows as $r) {
-        if (!empty($r['nomor_surat'])) {
-            $nomor_lines[] = '- ' . $r['nomor_surat'];
-        }
-    }
-
-    if ($event === 'auto_approved' || $event === 'approved') {
-        $subject = sprintf('[%s] Nomor Surat Resmi Terbit (%s)', $site, $tracking_code);
-        $body  = "Yth. {$first['pemohon_nama']},\n\n";
-        $body .= "Permintaan nomor surat Anda telah DISETUJUI dan diterbitkan dengan rincian berikut:\n\n";
-        $body .= "Kode Tracking : {$tracking_code}\n";
-        $body .= "Jenis Surat   : {$first['jenis_surat_nama']} ({$first['kode_hal']})\n";
-        $body .= "Perihal/Tujuan: {$first['perihal_tujuan']}\n";
-        $body .= "Jumlah Nomor  : " . count($rows) . "\n\n";
-        $body .= "Daftar Nomor Surat Resmi:\n" . implode("\n", $nomor_lines) . "\n\n";
-        if (!empty($first['catatan_admin'])) {
-            $body .= "Catatan Admin : {$first['catatan_admin']}\n\n";
-        }
-        $body .= "Anda dapat mengecek dan mencetak resi di: {$portal}\n";
-        @wp_mail($first['pemohon_email'], $subject, $body, $headers);
-    } elseif ($event === 'rejected') {
-        $subject = sprintf('[%s] Permintaan Nomor Surat Ditolak (%s)', $site, $tracking_code);
-        $body  = "Yth. {$first['pemohon_nama']},\n\n";
-        $body .= "Mohon maaf, permintaan nomor surat Anda belum dapat disetujui.\n\n";
-        $body .= "Kode Tracking : {$tracking_code}\n";
-        $body .= "Jenis Surat   : {$first['jenis_surat_nama']}\n";
-        if (!empty($first['catatan_admin'])) {
-            $body .= "Alasan/Catatan: {$first['catatan_admin']}\n";
-        }
-        $body .= "\nSilakan ajukan ulang setelah melengkapi persyaratan di: {$portal}\n";
-        @wp_mail($first['pemohon_email'], $subject, $body, $headers);
-    } else {
-        // pending submission
-        $subject = sprintf('[%s] Pengajuan Nomor Surat Diterima (%s)', $site, $tracking_code);
-        $body  = "Yth. {$first['pemohon_nama']},\n\n";
-        $body .= "Pengajuan nomor surat Anda telah kami terima dan sedang menunggu verifikasi Staf Tata Usaha.\n\n";
-        $body .= "Kode Tracking : {$tracking_code}\n";
-        $body .= "Jenis Surat   : {$first['jenis_surat_nama']} ({$first['kode_hal']})\n";
-        $body .= "Jumlah Nomor  : " . count($rows) . "\n";
-        $body .= "Perihal/Tujuan: {$first['perihal_tujuan']}\n\n";
-        $body .= "Pantau status persetujuan menggunakan Kode Tracking di: {$portal}\n";
-        @wp_mail($first['pemohon_email'], $subject, $body, $headers);
-
-        $admin_email = sanitize_email((string) ($settings['admin_notify_email'] ?? ''));
-        if ($admin_email !== '' && is_email($admin_email)) {
-            $adm_sub  = sprintf('[%s] Antrean Nomor Surat Baru (%s)', $site, $tracking_code);
-            $adm_body = "Ada permintaan nomor surat baru yang menunggu persetujuan:\n\n"
-                      . "Kode Tracking : {$tracking_code}\n"
-                      . "Pemohon       : {$first['pemohon_nama']} (" . strtoupper($first['pemohon_peran']) . " - {$first['pemohon_identitas']})\n"
-                      . "Jenis Surat   : {$first['jenis_surat_nama']} ({$first['kode_hal']})\n"
-                      . "Jumlah Nomor  : " . count($rows) . "\n"
-                      . "Perihal       : {$first['perihal_tujuan']}\n"
-                      . "Link Berkas   : " . ($first['link_berkas'] ?: '-') . "\n\n"
-                      . "Proses di WP Admin: " . admin_url('admin.php?page=ppb-nomor-surat') . "\n";
-            @wp_mail($admin_email, $adm_sub, $adm_body, $headers);
-        }
-    }
 }
 }
 
@@ -468,8 +403,11 @@ function ppb_ajax_submit_nomor_surat() {
         wp_send_json_error(['message' => 'Jenis surat tidak ditemukan atau sedang nonaktif.']);
     }
 
-    if ($nama === '' || $identitas === '' || !is_email($email) || $perihal === '') {
-        wp_send_json_error(['message' => 'Harap lengkapi Nama, NIM/NIP, Email yang valid, dan Perihal/Tujuan surat.']);
+    if ($nama === '' || $identitas === '' || $perihal === '') {
+        wp_send_json_error(['message' => 'Harap lengkapi Nama, NIM/NIP, dan Perihal/Tujuan surat.']);
+    }
+    if ($email !== '' && !is_email($email)) {
+        wp_send_json_error(['message' => 'Format email tidak valid.']);
     }
 
     $berkas_mode = $jenis['berkas_mode'] ?? 'optional';
@@ -586,8 +524,6 @@ function ppb_ajax_submit_nomor_surat() {
             ]);
         }
     }
-
-    ppb_surat_send_notification($tracking_code, $mode === 'auto' ? 'auto_approved' : 'submitted');
 
     wp_send_json_success([
         'tracking_code'    => $tracking_code,
@@ -790,8 +726,8 @@ function ppb_render_nomor_surat_widget($atts = []) {
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px;">
                     <div>
-                        <label for="ppb_ns_email" style="display:block;font-size:12.5px;font-weight:700;color:#0D3B22;margin-bottom:5px;">Email Aktif (untuk Notifikasi) *</label>
-                        <input type="email" id="ppb_ns_email" name="pemohon_email" required placeholder="nama@unm.ac.id / gmail.com" style="width:100%;padding:10px 12px;border:1px solid #CBD5E1;border-radius:10px;font-size:13.5px;">
+                        <label for="ppb_ns_email" style="display:block;font-size:12.5px;font-weight:700;color:#0D3B22;margin-bottom:5px;">Email (Opsional)</label>
+                        <input type="email" id="ppb_ns_email" name="pemohon_email" placeholder="nama@unm.ac.id / gmail.com" style="width:100%;padding:10px 12px;border:1px solid #CBD5E1;border-radius:10px;font-size:13.5px;">
                     </div>
                     <div>
                         <label for="ppb_ns_wa" style="display:block;font-size:12.5px;font-weight:700;color:#0D3B22;margin-bottom:5px;">No. WhatsApp</label>
@@ -1009,8 +945,9 @@ function ppb_render_nomor_surat_widget($atts = []) {
                     html += 'Pemohon: <strong>' + d.pemohon_nama + '</strong> (' + d.pemohon_identitas + ') &bull; ' + d.jenis_surat_nama + ' (' + d.batch_total + ' nomor)</div>';
                     if (isApproved) {
                         html += renderNumbersList(d.nomor_list);
+                        html += '<p style="margin:10px 0 0;font-size:12.5px;color:#065F46;background:#ECFDF5;padding:10px;border-radius:8px;border:1px solid #A7F3D0;"><strong>Wajib dicatat/disalin:</strong> Simpan Nomor Surat dan Kode Tracking di atas (sistem tidak mengirim email otomatis).</p>';
                     } else {
-                        html += '<p style="margin:10px 0 0;font-size:12.5px;color:#78350F;background:#FFFBEB;padding:10px;border-radius:8px;border:1px solid #FDE68A;">Simpan <strong>Kode Tracking</strong> di atas. Notifikasi juga dikirim ke email Anda saat Staf TU menerbitkan nomor surat.</p>';
+                        html += '<p style="margin:10px 0 0;font-size:12.5px;color:#78350F;background:#FFFBEB;padding:10px;border-radius:8px;border:1px solid #FDE68A;"><strong>Wajib dicatat/disalin:</strong> Simpan <strong>Kode Tracking</strong> di atas untuk mengecek status persetujuan &amp; mengambil nomor surat Anda di tab <strong>Cek Status / Tracking</strong> (sistem tidak mengirim email otomatis).</p>';
                     }
                     resBox.innerHTML = html;
                     resBox.style.display = 'block';
@@ -1304,7 +1241,6 @@ function ppb_render_nomor_surat_admin_page() {
                     $notice = $lock_res->get_error_message();
                     $notice_type = 'error';
                 } else {
-                    ppb_surat_send_notification($tc, 'approved');
                     $notice = sprintf('Berhasil menyetujui %d nomor surat untuk %s.', $count, $tc);
                 }
             }
@@ -1317,7 +1253,6 @@ function ppb_render_nomor_surat_admin_page() {
                 'processed_by'  => $uid,
                 'updated_at'    => $now,
             ], ['tracking_code' => $tc, 'status' => 'pending']);
-            ppb_surat_send_notification($tc, 'rejected');
             $notice = sprintf('Pengajuan %s ditandai ditolak.', $tc);
         } elseif ($act === 'save_jenis') {
             $tab = 'jenis';
@@ -1359,7 +1294,6 @@ function ppb_render_nomor_surat_admin_page() {
                 'pad_digits'         => max(1, min(6, (int) ($_POST['pad_digits'] ?? 3))),
                 'max_batch_dosen'    => max(2, min(200, (int) ($_POST['max_batch_dosen'] ?? 50))),
                 'validate_dosen_nip' => isset($_POST['validate_dosen_nip']) ? 1 : 0,
-                'admin_notify_email' => sanitize_email(wp_unslash($_POST['admin_notify_email'] ?? '')),
                 'offsets'            => $settings['offsets'],
             ];
             $offset_val = isset($_POST['offset_current_year']) ? max(0, (int) $_POST['offset_current_year']) : 0;
@@ -1639,10 +1573,6 @@ function ppb_render_nomor_surat_admin_page() {
                     <tr>
                         <th>Validasi NIP Dosen</th>
                         <td><label><input type="checkbox" name="validate_dosen_nip" value="1" <?php checked(!empty($settings['validate_dosen_nip'])); ?>> Wajibkan NIP cocok dengan direktori Dosen (<code>ppb_dosen</code>) saat meminta &gt;1 nomor sekaligus</label></td>
-                    </tr>
-                    <tr>
-                        <th>Email Notifikasi TU / Admin</th>
-                        <td><input type="email" name="admin_notify_email" value="<?php echo esc_attr($settings['admin_notify_email']); ?>" class="regular-text"></td>
                     </tr>
                 </table>
                 <button type="submit" class="button button-primary">💾 Simpan Pengaturan</button>
