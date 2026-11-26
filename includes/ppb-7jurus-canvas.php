@@ -827,9 +827,12 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
                     <input type="text" id="prof-tahun" required="" placeholder="2026/2027" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-teal">
                 </div>
 
-                <div class="pt-3 flex justify-end space-x-2">
-                    <button type="button" onclick="app.closeProfileModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-teal text-white rounded-lg text-xs font-semibold shadow hover:bg-teal/90">SIMPAN PROFIL GURU</button>
+                <div class="pt-3 flex items-center justify-between gap-2">
+                    <button type="button" onclick="app.resetProfile()" class="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold hover:bg-rose-100">Reset Profil</button>
+                    <div class="flex space-x-2">
+                        <button type="button" onclick="app.closeProfileModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-teal text-white rounded-lg text-xs font-semibold shadow hover:bg-teal/90">SIMPAN PROFIL GURU</button>
+                    </div>
                 </div>
             </form>
         </div>

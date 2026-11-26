@@ -405,7 +405,33 @@ const EXAMPLE_DATA = {
                 localStorage.setItem('bk_teacher_profile', JSON.stringify(this.teacherProfile));
                 this.closeProfileModal();
                 this.updateProfileBanner();
-                alert('Profil Guru BK berhasil disimpan!');
+                this.updateDashboardStats();
+                alert('Profil Guru BK berhasil disimpan di browser ini!');
+            }
+
+            resetProfile() {
+                if (!confirm('Hapus data Profil Guru BK yang tersimpan di browser ini?')) {
+                    return;
+                }
+                localStorage.removeItem('bk_teacher_profile');
+                this.teacherProfile = {
+                    nama: '',
+                    nip: '',
+                    pangkat: '',
+                    sekolah: '',
+                    kota: '',
+                    provinsi: '',
+                    tahun: '2026/2027'
+                };
+                ['prof-nama', 'prof-nip', 'prof-pangkat', 'prof-sekolah', 'prof-kota', 'prof-provinsi'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                const tahunEl = document.getElementById('prof-tahun');
+                if (tahunEl) tahunEl.value = '2026/2027';
+                this.closeProfileModal();
+                this.updateProfileBanner();
+                this.updateDashboardStats();
             }
 
             updateProfileBanner() {
@@ -413,16 +439,19 @@ const EXAMPLE_DATA = {
                 const navName = document.getElementById('nav-teacher-name');
                 if (this.teacherProfile.nama && this.teacherProfile.sekolah) {
                     navName.textContent = this.teacherProfile.nama;
-                    banner.className = "p-4 rounded-xl border bg-emerald-50 border-emerald-200 flex items-center justify-between";
+                    banner.className = "p-4 rounded-xl border bg-emerald-50 border-emerald-200 flex items-center justify-between gap-3";
                     banner.innerHTML = `
                         <div class="flex items-center space-x-3">
                             <div class="p-2 bg-emerald-600 text-white rounded-lg"><i data-lucide="user-check" class="w-5 h-5"></i></div>
                             <div>
-                                <h4 class="text-xs font-bold text-emerald-900">PROFIL PENYUSUN TERVERIFIKASI</h4>
+                                <h4 class="text-xs font-bold text-emerald-900">PROFIL PENYUSUN TERVERIFIKASI (LOKAL BROWSER)</h4>
                                 <p class="text-xs text-emerald-700">${this.teacherProfile.nama} (${this.teacherProfile.sekolah})</p>
                             </div>
                         </div>
-                        <button onclick="app.openProfileModal()" class="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700">Edit Profil</button>
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <button onclick="app.openProfileModal()" class="text-xs font-semibold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700">Edit Profil</button>
+                            <button onclick="app.resetProfile()" class="text-xs font-semibold bg-white text-rose-700 border border-rose-200 px-3 py-1.5 rounded-lg hover:bg-rose-50">Reset</button>
+                        </div>
                     `;
                 } else {
                     navName.textContent = "Profil Guru (Belum Lengkap)";
