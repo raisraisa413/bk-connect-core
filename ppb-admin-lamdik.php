@@ -66,8 +66,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Mahasiswa',
                 'syarat_perlu' => 'Produktivitas Inovasi Mahasiswa',
                 'dok_categories' => array('sk_mahasiswa_aktif', 'perlindungan_mahasiswa'),
-                'deskripsi' => 'Rekrutmen & seleksi S1 (SNBP, SNBT, Mandiri, RPL), layanan kemahasiswaan, kesiapkerjaan, kewirausahaan & studi lanjut, Tracer Study S1, serta produktivitas inovasi/prestasi mahasiswa (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Inovasi, Layanan & Tracer S1',
+                'deskripsi' => 'Rekrutmen & seleksi S1 (SNBP, SNBT, Mandiri, RPL), layanan kemahasiswaan, kesiapkerjaan, kewirausahaan & studi lanjut, Tracer Study S1, serta produktivitas inovasi dan prestasi mahasiswa.',
+                'tag_ringkas' => '✓ Inovasi, Layanan & Tracer Study S1',
                 'internal_links' => array(
                     array('label' => 'Statistik Mahasiswa S1', 'url' => '/kemahasiswaan/statistik/' . $q_suffix),
                     array('label' => 'Penerimaan Maba S1', 'url' => '/kemahasiswaan/penerimaan/' . $q_suffix),
@@ -79,8 +79,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Dosen dan Tendik',
                 'syarat_perlu' => 'Mutu Dosen & Produktivitas Publikasi Dosen',
                 'dok_categories' => array('sk_senat'),
-                'deskripsi' => 'Mutu & kecukupan DTPS pengampu S1 BK (Guru Besar, Doktor, Lektor Kepala) dan tenaga kependidikan, rasio pembimbingan, produktivitas publikasi SINTA/Scopus, HKI, buku ajar, serta tindak lanjut pengembangan SDM (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Mutu & Publikasi DTPS S1',
+                'deskripsi' => 'Mutu & kecukupan DTPS pengampu S1 BK (Guru Besar, Doktor, Lektor Kepala) dan tenaga kependidikan, rasio pembimbingan, produktivitas publikasi SINTA/Scopus, HKI, buku ajar, serta tindak lanjut pengembangan SDM.',
+                'tag_ringkas' => '✓ Mutu & Produktivitas Publikasi DTPS S1',
                 'internal_links' => array(
                     array('label' => 'Direktori Dosen S1', 'url' => '/profil/dosen/' . $q_suffix),
                     array('label' => 'Kepakaran & SINTA', 'url' => '/profil/kepakaran-dosen/'),
@@ -105,8 +105,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Pendidikan',
                 'syarat_perlu' => 'Kurikulum & Micro-teaching / Mikrokonseling',
                 'dok_categories' => array('pedoman_penilaian', 'sk_senat'),
-                'deskripsi' => 'Kurikulum OBE 2025 S1 (144–146 SKS, KKNI Lv. 6), RPS 16 pertemuan, micro-teaching/mikrokonseling, PLP/PPL di sekolah mitra, pengakuan micro-credential, asesmen pembelajaran & jadwal Sempro/Semhas/Skripsi (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Kurikulum OBE & Mikrokonseling S1',
+                'deskripsi' => 'Kurikulum OBE 2025 S1 (144–146 SKS, KKNI Lv. 6), RPS 16 pertemuan, micro-teaching/mikrokonseling, PLP/PPL di sekolah mitra, pengakuan micro-credential, asesmen pembelajaran & jadwal Sempro/Semhas/Skripsi.',
+                'tag_ringkas' => '✓ Kurikulum OBE & Mikrokonseling S1',
                 'internal_links' => array(
                     array('label' => 'Kurikulum OBE S1', 'url' => '/akademik/kurikulum/' . $q_suffix),
                     array('label' => 'Jadwal Ujian Skripsi', 'url' => '/akademik/jadwal-ujian/' . $q_suffix),
@@ -144,8 +144,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Penjaminan Mutu',
                 'syarat_perlu' => 'Penerapan SPMI Siklus PPEPP',
                 'dok_categories' => array('renstra', 'renop', 'akreditasi'),
-                'deskripsi' => 'Implementasi SPMI dengan siklus PPEPP oleh GPM Jurusan PPB & LPM UNM, laporan Audit Mutu Internal (AMI), Survei Kepuasan Sivitas/Mitra S1, serta evaluasi, refleksi & tindak lanjut pelampauan SN Dikti (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · SPMI Siklus PPEPP & AMI',
+                'deskripsi' => 'Implementasi SPMI dengan siklus PPEPP oleh GPM Jurusan PPB & LPM UNM, laporan Audit Mutu Internal (AMI), Survei Kepuasan Sivitas/Mitra S1, serta evaluasi, refleksi & tindak lanjut pelampauan SN Dikti.',
+                'tag_ringkas' => '✓ SPMI Siklus PPEPP & Audit Mutu S1',
                 'internal_links' => array(
                     array('label' => 'Renstra & UPM', 'url' => '/akreditasi/upm/'),
                     array('label' => 'Survei GPM S1', 'url' => '/survei/'),
@@ -186,8 +186,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Mahasiswa',
                 'syarat_perlu' => 'Produktivitas Inovasi Mahasiswa',
                 'dok_categories' => array('sk_mahasiswa_aktif', 'perlindungan_mahasiswa'),
-                'deskripsi' => 'Rekrutmen Pascasarjana S2 (Reguler/Kerjasama/RPL), layanan akademik mahasiswa magister, kesiapkerjaan & karier lanjut, Tracer Study alumni S2, serta inovasi & karya mahasiswa S2 (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Inovasi & Tracer S2',
+                'deskripsi' => 'Rekrutmen Pascasarjana S2 (Reguler/Kerjasama/RPL), layanan akademik mahasiswa magister, kesiapkerjaan & karier lanjut, Tracer Study alumni S2, serta inovasi & karya mahasiswa S2.',
+                'tag_ringkas' => '✓ Inovasi & Tracer Study S2',
                 'internal_links' => array(
                     array('label' => 'Statistik Mahasiswa S2', 'url' => '/kemahasiswaan/statistik/' . $q_suffix),
                     array('label' => 'Penerimaan S2', 'url' => '/kemahasiswaan/penerimaan/' . $q_suffix),
@@ -199,8 +199,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Dosen dan Tendik',
                 'syarat_perlu' => 'Mutu Dosen & Produktivitas Publikasi Dosen',
                 'dok_categories' => array('sk_senat'),
-                'deskripsi' => 'DTPS berkualifikasi Doktor & Guru Besar pengampu & pembimbing Tesis S2 BK, kecukupan tendik Pascasarjana, sertifikasi konselor ahli, produktivitas publikasi SINTA/Scopus & HKI (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · DTPS Doktor/Guru Besar S2',
+                'deskripsi' => 'DTPS berkualifikasi Doktor & Guru Besar pengampu & pembimbing Tesis S2 BK, kecukupan tendik Pascasarjana, sertifikasi konselor ahli, produktivitas publikasi SINTA/Scopus & HKI.',
+                'tag_ringkas' => '✓ DTPS Doktor/Guru Besar & Publikasi S2',
                 'internal_links' => array(
                     array('label' => 'Dosen Pengampu S2', 'url' => '/profil/dosen/' . $q_suffix),
                     array('label' => 'Kepakaran & SINTA', 'url' => '/profil/kepakaran-dosen/'),
@@ -225,8 +225,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Pendidikan',
                 'syarat_perlu' => 'Kurikulum & Praktik Supervisi / Mikrokonseling',
                 'dok_categories' => array('pedoman_penilaian', 'sk_senat'),
-                'deskripsi' => 'Kurikulum Magister S2 (38–42 SKS, KKNI Lv. 8), mata kuliah R&D BK & supervisi klinis, RPS/SAP S2, micro-credential, serta mekanisme Sempro, Semhas & Ujian Tesis (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Kurikulum & Supervisi S2',
+                'deskripsi' => 'Kurikulum Magister S2 (38–42 SKS, KKNI Lv. 8), mata kuliah R&D BK & supervisi klinis, RPS/SAP S2, micro-credential, serta mekanisme Sempro, Semhas & Ujian Tesis.',
+                'tag_ringkas' => '✓ Kurikulum Magister & Supervisi Klinis S2',
                 'internal_links' => array(
                     array('label' => 'Kurikulum S2', 'url' => '/akademik/kurikulum/' . $q_suffix),
                     array('label' => 'Jadwal Ujian Tesis', 'url' => '/akademik/jadwal-ujian/' . $q_suffix),
@@ -264,8 +264,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Penjaminan Mutu',
                 'syarat_perlu' => 'Penerapan SPMI Siklus PPEPP',
                 'dok_categories' => array('renstra', 'renop', 'akreditasi'),
-                'deskripsi' => 'Pelaksanaan SPMI siklus PPEPP pada jenjang S2, laporan AMI Pascasarjana, Survei Kepuasan Mahasiswa S2, serta refleksi & tindak lanjut ketepatan studi dan luaran tesis (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · SPMI PPEPP & AMI S2',
+                'deskripsi' => 'Pelaksanaan SPMI siklus PPEPP pada jenjang S2, laporan AMI Pascasarjana, Survei Kepuasan Mahasiswa S2, serta refleksi & tindak lanjut ketepatan studi dan luaran tesis.',
+                'tag_ringkas' => '✓ SPMI Siklus PPEPP & AMI S2',
                 'internal_links' => array(
                     array('label' => 'Renstra & UPM', 'url' => '/akreditasi/upm/'),
                     array('label' => 'Survei GPM S2', 'url' => '/survei/'),
@@ -306,8 +306,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Mahasiswa',
                 'syarat_perlu' => 'Produktivitas Inovasi Mahasiswa',
                 'dok_categories' => array('sk_mahasiswa_aktif', 'perlindungan_mahasiswa'),
-                'deskripsi' => 'Seleksi masuk mahasiswa doktoral & RPL, layanan riset kandidat doktor, produktivitas inovasi/karya ilmiah mahasiswa S3, studi/karier lanjut, dan Tracer Study lulusan Doktor (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Inovasi & Tracer S3',
+                'deskripsi' => 'Seleksi masuk mahasiswa doktoral & RPL, layanan riset kandidat doktor, produktivitas inovasi/karya ilmiah mahasiswa S3, studi/karier lanjut, dan Tracer Study lulusan Doktor.',
+                'tag_ringkas' => '✓ Inovasi & Tracer Study S3',
                 'internal_links' => array(
                     array('label' => 'Statistik Mahasiswa S3', 'url' => '/kemahasiswaan/statistik/' . $q_suffix),
                     array('label' => 'Penerimaan S3', 'url' => '/kemahasiswaan/penerimaan/' . $q_suffix),
@@ -319,8 +319,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Dosen dan Tendik',
                 'syarat_perlu' => 'Mutu Dosen & Produktivitas Publikasi Dosen',
                 'dok_categories' => array('sk_senat'),
-                'deskripsi' => 'Promotor & Ko-Promotor berkualifikasi Guru Besar (4 Profesor BK) dan Doktor ber-h-index Scopus serta tendik Pascasarjana; produktivitas publikasi internasional & sitasi DTPS S3 (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Guru Besar & Publikasi Scopus',
+                'deskripsi' => 'Promotor & Ko-Promotor berkualifikasi Guru Besar (4 Profesor BK) dan Doktor ber-h-index Scopus serta tendik Pascasarjana; produktivitas publikasi internasional & sitasi DTPS S3.',
+                'tag_ringkas' => '✓ Promotor Guru Besar & Publikasi Scopus',
                 'internal_links' => array(
                     array('label' => 'Promotor & Guru Besar', 'url' => '/profil/dosen/' . $q_suffix),
                     array('label' => 'Kepakaran & SINTA', 'url' => '/profil/kepakaran-dosen/'),
@@ -345,8 +345,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Pendidikan',
                 'syarat_perlu' => 'Kurikulum & Praktik Keilmuan Lanjut',
                 'dok_categories' => array('pedoman_penilaian', 'sk_senat'),
-                'deskripsi' => 'Kurikulum Doktoral S3 (42–48 SKS, KKNI Lv. 9), filsafat ilmu & konstruksi model konseling, pengakuan micro-credential, serta tahapan Ujian Kualifikasi, Sempro/Semhas Disertasi, Ujian Tertutup & Terbuka (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · Kurikulum S3 & Disertasi',
+                'deskripsi' => 'Kurikulum Doktoral S3 (42–48 SKS, KKNI Lv. 9), filsafat ilmu & konstruksi model konseling, pengakuan micro-credential, serta tahapan Ujian Kualifikasi, Sempro/Semhas Disertasi, Ujian Tertutup & Terbuka.',
+                'tag_ringkas' => '✓ Kurikulum Doktoral S3 & Ujian Disertasi',
                 'internal_links' => array(
                     array('label' => 'Kurikulum S3', 'url' => '/akademik/kurikulum/' . $q_suffix),
                     array('label' => 'Jadwal Disertasi', 'url' => '/akademik/jadwal-ujian/' . $q_suffix),
@@ -384,8 +384,8 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
                 'judul' => 'Penjaminan Mutu',
                 'syarat_perlu' => 'Penerapan SPMI Siklus PPEPP',
                 'dok_categories' => array('renstra', 'renop', 'akreditasi'),
-                'deskripsi' => 'Penerapan SPMI siklus PPEPP pada S3, AMI Pascasarjana, Survei Kepuasan Mahasiswa S3, serta evaluasi & tindak lanjut HKI/paten teori baru dan ketepatan lulusan doktor (Syarat Perlu Unggul).',
-                'tag_ringkas' => '★ Syarat Perlu Unggul · SPMI PPEPP & AMI S3',
+                'deskripsi' => 'Penerapan SPMI siklus PPEPP pada S3, AMI Pascasarjana, Survei Kepuasan Mahasiswa S3, serta evaluasi & tindak lanjut HKI/paten teori baru dan ketepatan lulusan doktor.',
+                'tag_ringkas' => '✓ SPMI Siklus PPEPP & AMI S3',
                 'internal_links' => array(
                     array('label' => 'Renstra & UPM', 'url' => '/akreditasi/upm/'),
                     array('label' => 'Survei GPM S3', 'url' => '/survei/'),
@@ -397,13 +397,13 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
         $items = array(
             0 => array('kode' => 'K1', 'judul' => 'Visi Keilmuan PS', 'syarat_perlu' => '', 'dok_categories' => array('renstra', 'akreditasi'), 'deskripsi' => 'Visi keilmuan, strategi pencapaian, evaluasi & refleksi ' . $nama_prodi . ' mengacu pada payung Jurusan PPB FIP UNM.', 'tag_ringkas' => '✓ LED 3.0 · Visi Keilmuan ' . strtoupper($s), 'internal_links' => array(array('label' => 'Visi & Misi', 'url' => '/profil/visi-misi/'))),
             1 => array('kode' => 'K2', 'judul' => 'Tata Kelola dan Manajemen UPPS', 'syarat_perlu' => '', 'dok_categories' => array('renstra', 'renop', 'sk_senat'), 'deskripsi' => 'Struktur tata pamong UPPS/Jurusan, manajemen operasional & kerja sama tridharma pada ' . $nama_prodi . '.', 'tag_ringkas' => '✓ Tata Kelola UPPS & MoA', 'internal_links' => array(array('label' => 'Struktur Organisasi', 'url' => '/profil/struktur/'))),
-            2 => array('kode' => 'K3', 'judul' => 'Mahasiswa', 'syarat_perlu' => 'Produktivitas Inovasi Mahasiswa', 'dok_categories' => array('sk_mahasiswa_aktif', 'perlindungan_mahasiswa'), 'deskripsi' => 'Rekrutmen/RPL, layanan mahasiswa, kesiapkerjaan/kewirausahaan, inovasi mahasiswa & tracer alumni ' . $nama_prodi . '.', 'tag_ringkas' => '★ Syarat Perlu Unggul · Mahasiswa & Inovasi', 'internal_links' => array(array('label' => 'Statistik Mahasiswa', 'url' => '/kemahasiswaan/statistik/' . $q_suffix))),
-            3 => array('kode' => 'K4', 'judul' => 'Dosen dan Tendik', 'syarat_perlu' => 'Mutu Dosen & Produktivitas Publikasi Dosen', 'dok_categories' => array('sk_senat'), 'deskripsi' => 'Mutu DTPS & tendik pengampu ' . $nama_prodi . ', kualifikasi, kepakaran, SINTA & produktivitas publikasi dosen.', 'tag_ringkas' => '★ Syarat Perlu Unggul · Dosen, Tendik & Publikasi', 'internal_links' => array(array('label' => 'Direktori Dosen', 'url' => '/profil/dosen/' . $q_suffix))),
+            2 => array('kode' => 'K3', 'judul' => 'Mahasiswa', 'syarat_perlu' => 'Produktivitas Inovasi Mahasiswa', 'dok_categories' => array('sk_mahasiswa_aktif', 'perlindungan_mahasiswa'), 'deskripsi' => 'Rekrutmen/RPL, layanan mahasiswa, kesiapkerjaan/kewirausahaan, inovasi mahasiswa & tracer alumni ' . $nama_prodi . '.', 'tag_ringkas' => '✓ Mahasiswa, Layanan & Inovasi', 'internal_links' => array(array('label' => 'Statistik Mahasiswa', 'url' => '/kemahasiswaan/statistik/' . $q_suffix))),
+            3 => array('kode' => 'K4', 'judul' => 'Dosen dan Tendik', 'syarat_perlu' => 'Mutu Dosen & Produktivitas Publikasi Dosen', 'dok_categories' => array('sk_senat'), 'deskripsi' => 'Mutu DTPS & tendik pengampu ' . $nama_prodi . ', kualifikasi, kepakaran, SINTA & produktivitas publikasi dosen.', 'tag_ringkas' => '✓ Dosen, Tendik & Publikasi', 'internal_links' => array(array('label' => 'Direktori Dosen', 'url' => '/profil/dosen/' . $q_suffix))),
             4 => array('kode' => 'K5', 'judul' => 'Keuangan, Sarana, dan Prasarana Pendidikan', 'syarat_perlu' => '', 'dok_categories' => array('renop'), 'deskripsi' => 'Kecukupan keuangan, ruang pembelajaran, laboratorium BK, K3L & sistem informasi untuk ' . $nama_prodi . '.', 'tag_ringkas' => '✓ Sarpras, K3L & Lab BK', 'internal_links' => array(array('label' => 'Sarana & Prasarana', 'url' => '/profil/sarana-prasarana/'))),
-            5 => array('kode' => 'K6', 'judul' => 'Pendidikan', 'syarat_perlu' => 'Kurikulum & Micro-teaching / Mikrokonseling', 'dok_categories' => array('pedoman_penilaian', 'sk_senat'), 'deskripsi' => 'Kurikulum OBE, RPS/SAP, micro-teaching/mikrokonseling, PPL/micro-credential, asesmen & tugas akhir ' . $nama_prodi . '.', 'tag_ringkas' => '★ Syarat Perlu Unggul · Kurikulum & Praktik', 'internal_links' => array(array('label' => 'Kurikulum OBE', 'url' => '/akademik/kurikulum/' . $q_suffix))),
+            5 => array('kode' => 'K6', 'judul' => 'Pendidikan', 'syarat_perlu' => 'Kurikulum & Micro-teaching / Mikrokonseling', 'dok_categories' => array('pedoman_penilaian', 'sk_senat'), 'deskripsi' => 'Kurikulum OBE, RPS/SAP, micro-teaching/mikrokonseling, PPL/micro-credential, asesmen & tugas akhir ' . $nama_prodi . '.', 'tag_ringkas' => '✓ Kurikulum OBE & Praktik Pembelajaran', 'internal_links' => array(array('label' => 'Kurikulum OBE', 'url' => '/akademik/kurikulum/' . $q_suffix))),
             6 => array('kode' => 'K7', 'judul' => 'Penelitian', 'syarat_perlu' => '', 'dok_categories' => array('lainnya'), 'deskripsi' => 'Pelaksanaan penelitian dosen bersama mahasiswa ' . $nama_prodi . ', luaran riset, evaluasi & refleksi roadmap.', 'tag_ringkas' => '✓ Riset & Publikasi', 'internal_links' => array(array('label' => 'MIS PNBP Riset', 'url' => '/mis-pnbp/'))),
             7 => array('kode' => 'K8', 'judul' => 'Pengabdian kepada Masyarakat', 'syarat_perlu' => '', 'dok_categories' => array('lainnya'), 'deskripsi' => 'Program pengabdian kepada masyarakat oleh sivitas ' . $nama_prodi . ' bersama mitra & tindak lanjutnya.', 'tag_ringkas' => '✓ Luaran PkM & Dampak', 'internal_links' => array(array('label' => 'MIS PNBP PkM', 'url' => '/mis-pnbp/#pkm'))),
-            8 => array('kode' => 'K9', 'judul' => 'Penjaminan Mutu', 'syarat_perlu' => 'Penerapan SPMI Siklus PPEPP', 'dok_categories' => array('renstra', 'renop', 'akreditasi'), 'deskripsi' => 'Penerapan SPMI siklus PPEPP, Audit Mutu Internal (AMI), evaluasi, refleksi & tindak lanjut berkelanjutan.', 'tag_ringkas' => '★ Syarat Perlu Unggul · SPMI Siklus PPEPP', 'internal_links' => array(array('label' => 'Renstra & UPM', 'url' => '/akreditasi/upm/'))),
+            8 => array('kode' => 'K9', 'judul' => 'Penjaminan Mutu', 'syarat_perlu' => 'Penerapan SPMI Siklus PPEPP', 'dok_categories' => array('renstra', 'renop', 'akreditasi'), 'deskripsi' => 'Penerapan SPMI siklus PPEPP, Audit Mutu Internal (AMI), evaluasi, refleksi & tindak lanjut berkelanjutan.', 'tag_ringkas' => '✓ SPMI Siklus PPEPP & Audit Mutu', 'internal_links' => array(array('label' => 'Renstra & UPM', 'url' => '/akreditasi/upm/'))),
         );
     }
 
@@ -647,6 +647,12 @@ function ppb_get_lamdik_settings() {
                 if ($needs_v3_upgrade && (empty($sk['judul']) || in_array(trim((string) $sk['judul']), $legacy_v1_titles, true))) {
                     $row['judul']       = $def_k['judul'];
                     $row['tag_ringkas'] = $def_k['tag_ringkas'];
+                }
+                if (strpos((string) ($row['tag_ringkas'] ?? ''), '★') !== false || stripos((string) ($row['tag_ringkas'] ?? ''), 'Syarat Perlu Unggul') !== false) {
+                    $row['tag_ringkas'] = $def_k['tag_ringkas'];
+                }
+                if (strpos((string) ($row['deskripsi'] ?? ''), '★') !== false || stripos((string) ($row['deskripsi'] ?? ''), '(Syarat Perlu Unggul)') !== false) {
+                    $row['deskripsi'] = str_replace(array(' (Syarat Perlu Unggul)', '★ '), array('', ''), (string) $row['deskripsi']);
                 }
                 $norm_ev = ppb_lamdik_normalize_eviden_links($sk, $def_k);
                 $row['label_tombol'] = $norm_ev['label_tombol'];
@@ -895,13 +901,12 @@ function ppb_render_lamdik_admin_page() {
                 <!-- 2. 9 KRITERIA LAMDIK PRODI (IAPSK 3.0) -->
                 <div class="ppb-lam-card">
                     <h2>📑 2. Eviden 9 Kriteria LAMDIK IAPSK 3.0 — <?php echo esc_html($pmeta['nama']); ?></h2>
-                    <p class="ppb-lam-desc">Masukkan tautan <strong>Folder / File Google Drive</strong> (bisa lebih dari 1 link per kriteria) untuk dibaca Asesor di halaman publik <code>/akreditasi/<?php echo esc_html($slug); ?>/</code> dan tabel <strong>Indeks Tautan Drive Asesor</strong>. Dokumen CPT <em>Dokumen Mutu</em> yang sesuai unit &amp; kategori juga akan terhubung otomatis.</p>
+                    <p class="ppb-lam-desc">Masukkan tautan <strong>Folder / File Google Drive</strong> (bisa lebih dari 1 link per kriteria) untuk dibaca Asesor langsung di dalam setiap kriteria halaman <code>/akreditasi/<?php echo esc_html($slug); ?>/</code>. Dokumen CPT <em>Dokumen Resmi</em> yang sesuai unit &amp; kategori juga akan terhubung otomatis.</p>
 
                     <?php foreach ($krit as $idx => $kr) :
                         $ev_links = !empty($kr['eviden_links']) && is_array($kr['eviden_links'])
                             ? $kr['eviden_links']
                             : array(array('label' => $kr['label_tombol'] ?? ('Eviden Drive K' . ($idx + 1)), 'url' => $kr['drive_url'] ?? ''));
-                        $sp_note = trim((string) ($kr['syarat_perlu'] ?? ''));
                     ?>
                         <div class="ppb-lam-krit-card" data-krit-wrap="<?php echo esc_attr($slug . '_' . $idx); ?>">
                             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
@@ -910,9 +915,6 @@ function ppb_render_lamdik_admin_page() {
                                         <?php echo esc_html($pmeta['kode'] . ' · KRITERIA ' . ($idx + 1)); ?>
                                     </span>
                                     <strong style="font-size:14.5px;color:#0f172a;"><?php echo esc_html($kr['judul']); ?></strong>
-                                    <?php if ($sp_note !== '') : ?>
-                                        <span style="display:inline-block;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">★ Syarat Perlu Unggul: <?php echo esc_html($sp_note); ?></span>
-                                    <?php endif; ?>
                                 </div>
                             </div>
 
@@ -1211,8 +1213,7 @@ function ppb_render_lamdik_hub_html($atts = array()) {
             if (!empty($gen['matriks_url'])) {
                 $quick_links[] = array('label' => '⚖️ Matriks Penilaian 3.0 ' . $pmeta['kode'], 'url' => $gen['matriks_url'], 'primary' => false);
             }
-            $acc_id   = 'bk-lamdik-accordion-' . $slug;
-            $idx_id   = 'ppb-lam-asezor-index-' . $slug;
+            $acc_id         = 'bk-lamdik-accordion-' . $slug;
             $admin_edit_url = admin_url('admin.php?page=ppb-lamdik-settings&unit=' . rawurlencode($slug));
         ?>
         <div class="ppb-lam-deg-panel" data-lam-deg-panel="<?php echo esc_attr($slug); ?>" style="display:<?php echo $is_act ? 'block' : 'none'; ?>;">
@@ -1241,7 +1242,7 @@ function ppb_render_lamdik_hub_html($atts = array()) {
             </div>
 
             <!-- Quick Access Drive Bar per Jenjang + Tautan Payung Jurusan -->
-            <div style="background:#0D3B22;color:#fff;border-radius:16px;padding:18px 22px;margin:0 0 22px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 6px 20px rgba(13,59,34,0.14);">
+            <div style="background:#0D3B22;color:#fff;border-radius:16px;padding:18px 22px;margin:0 0 26px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 6px 20px rgba(13,59,34,0.14);">
                 <div>
                     <div style="font-size:10.5px;font-weight:800;color:#F5B82E;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Portal Eviden Asesor IAPSK 3.0 · <?php echo esc_html($pmeta['nama']); ?></div>
                     <strong style="font-size:15px;color:#fff;">Dokumen Induk (LED 3.0, DKPS 3.0 &amp; Folder Drive) + Payung Mutu Jurusan</strong>
@@ -1264,64 +1265,6 @@ function ppb_render_lamdik_hub_html($atts = array()) {
                 </div>
             </div>
 
-            <!-- Panel Peta Tautan Google Drive Asesor (Ringkasan 1-Layar K1-K9) -->
-            <div style="background:#ffffff;border:1.5px solid #D4E3D8;border-radius:16px;padding:18px 22px;margin-bottom:26px;box-shadow:0 4px 16px rgba(13,59,34,0.04);">
-                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
-                    <div>
-                        <span style="display:inline-block;background:#E8F0EA;color:#0D3B22;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:999px;text-transform:uppercase;margin-bottom:4px;">Navigasi Cepat Asesor AK &amp; AL</span>
-                        <h3 style="font-family:'Fraunces',Georgia,serif;font-size:19px;color:#0D3B22;margin:0;">📋 Peta Tautan Google Drive per Kriteria (IAPSK 3.0 — <?php echo esc_html($pmeta['kode']); ?>)</h3>
-                    </div>
-                    <button type="button" class="ppb-lam-index-toggle" data-target-idx="<?php echo esc_attr($idx_id); ?>" style="appearance:none;background:#FAF8F5;border:1px solid #D4E3D8;color:#0D3B22;font-size:12px;font-weight:700;padding:7px 13px;border-radius:8px;cursor:pointer;">Sembunyikan Tabel</button>
-                </div>
-
-                <div id="<?php echo esc_attr($idx_id); ?>" style="overflow-x:auto;">
-                    <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
-                        <thead>
-                            <tr style="background:#FAF8F5;border-bottom:2px solid #D4E3D8;text-align:left;color:#0D3B22;">
-                                <th style="padding:10px 10px;width:62px;">Kode</th>
-                                <th style="padding:10px 10px;">Kriteria IAPSK 3.0</th>
-                                <th style="padding:10px 10px;">Tautan Langsung Google Drive / Dokumen Eviden</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($krit as $kidx => $kr_row) :
-                                $k_drives = $krit_drive_map[$kidx] ?? array();
-                                $sp_note  = trim((string) ($kr_row['syarat_perlu'] ?? ''));
-                            ?>
-                            <tr style="border-bottom:1px solid #E5E7EB;">
-                                <td style="padding:10px;vertical-align:top;font-family:'IBM Plex Mono',monospace;font-weight:800;color:#0D3B22;">K<?php echo (int) ($kidx + 1); ?></td>
-                                <td style="padding:10px;vertical-align:top;">
-                                    <strong style="color:#111C16;"><?php echo esc_html($kr_row['judul']); ?></strong>
-                                    <?php if ($sp_note !== '') : ?>
-                                        <div style="margin-top:3px;"><span style="display:inline-block;background:#FEF3C7;color:#92400E;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;">★ Syarat Perlu Unggul: <?php echo esc_html($sp_note); ?></span></div>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="padding:10px;vertical-align:top;">
-                                    <?php if (!empty($k_drives)) : ?>
-                                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                                            <?php foreach ($k_drives as $kd) : ?>
-                                                <a href="<?php echo esc_url($kd['url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;background:#F5B82E;color:#0D3B22;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:7px;text-decoration:none;">📂 <?php echo esc_html($kd['label']); ?> &#8599;</a>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php elseif (!empty($gen['folder_utama_url'])) : ?>
-                                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
-                                            <a href="<?php echo esc_url($gen['folder_utama_url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;background:#E8F0EA;color:#0D3B22;border:1px solid #B7D0BE;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:7px;text-decoration:none;">🗂️ Folder Induk Drive <?php echo esc_html($pmeta['kode']); ?> &#8599;</a>
-                                            <span style="font-size:11px;color:#64748B;">(Link sub-folder K<?php echo (int) ($kidx + 1); ?> dapat diisi di WP-Admin)</span>
-                                        </div>
-                                    <?php else : ?>
-                                        <span style="font-size:11.5px;color:#94A3B8;">Belum ada tautan Drive diinput</span>
-                                        <?php if ($can_edit_admin) : ?>
-                                            &middot; <a href="<?php echo esc_url($admin_edit_url); ?>" style="font-size:11.5px;font-weight:700;color:#0D3B22;">+ Input Link K<?php echo (int) ($kidx + 1); ?></a>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Accordion Heading -->
             <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:18px;">
                 <div>
@@ -1341,7 +1284,6 @@ function ppb_render_lamdik_hub_html($atts = array()) {
                     $is_open      = ($idx === 0);
                     $internal     = !empty($kr['internal_links']) && is_array($kr['internal_links']) ? $kr['internal_links'] : array();
                     $k_drives     = $krit_drive_map[$idx] ?? array();
-                    $sp_note      = trim((string) ($kr['syarat_perlu'] ?? ''));
                     $total_tautan = count($internal) + count($k_drives);
                 ?>
                 <div class="bk-acc-item <?php echo $is_open ? 'is-open' : ''; ?>">
@@ -1349,9 +1291,6 @@ function ppb_render_lamdik_hub_html($atts = array()) {
                         <span class="bk-acc-title-wrap">
                             <span class="bk-acc-num"><?php echo sprintf('%02d', $idx + 1); ?></span>
                             <span class="bk-acc-title"><?php echo esc_html($kr['judul']); ?></span>
-                            <?php if ($sp_note !== '') : ?>
-                                <span style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:9999px;margin-left:6px;white-space:nowrap;">★ Syarat Perlu</span>
-                            <?php endif; ?>
                         </span>
                         <span style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;">
                             <?php if (!empty($k_drives)) : ?>
@@ -1417,17 +1356,6 @@ function ppb_render_lamdik_hub_html($atts = array()) {
             var root = document.getElementById('ppb-lamdik-hub-root');
             if (!root || root.getAttribute('data-wired') === '1') return;
             root.setAttribute('data-wired', '1');
-
-            root.querySelectorAll('.ppb-lam-index-toggle').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var tid = btn.getAttribute('data-target-idx');
-                    var box = tid ? document.getElementById(tid) : null;
-                    if (!box) return;
-                    var hidden = box.style.display === 'none';
-                    box.style.display = hidden ? 'block' : 'none';
-                    btn.textContent = hidden ? 'Sembunyikan Tabel' : 'Tampilkan Tabel Drive (K1–K9)';
-                });
-            });
 
             var degBtns   = root.querySelectorAll('.ppb-lam-deg-btn');
             var degPanels = root.querySelectorAll('.ppb-lam-deg-panel');
