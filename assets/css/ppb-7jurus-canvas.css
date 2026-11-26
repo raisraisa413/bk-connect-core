@@ -1,0 +1,310 @@
+
+/* Scoped Base for 7 Jurus BK Hebat Universal Service Design Canvas */
+.bk-7jurus-app {
+    font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    overflow: hidden;
+    box-shadow: 0 10px 30px -10px rgba(20, 45, 78, 0.1);
+}
+.bk-7jurus-app *,
+.bk-7jurus-app *::before,
+.bk-7jurus-app *::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: #e5e7eb;
+}
+.bk-7jurus-app input,
+.bk-7jurus-app textarea,
+.bk-7jurus-app select,
+.bk-7jurus-app button {
+    font-family: inherit;
+}
+.bk-7jurus-app .canvas-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px -2px rgba(20, 45, 78, 0.08);
+    transition: all 0.3s ease;
+}
+.bk-7jurus-app .canvas-card:hover {
+    box-shadow: 0 8px 30px -4px rgba(20, 45, 78, 0.12);
+}
+.bk-7jurus-app .tab-btn.active {
+    background-color: #142D4E;
+    color: #FFFFFF;
+    border-color: #142D4E;
+}
+.bk-7jurus-app .jurus-card.selected {
+    border-color: #159A91;
+    background-color: #EAF3FA;
+}
+.bk-7jurus-app .border {
+    border-width: 1px;
+}
+.bk-7jurus-app .border-2 {
+    border-width: 2px;
+}
+.bk-7jurus-app .border-b {
+    border-bottom-width: 1px;
+}
+.bk-7jurus-app .border-b-2 {
+    border-bottom-width: 2px;
+}
+.bk-7jurus-app .border-t {
+    border-top-width: 1px;
+}
+.bk-7jurus-app .border-l-4 {
+    border-left-width: 4px;
+}
+@media print {
+    .bk-7jurus-app .no-print { display: none !important; }
+    .bk-7jurus-app .print-only { display: block !important; }
+}
+
+.bk-7jurus-app .pointer-events-none{pointer-events:none}
+.bk-7jurus-app .fixed{position:fixed}
+.bk-7jurus-app .absolute{position:absolute}
+.bk-7jurus-app .relative{position:relative}
+.bk-7jurus-app .sticky{position:sticky}
+.bk-7jurus-app .inset-0{inset:0px}
+.bk-7jurus-app .right-0{right:0px}
+.bk-7jurus-app .top-0{top:0px}
+.bk-7jurus-app .z-10{z-index:10}
+.bk-7jurus-app .z-40{z-index:40}
+.bk-7jurus-app .z-50{z-index:50}
+.bk-7jurus-app .mx-auto{margin-left:auto;margin-right:auto}
+.bk-7jurus-app .mb-1{margin-bottom:0.25rem}
+.bk-7jurus-app .mb-2{margin-bottom:0.5rem}
+.bk-7jurus-app .mb-3{margin-bottom:0.75rem}
+.bk-7jurus-app .mb-4{margin-bottom:1rem}
+.bk-7jurus-app .mb-6{margin-bottom:1.5rem}
+.bk-7jurus-app .mt-0\.5{margin-top:0.125rem}
+.bk-7jurus-app .mt-1{margin-top:0.25rem}
+.bk-7jurus-app .mt-12{margin-top:3rem}
+.bk-7jurus-app .mt-4{margin-top:1rem}
+.bk-7jurus-app .block{display:block}
+.bk-7jurus-app .inline-block{display:inline-block}
+.bk-7jurus-app .flex{display:flex}
+.bk-7jurus-app .grid{display:grid}
+.bk-7jurus-app .hidden{display:none}
+.bk-7jurus-app .h-16{height:4rem}
+.bk-7jurus-app .h-3{height:0.75rem}
+.bk-7jurus-app .h-4{height:1rem}
+.bk-7jurus-app .h-5{height:1.25rem}
+.bk-7jurus-app .h-6{height:1.5rem}
+.bk-7jurus-app .h-96{height:24rem}
+.bk-7jurus-app .h-\[90vh\]{height:90vh}
+.bk-7jurus-app .max-h-\[90vh\]{max-height:90vh}
+.bk-7jurus-app .min-h-screen{min-height:100vh}
+.bk-7jurus-app .w-4{width:1rem}
+.bk-7jurus-app .w-5{width:1.25rem}
+.bk-7jurus-app .w-6{width:1.5rem}
+.bk-7jurus-app .w-96{width:24rem}
+.bk-7jurus-app .w-full{width:100%}
+.bk-7jurus-app .max-w-3xl{max-width:48rem}
+.bk-7jurus-app .max-w-4xl{max-width:56rem}
+.bk-7jurus-app .max-w-7xl{max-width:80rem}
+.bk-7jurus-app .max-w-lg{max-width:32rem}
+.bk-7jurus-app .flex-1{flex:1 1 0%}
+.bk-7jurus-app .shrink-0{flex-shrink:0}
+.bk-7jurus-app .flex-grow{flex-grow:1}
+.bk-7jurus-app .-translate-y-6{--tw-translate-y:-1.5rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+.bk-7jurus-app .translate-x-12{--tw-translate-x:3rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+.bk-7jurus-app .cursor-pointer{cursor:pointer}
+.bk-7jurus-app .grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}
+.bk-7jurus-app .grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}
+.bk-7jurus-app .flex-col{flex-direction:column}
+.bk-7jurus-app .flex-wrap{flex-wrap:wrap}
+.bk-7jurus-app .items-start{align-items:flex-start}
+.bk-7jurus-app .items-center{align-items:center}
+.bk-7jurus-app .justify-end{justify-content:flex-end}
+.bk-7jurus-app .justify-center{justify-content:center}
+.bk-7jurus-app .justify-between{justify-content:space-between}
+.bk-7jurus-app .gap-2{gap:0.5rem}
+.bk-7jurus-app .gap-3{gap:0.75rem}
+.bk-7jurus-app .gap-4{gap:1rem}
+.bk-7jurus-app .space-x-1 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.25rem * var(--tw-space-x-reverse));margin-left:calc(0.25rem * calc(1 - var(--tw-space-x-reverse)))}
+.bk-7jurus-app .space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}
+.bk-7jurus-app .space-x-3 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.75rem * var(--tw-space-x-reverse));margin-left:calc(0.75rem * calc(1 - var(--tw-space-x-reverse)))}
+.bk-7jurus-app .space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}
+.bk-7jurus-app .space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}
+.bk-7jurus-app .space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}
+.bk-7jurus-app .space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}
+.bk-7jurus-app .space-y-8 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(2rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(2rem * var(--tw-space-y-reverse))}
+.bk-7jurus-app .overflow-hidden{overflow:hidden}
+.bk-7jurus-app .overflow-x-auto{overflow-x:auto}
+.bk-7jurus-app .overflow-y-auto{overflow-y:auto}
+.bk-7jurus-app .rounded{border-radius:0.25rem}
+.bk-7jurus-app .rounded-2xl{border-radius:1rem}
+.bk-7jurus-app .rounded-full{border-radius:9999px}
+.bk-7jurus-app .rounded-lg{border-radius:0.5rem}
+.bk-7jurus-app .rounded-md{border-radius:0.375rem}
+.bk-7jurus-app .rounded-xl{border-radius:0.75rem}
+.bk-7jurus-app .border{border-width:1px}
+.bk-7jurus-app .border-2{border-width:2px}
+.bk-7jurus-app .border-b{border-bottom-width:1px}
+.bk-7jurus-app .border-l-4{border-left-width:4px}
+.bk-7jurus-app .border-t{border-top-width:1px}
+.bk-7jurus-app .border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-blue-200{--tw-border-opacity:1;border-color:rgb(191 219 254 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-emerald-100{--tw-border-opacity:1;border-color:rgb(209 250 229 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-emerald-200{--tw-border-opacity:1;border-color:rgb(167 243 208 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-rose-200{--tw-border-opacity:1;border-color:rgb(254 205 211 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-slate-300{--tw-border-opacity:1;border-color:rgb(203 213 225 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-teal{--tw-border-opacity:1;border-color:rgb(21 154 145 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .border-white\/30{border-color:rgb(255 255 255 / 0.3)}
+.bk-7jurus-app .bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-amber-50\/50{background-color:rgb(255 251 235 / 0.5)}
+.bk-7jurus-app .bg-amber-600{--tw-bg-opacity:1;background-color:rgb(217 119 6 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-blue-50\/50{background-color:rgb(239 246 255 / 0.5)}
+.bk-7jurus-app .bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-emerald-50{--tw-bg-opacity:1;background-color:rgb(236 253 245 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-emerald-50\/50{background-color:rgb(236 253 245 / 0.5)}
+.bk-7jurus-app .bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-gold\/20{background-color:rgb(215 170 84 / 0.2)}
+.bk-7jurus-app .bg-navy{--tw-bg-opacity:1;background-color:rgb(20 45 78 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-rose-50{--tw-bg-opacity:1;background-color:rgb(255 241 242 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-slate-800\/80{background-color:rgb(30 41 59 / 0.8)}
+.bk-7jurus-app .bg-slate-900\/60{background-color:rgb(15 23 42 / 0.6)}
+.bk-7jurus-app .bg-slate-900\/70{background-color:rgb(15 23 42 / 0.7)}
+.bk-7jurus-app .bg-teal{--tw-bg-opacity:1;background-color:rgb(21 154 145 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-teal\/10{background-color:rgb(21 154 145 / 0.1)}
+.bk-7jurus-app .bg-teal\/20{background-color:rgb(21 154 145 / 0.2)}
+.bk-7jurus-app .bg-teal\/5{background-color:rgb(21 154 145 / 0.05)}
+.bk-7jurus-app .bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-white\/10{background-color:rgb(255 255 255 / 0.1)}
+.bk-7jurus-app .bg-amber-50{--tw-bg-opacity:1;background-color:rgb(255 251 235 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}
+.bk-7jurus-app .from-navy{--tw-gradient-from:#142D4E var(--tw-gradient-from-position);--tw-gradient-to:rgb(20 45 78 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}
+.bk-7jurus-app .via-slate-900{--tw-gradient-to:rgb(15 23 42 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #0f172a var(--tw-gradient-via-position), var(--tw-gradient-to)}
+.bk-7jurus-app .to-navy{--tw-gradient-to:#142D4E var(--tw-gradient-to-position)}
+.bk-7jurus-app .p-2{padding:0.5rem}
+.bk-7jurus-app .p-2\.5{padding:0.625rem}
+.bk-7jurus-app .p-3{padding:0.75rem}
+.bk-7jurus-app .p-4{padding:1rem}
+.bk-7jurus-app .p-6{padding:1.5rem}
+.bk-7jurus-app .p-8{padding:2rem}
+.bk-7jurus-app .px-2{padding-left:0.5rem;padding-right:0.5rem}
+.bk-7jurus-app .px-2\.5{padding-left:0.625rem;padding-right:0.625rem}
+.bk-7jurus-app .px-3{padding-left:0.75rem;padding-right:0.75rem}
+.bk-7jurus-app .px-4{padding-left:1rem;padding-right:1rem}
+.bk-7jurus-app .px-5{padding-left:1.25rem;padding-right:1.25rem}
+.bk-7jurus-app .px-6{padding-left:1.5rem;padding-right:1.5rem}
+.bk-7jurus-app .py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}
+.bk-7jurus-app .py-1{padding-top:0.25rem;padding-bottom:0.25rem}
+.bk-7jurus-app .py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}
+.bk-7jurus-app .py-2{padding-top:0.5rem;padding-bottom:0.5rem}
+.bk-7jurus-app .py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}
+.bk-7jurus-app .py-3{padding-top:0.75rem;padding-bottom:0.75rem}
+.bk-7jurus-app .py-4{padding-top:1rem;padding-bottom:1rem}
+.bk-7jurus-app .py-6{padding-top:1.5rem;padding-bottom:1.5rem}
+.bk-7jurus-app .pb-2{padding-bottom:0.5rem}
+.bk-7jurus-app .pb-3{padding-bottom:0.75rem}
+.bk-7jurus-app .pb-4{padding-bottom:1rem}
+.bk-7jurus-app .pl-4{padding-left:1rem}
+.bk-7jurus-app .pt-3{padding-top:0.75rem}
+.bk-7jurus-app .pt-4{padding-top:1rem}
+.bk-7jurus-app .text-center{text-align:center}
+.bk-7jurus-app .font-sans{font-family:Inter, Plus Jakarta Sans, sans-serif}
+.bk-7jurus-app .text-2xl{font-size:1.5rem;line-height:2rem}
+.bk-7jurus-app .text-base{font-size:1rem;line-height:1.5rem}
+.bk-7jurus-app .text-lg{font-size:1.125rem;line-height:1.75rem}
+.bk-7jurus-app .text-sm{font-size:0.875rem;line-height:1.25rem}
+.bk-7jurus-app .text-xl{font-size:1.25rem;line-height:1.75rem}
+.bk-7jurus-app .text-xs{font-size:0.75rem;line-height:1rem}
+.bk-7jurus-app .font-black{font-weight:900}
+.bk-7jurus-app .font-bold{font-weight:700}
+.bk-7jurus-app .font-extrabold{font-weight:800}
+.bk-7jurus-app .font-medium{font-weight:500}
+.bk-7jurus-app .font-semibold{font-weight:600}
+.bk-7jurus-app .uppercase{text-transform:uppercase}
+.bk-7jurus-app .italic{font-style:italic}
+.bk-7jurus-app .leading-tight{line-height:1.25}
+.bk-7jurus-app .tracking-tight{letter-spacing:-0.025em}
+.bk-7jurus-app .tracking-wider{letter-spacing:0.05em}
+.bk-7jurus-app .text-amber-800{--tw-text-opacity:1;color:rgb(146 64 14 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-amber-900{--tw-text-opacity:1;color:rgb(120 53 15 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-blue-800{--tw-text-opacity:1;color:rgb(30 64 175 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-blue-900{--tw-text-opacity:1;color:rgb(30 58 138 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-emerald-500{--tw-text-opacity:1;color:rgb(16 185 129 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-emerald-900{--tw-text-opacity:1;color:rgb(6 78 59 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-gold{--tw-text-opacity:1;color:rgb(215 170 84 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-navy{--tw-text-opacity:1;color:rgb(20 45 78 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-pink-400{--tw-text-opacity:1;color:rgb(244 114 182 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-rose-700{--tw-text-opacity:1;color:rgb(190 18 60 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-teal{--tw-text-opacity:1;color:rgb(21 154 145 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.bk-7jurus-app .opacity-10{opacity:0.1}
+.bk-7jurus-app .shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}
+.bk-7jurus-app .shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}
+.bk-7jurus-app .shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}
+.bk-7jurus-app .shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}
+.bk-7jurus-app .shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}
+.bk-7jurus-app .outline-none{outline:2px solid transparent;outline-offset:2px}
+.bk-7jurus-app .backdrop-blur{--tw-backdrop-blur:blur(8px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}
+.bk-7jurus-app .backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}
+.bk-7jurus-app .transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}
+.bk-7jurus-app .transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}
+.bk-7jurus-app .duration-500{transition-duration:500ms}
+.bk-7jurus-app .hover\:border-teal:hover{--tw-border-opacity:1;border-color:rgb(21 154 145 / var(--tw-border-opacity, 1))}
+.bk-7jurus-app .hover\:bg-navy\/90:hover{background-color:rgb(20 45 78 / 0.9)}
+.bk-7jurus-app .hover\:bg-rose-100:hover{--tw-bg-opacity:1;background-color:rgb(255 228 230 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .hover\:bg-slate-100:hover{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .hover\:bg-slate-300:hover{--tw-bg-opacity:1;background-color:rgb(203 213 225 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .hover\:bg-slate-800:hover{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .hover\:bg-teal\/20:hover{background-color:rgb(21 154 145 / 0.2)}
+.bk-7jurus-app .hover\:bg-teal\/90:hover{background-color:rgb(21 154 145 / 0.9)}
+.bk-7jurus-app .hover\:bg-white\/20:hover{background-color:rgb(255 255 255 / 0.2)}
+.bk-7jurus-app .hover\:bg-amber-700:hover{--tw-bg-opacity:1;background-color:rgb(180 83 9 / var(--tw-bg-opacity, 1))}
+.bk-7jurus-app .hover\:text-amber-300:hover{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .hover\:text-slate-600:hover{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}
+.bk-7jurus-app .focus\:ring-1:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}
+.bk-7jurus-app .focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}
+.bk-7jurus-app .focus\:ring-amber-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(245 158 11 / var(--tw-ring-opacity, 1))}
+.bk-7jurus-app .focus\:ring-blue-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(59 130 246 / var(--tw-ring-opacity, 1))}
+.bk-7jurus-app .focus\:ring-emerald-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(16 185 129 / var(--tw-ring-opacity, 1))}
+.bk-7jurus-app .focus\:ring-teal:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(21 154 145 / var(--tw-ring-opacity, 1))}
+@media (min-width: 640px){.bk-7jurus-app .sm\:inline{display:inline}
+.bk-7jurus-app .sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}
+.bk-7jurus-app .sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}}
+@media (min-width: 768px){.bk-7jurus-app .md\:mb-0{margin-bottom:0px}
+.bk-7jurus-app .md\:inline{display:inline}
+.bk-7jurus-app .md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}
+.bk-7jurus-app .md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}
+.bk-7jurus-app .md\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}
+.bk-7jurus-app .md\:flex-row{flex-direction:row}
+.bk-7jurus-app .md\:items-center{align-items:center}
+.bk-7jurus-app .md\:space-x-4 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(1rem * var(--tw-space-x-reverse));margin-left:calc(1rem * calc(1 - var(--tw-space-x-reverse)))}
+.bk-7jurus-app .md\:p-8{padding:2rem}
+.bk-7jurus-app .md\:text-left{text-align:left}
+.bk-7jurus-app .md\:text-4xl{font-size:2.25rem;line-height:2.5rem}
+.bk-7jurus-app .md\:text-base{font-size:1rem;line-height:1.5rem}
+.bk-7jurus-app .md\:text-lg{font-size:1.125rem;line-height:1.75rem}
+.bk-7jurus-app .md\:text-sm{font-size:0.875rem;line-height:1.25rem}}
+@media (min-width: 1024px){.bk-7jurus-app .lg\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}
+.bk-7jurus-app .lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}
+.bk-7jurus-app .lg\:grid-cols-8{grid-template-columns:repeat(8, minmax(0, 1fr))}
+.bk-7jurus-app .lg\:px-8{padding-left:2rem;padding-right:2rem}}

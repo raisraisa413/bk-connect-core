@@ -299,5 +299,6 @@ require_once __DIR__ . '/ppb-admin-kemahasiswaan.php';
 require_once __DIR__ . '/ppb-admin-layanan.php';
 require_once __DIR__ . '/ppb-admin-survei.php';
 require_once __DIR__ . '/ppb-admin-excel.php';
+require_once __DIR__ . '/includes/ppb-7jurus-canvas.php';
 
 
