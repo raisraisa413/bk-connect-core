@@ -1040,11 +1040,13 @@ function ppb_render_nomor_surat_widget($atts = []) {
                 res.data.batches.forEach(function(b){
                     var stBadge = b.status === 'approved'
                         ? '<span style="background:#D1FAE5;color:#065F46;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">✓ Terdaftar / Valid</span>'
-                        : (b.status === 'frozen'
-                            ? '<span style="background:#E0F2FE;color:#075985;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">❄️ Dibekukan (Freeze)</span>'
-                            : (b.status === 'rejected'
-                                ? '<span style="background:#FEE2E2;color:#991B1B;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Ditolak</span>'
-                                : '<span style="background:#FEF3C7;color:#92400E;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Menunggu Verifikasi</span>'));
+                        : (b.status === 'reserved'
+                            ? '<span style="background:#EDE9FE;color:#5B21B6;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">📌 Direservasi Admin</span>'
+                            : (b.status === 'frozen'
+                                ? '<span style="background:#E0F2FE;color:#075985;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">❄️ Dibekukan (Freeze)</span>'
+                                : (b.status === 'rejected'
+                                    ? '<span style="background:#FEE2E2;color:#991B1B;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Ditolak</span>'
+                                    : '<span style="background:#FEF3C7;color:#92400E;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Menunggu Verifikasi</span>')));
                     var nums = b.items.map(function(it){ return it.nomor_surat; }).filter(Boolean);
                     out += '<div style="background:#FAF8F5;border:1px solid #D4E3D8;border-radius:12px;padding:16px;margin-bottom:12px;">';
                     out += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">';
@@ -1079,7 +1081,7 @@ function ppb_surat_build_admin_where($args = []) {
     $where  = ['1=1'];
     $params = [];
 
-    if (!empty($args['status']) && in_array($args['status'], ['pending', 'approved', 'rejected', 'frozen'], true)) {
+    if (!empty($args['status']) && in_array($args['status'], ['pending', 'approved', 'rejected', 'frozen', 'reserved'], true)) {
         $where[]  = 'status = %s';
         $params[] = $args['status'];
     }
@@ -1091,7 +1093,7 @@ function ppb_surat_build_admin_where($args = []) {
         $where[]  = 'kode_hal = %s';
         $params[] = strtoupper(sanitize_text_field($args['kode_hal']));
     }
-    if (!empty($args['peran']) && in_array($args['peran'], ['mahasiswa', 'dosen'], true)) {
+    if (!empty($args['peran']) && in_array($args['peran'], ['mahasiswa', 'dosen', 'admin'], true)) {
         $where[]  = 'pemohon_peran = %s';
         $params[] = $args['peran'];
     }
@@ -1328,6 +1330,97 @@ function ppb_render_nomor_surat_admin_page() {
                 $wpdb->delete($table, ['id' => $row_id]);
                 $notice = 'Data pengajuan nomor surat berhasil dihapus.';
             }
+        } elseif ($act === 'delete_batch') {
+            $tc = isset($_POST['tracking_code']) ? sanitize_text_field(wp_unslash($_POST['tracking_code'])) : '';
+            if ($tc !== '') {
+                $deleted_cnt = (int) $wpdb->delete($table, ['tracking_code' => $tc]);
+                $notice = sprintf('Berhasil menghapus seluruh batch %s (%d baris).', $tc, $deleted_cnt);
+            }
+        } elseif ($act === 'reserve_numbers') {
+            $r_jenis_id = isset($_POST['r_jenis_id']) ? sanitize_key(wp_unslash($_POST['r_jenis_id'])) : '';
+            $r_jumlah   = isset($_POST['r_jumlah']) ? max(1, min(100, (int) $_POST['r_jumlah'])) : 1;
+            $r_start    = isset($_POST['r_start_seq']) ? (int) $_POST['r_start_seq'] : 0;
+            $r_perihal  = isset($_POST['r_perihal']) ? sanitize_text_field(wp_unslash($_POST['r_perihal'])) : '';
+            $r_status   = (isset($_POST['r_status']) && $_POST['r_status'] === 'approved') ? 'approved' : 'reserved';
+            $r_tahun    = (int) current_time('Y');
+
+            $jenis = ppb_surat_find_jenis($r_jenis_id, false);
+            if (!$jenis) {
+                $notice = 'Jenis surat untuk reservasi tidak ditemukan.';
+                $notice_type = 'error';
+            } else {
+                $kode_hal = strtoupper((string) ($jenis['kode_hal'] ?: 'PP'));
+                $tc       = 'RSV-' . $r_tahun . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+                $cur_user = wp_get_current_user();
+                $adm_name = ($cur_user && !empty($cur_user->display_name)) ? $cur_user->display_name : 'Admin / TU';
+                $perihal  = $r_perihal !== '' ? $r_perihal : 'Nomor direservasi oleh Admin/TU';
+
+                $lock_res = ppb_surat_with_year_lock($r_tahun, function () use ($wpdb, $table, $r_tahun, $r_jumlah, $r_start, $kode_hal, $settings, $tc, $jenis, $adm_name, $perihal, $r_status, $uid, $now) {
+                    if ($r_start > 0) {
+                        $alloc = [];
+                        for ($i = 0; $i < $r_jumlah; $i++) {
+                            $seq = $r_start + $i;
+                            $fmt = ppb_surat_format_number($seq, $kode_hal, $r_tahun, $settings);
+                            if (ppb_surat_number_exists($r_tahun, $seq, $fmt)) {
+                                return new WP_Error('rsv_conflict', sprintf('Nomor urut %d (%s) sudah terpakai/direservasi! Pilih nomor awal lain atau kosongkan untuk otomatis.', $seq, $fmt));
+                            }
+                            $alloc[] = ['nomor_urut' => $seq, 'nomor_surat' => $fmt];
+                        }
+                        $cur_opt = (int) get_option('ppb_surat_counter_' . $r_tahun, 0);
+                        if ($r_start + $r_jumlah - 1 > $cur_opt) {
+                            update_option('ppb_surat_counter_' . $r_tahun, $r_start + $r_jumlah - 1, false);
+                        }
+                    } else {
+                        $alloc = ppb_surat_allocate_numbers_locked($r_tahun, $r_jumlah, $kode_hal);
+                        if (is_wp_error($alloc)) {
+                            return $alloc;
+                        }
+                    }
+
+                    foreach ($alloc as $idx => $al) {
+                        $ins = $wpdb->insert($table, [
+                            'tracking_code'     => $tc,
+                            'batch_index'       => $idx + 1,
+                            'batch_total'       => $r_jumlah,
+                            'jenis_surat_id'    => $jenis['id'],
+                            'jenis_surat_nama'  => $jenis['nama'],
+                            'kode_hal'          => $kode_hal,
+                            'mode_penerbitan'   => 'reservasi',
+                            'pemohon_peran'     => 'admin',
+                            'pemohon_nama'      => $adm_name,
+                            'pemohon_identitas' => 'RESERVASI',
+                            'pemohon_email'     => '',
+                            'pemohon_wa'        => '',
+                            'unit_jenjang'      => 'jurusan',
+                            'perihal_tujuan'    => $perihal,
+                            'link_berkas'       => '',
+                            'status'            => $r_status,
+                            'nomor_urut'        => $al['nomor_urut'],
+                            'tahun'             => $r_tahun,
+                            'nomor_surat'       => $al['nomor_surat'],
+                            'catatan_admin'     => 'Reservasi Admin',
+                            'processed_by'      => $uid,
+                            'created_at'        => $now,
+                            'updated_at'        => $now,
+                        ]);
+                        if ($ins === false) {
+                            $wpdb->delete($table, ['tracking_code' => $tc]);
+                            return new WP_Error('rsv_insert_err', 'Gagal menyimpan reservasi karena konflik nomor.');
+                        }
+                    }
+                    return $alloc;
+                });
+
+                if (is_wp_error($lock_res)) {
+                    $notice = $lock_res->get_error_message();
+                    $notice_type = 'error';
+                } else {
+                    $first_num = $lock_res[0]['nomor_surat'];
+                    $last_num  = $lock_res[count($lock_res) - 1]['nomor_surat'];
+                    $range_str = (count($lock_res) > 1) ? "{$first_num} s.d. {$last_num}" : $first_num;
+                    $notice = sprintf('Berhasil mereservasi %d nomor surat (%s) dengan kode %s.', $r_jumlah, $range_str, $tc);
+                }
+            }
         } elseif ($act === 'save_jenis') {
             $tab = 'jenis';
             $ids    = $_POST['j_id'] ?? [];
@@ -1441,6 +1534,45 @@ function ppb_render_nomor_surat_admin_page() {
                 's'        => $f_search,
             ], admin_url('admin.php')), 'ppb_surat_export_nonce');
         ?>
+            <!-- Reservasi Nomor oleh Admin -->
+            <details style="background:#F8FAFC;border:1px solid #CBD5E1;border-radius:10px;padding:12px 16px;margin-bottom:14px;">
+                <summary style="cursor:pointer;font-weight:700;color:#0D3B22;font-size:13.5px;">📌 Reservasi / Booking Nomor Surat oleh Admin</summary>
+                <form method="post" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:12px;">
+                    <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
+                    <input type="hidden" name="ppb_surat_action" value="reserve_numbers">
+                    <div style="min-width:210px;flex:1;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;margin-bottom:3px;">Jenis Surat</label>
+                        <select name="r_jenis_id" style="width:100%;">
+                            <?php foreach (ppb_surat_get_jenis_list(false) as $rj) : ?>
+                                <option value="<?php echo esc_attr($rj['id']); ?>">[<?php echo esc_html($rj['kode_hal']); ?>] <?php echo esc_html($rj['nama']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div style="width:95px;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;margin-bottom:3px;">Jumlah</label>
+                        <input type="number" name="r_jumlah" min="1" max="100" value="1" style="width:100%;">
+                    </div>
+                    <div style="width:155px;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;margin-bottom:3px;">No. Urut Awal (Opsional)</label>
+                        <input type="number" name="r_start_seq" min="1" placeholder="Otomatis" style="width:100%;">
+                    </div>
+                    <div style="min-width:210px;flex:1;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;margin-bottom:3px;">Keterangan / Peruntukan</label>
+                        <input type="text" name="r_perihal" placeholder="Mis. Disimpan untuk SK / Surat Tugas" style="width:100%;">
+                    </div>
+                    <div style="width:140px;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;margin-bottom:3px;">Status Awal</label>
+                        <select name="r_status" style="width:100%;">
+                            <option value="reserved">📌 Direservasi</option>
+                            <option value="approved">✓ Langsung Terbit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" class="button button-primary">📌 Reservasi Nomor</button>
+                    </div>
+                </form>
+            </details>
+
             <!-- Filter & Export Bar -->
             <form method="get" style="background:#fff;border:1px solid #D4E3D8;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
                 <input type="hidden" name="page" value="ppb-nomor-surat">
@@ -1449,6 +1581,7 @@ function ppb_render_nomor_surat_admin_page() {
                     <option value="">Semua Status</option>
                     <option value="pending" <?php selected($f_status, 'pending'); ?>>Menunggu Approval</option>
                     <option value="approved" <?php selected($f_status, 'approved'); ?>>Disetujui / Terbit</option>
+                    <option value="reserved" <?php selected($f_status, 'reserved'); ?>>Direservasi Admin</option>
                     <option value="frozen" <?php selected($f_status, 'frozen'); ?>>Dibekukan (Freeze)</option>
                     <option value="rejected" <?php selected($f_status, 'rejected'); ?>>Ditolak</option>
                 </select>
@@ -1456,6 +1589,7 @@ function ppb_render_nomor_surat_admin_page() {
                     <option value="">Semua Peran</option>
                     <option value="mahasiswa" <?php selected($f_peran, 'mahasiswa'); ?>>Mahasiswa</option>
                     <option value="dosen" <?php selected($f_peran, 'dosen'); ?>>Dosen</option>
+                    <option value="admin" <?php selected($f_peran, 'admin'); ?>>Admin / Reservasi</option>
                 </select>
                 <input type="number" name="tahun" value="<?php echo $f_tahun ?: ''; ?>" placeholder="Tahun (<?php echo $cur_year; ?>)" style="width:120px;">
                 <input type="text" name="kode_hal" value="<?php echo esc_attr($f_hal); ?>" placeholder="Kode Hal (PP/PT)" style="width:130px;">
@@ -1474,8 +1608,8 @@ function ppb_render_nomor_surat_admin_page() {
                         <th style="width:190px;">Nomor Surat</th>
                         <th style="width:205px;">Pemohon</th>
                         <th>Jenis &amp; Perihal</th>
-                        <th style="width:105px;">Status</th>
-                        <th style="width:245px;">Aksi Admin</th>
+                        <th style="width:110px;">Status</th>
+                        <th style="width:255px;">Aksi Admin</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1485,10 +1619,12 @@ function ppb_render_nomor_surat_admin_page() {
                     $rendered_pending_batches = [];
                     foreach ($rows as $r) :
                         $tc = $r['tracking_code'];
-                        $is_pending = ($r['status'] === 'pending');
-                        $is_frozen  = ($r['status'] === 'frozen');
-                        $wa_raw     = trim((string) ($r['pemohon_wa'] ?? ''));
-                        $wa_digits  = preg_replace('/[^0-9]/', '', $wa_raw);
+                        $is_pending  = ($r['status'] === 'pending');
+                        $is_frozen   = ($r['status'] === 'frozen');
+                        $is_reserved = ($r['status'] === 'reserved');
+                        $b_total     = (int) $r['batch_total'];
+                        $wa_raw      = trim((string) ($r['pemohon_wa'] ?? ''));
+                        $wa_digits   = preg_replace('/[^0-9]/', '', $wa_raw);
                         if (strpos($wa_digits, '0') === 0) {
                             $wa_digits = '62' . substr($wa_digits, 1);
                         }
@@ -1496,14 +1632,14 @@ function ppb_render_nomor_surat_admin_page() {
                     <tr>
                         <td>
                             <code style="font-weight:700;color:#0D3B22;"><?php echo esc_html($tc); ?></code>
-                            <?php if ((int) $r['batch_total'] > 1) : ?>
-                                <br><span style="font-size:11px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-weight:700;">Batch <?php echo (int) $r['batch_index'] . '/' . (int) $r['batch_total']; ?></span>
+                            <?php if ($b_total > 1) : ?>
+                                <br><span style="font-size:11px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-weight:700;">Batch <?php echo (int) $r['batch_index'] . '/' . $b_total; ?></span>
                             <?php endif; ?>
                             <div style="font-size:11px;color:#6B7280;margin-top:2px;"><?php echo esc_html($r['created_at']); ?></div>
                         </td>
                         <td>
                             <?php if (!empty($r['nomor_surat'])) : ?>
-                                <strong style="font-family:monospace;font-size:13px;color:<?php echo $is_frozen ? '#075985;text-decoration:line-through' : '#0D3B22'; ?>;"><?php echo esc_html($r['nomor_surat']); ?></strong>
+                                <strong style="font-family:monospace;font-size:13px;color:<?php echo $is_frozen ? '#075985;text-decoration:line-through' : ($is_reserved ? '#5B21B6' : '#0D3B22'); ?>;"><?php echo esc_html($r['nomor_surat']); ?></strong>
                             <?php else : ?>
                                 <span style="color:#9CA3AF;font-style:italic;">Belum terbit</span>
                             <?php endif; ?>
@@ -1529,6 +1665,8 @@ function ppb_render_nomor_surat_admin_page() {
                         <td>
                             <?php if ($r['status'] === 'approved') : ?>
                                 <span style="background:#D1FAE5;color:#065F46;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">Terbit</span>
+                            <?php elseif ($r['status'] === 'reserved') : ?>
+                                <span style="background:#EDE9FE;color:#5B21B6;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">📌 Reservasi</span>
                             <?php elseif ($r['status'] === 'frozen') : ?>
                                 <span style="background:#E0F2FE;color:#075985;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">❄️ Freeze</span>
                             <?php elseif ($r['status'] === 'rejected') : ?>
@@ -1540,7 +1678,6 @@ function ppb_render_nomor_surat_admin_page() {
                         <td>
                             <?php if ($is_pending && !isset($rendered_pending_batches[$tc])) :
                                 $rendered_pending_batches[$tc] = true;
-                                $b_total = (int) $r['batch_total'];
                             ?>
                                 <form method="post" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px;">
                                     <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
@@ -1563,12 +1700,17 @@ function ppb_render_nomor_surat_admin_page() {
                             <form method="post" style="display:flex;gap:5px;flex-wrap:wrap;">
                                 <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
                                 <input type="hidden" name="row_id" value="<?php echo (int) $r['id']; ?>">
-                                <?php if ($is_frozen) : ?>
-                                    <button type="submit" name="ppb_surat_action" value="unfreeze_row" class="button button-small" style="color:#075985;">🔓 Aktifkan</button>
-                                <?php else : ?>
+                                <input type="hidden" name="tracking_code" value="<?php echo esc_attr($tc); ?>">
+                                <?php if ($is_frozen || $is_reserved) : ?>
+                                    <button type="submit" name="ppb_surat_action" value="unfreeze_row" class="button button-small" style="color:#065F46;">✓ Aktifkan</button>
+                                <?php endif; ?>
+                                <?php if (!$is_frozen) : ?>
                                     <button type="submit" name="ppb_surat_action" value="freeze_row" class="button button-small" style="color:#075985;">❄️ Freeze</button>
                                 <?php endif; ?>
-                                <button type="submit" name="ppb_surat_action" value="delete_row" class="button button-small" style="color:#991B1B;" onclick="return confirm('Yakin hapus data pengajuan nomor surat ini?');">🗑️ Hapus</button>
+                                <button type="submit" name="ppb_surat_action" value="delete_row" class="button button-small" style="color:#991B1B;" onclick="return confirm('Yakin hapus data nomor surat ini?');">🗑️ Hapus</button>
+                                <?php if ($b_total > 1) : ?>
+                                    <button type="submit" name="ppb_surat_action" value="delete_batch" class="button button-small" style="color:#991B1B;border-color:#FCA5A5;background:#FEF2F2;" onclick="return confirm('Yakin hapus SELURUH batch <?php echo esc_js($tc); ?> (<?php echo $b_total; ?> nomor)?');">🗑️ Hapus Batch (<?php echo $b_total; ?>)</button>
+                                <?php endif; ?>
                             </form>
                         </td>
                     </tr>
