@@ -1201,31 +1201,32 @@ add_filter('the_content', function($content) {
     $prodi_units = function_exists('ppb_get_prodi_units') ? ppb_get_prodi_units(true) : array();
 
     // 3a. /akreditasi/ atau /akreditasi/{jenjang}/ -> Replace stat grid + accordion dengan Hub S1/S2/S3 dinamis
-    $is_akred_hub = ($slug_path === 'akreditasi' || strpos($slug_path, 'akreditasi/') === 0 && !in_array($slug_path, array('akreditasi/sertifikat', 'akreditasi/upm'), true));
+    $is_akred_hub = ($slug_path === 'akreditasi' || (strpos($slug_path, 'akreditasi/') === 0 && !in_array($slug_path, array('akreditasi/sertifikat', 'akreditasi/upm'), true)));
     if (($is_akred_hub || strpos($content, 'id="bk-lamdik-accordion"') !== false) && strpos($content, 'id="ppb-lamdik-hub-root"') === false) {
         if (strpos($content, 'id="bk-lamdik-accordion"') !== false) {
             $hub_html = ppb_render_lamdik_hub_html();
             // Hapus 4 kartu stat statis sebelum accordion jika ada agar tidak ganda
-            $content = preg_replace(
+            $tmp_stat = preg_replace(
                 '/<div\s+style=["\']display:grid;grid-template-columns:repeat\(auto-fit,\s*minmax\([^)]*\)[^>]*>\s*<div[^>]*>\s*<div[^>]*>Akreditasi Program Studi.*?<\/div>\s*<\/div>\s*<\/div>\s*(?=<!--\s*Accordion|<div[^>]*justify-content:space-between)/is',
                 '',
                 $content,
                 1
             );
+            if (is_string($tmp_stat)) {
+                $content = $tmp_stat;
+            }
             // Hapus heading + tombol toggle lama tepat sebelum #bk-lamdik-accordion
-            $content = preg_replace(
+            $tmp_head = preg_replace(
                 '/(?:<!--[^>]*-->\s*)?<div\s+style=["\']display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between[^>]*>.*?Direktori Eviden 9 Kriteria LAMDIK.*?<\/button>\s*<\/div>\s*/is',
                 '',
                 $content,
                 1
             );
+            if (is_string($tmp_head)) {
+                $content = $tmp_head;
+            }
             if (function_exists('ppb_replace_div_by_id')) {
-                $replaced = ppb_replace_div_by_id($content, 'bk-lamdik-accordion', $hub_html);
-                // Unwrap inner div shell if needed by replacing the outer <div class="bk-accordion" id="bk-lamdik-accordion">
-                $content = preg_replace('/<div\b[^>]*\bid=["\']bk-lamdik-accordion["\'][^>]*>' . preg_quote($hub_html, '/') . '<\/div>/s', $hub_html, $replaced, 1);
-                if ($content === $replaced) {
-                    $content = $replaced;
-                }
+                $content = ppb_replace_div_by_id($content, 'bk-lamdik-accordion', $hub_html, true);
             }
         }
     }
@@ -1271,7 +1272,7 @@ add_filter('the_content', function($content) {
             $content,
             1
         );
-        if ($replaced_cert && $replaced_cert !== $content) {
+        if (is_string($replaced_cert) && $replaced_cert !== '' && $replaced_cert !== $content) {
             $content = $replaced_cert;
         }
     }
@@ -1279,31 +1280,37 @@ add_filter('the_content', function($content) {
     // 3c. /akreditasi/upm/ -> Level Jurusan PPB (Renstra, Renop, Portal UPM)
     if ($slug_path === 'akreditasi/upm' || $slug_path === 'upm' || strpos($content, 'Unduh Dokumen Renstra PDF') !== false) {
         if (!empty($jur['renstra_url'])) {
-            $content = preg_replace(
+            $tmp = preg_replace(
                 '/<a\s+href=["\']#["\']([^>]*)>(\s*📄\s*Unduh Dokumen Renstra PDF\s*)<\/a>/is',
                 '<a href="' . esc_url($jur['renstra_url']) . '" target="_blank" rel="noopener noreferrer"$1>$2 &#8599;</a>',
                 $content
             );
         } else {
-            $content = preg_replace(
+            $tmp = preg_replace(
                 '/<a\s+href=["\']#["\']([^>]*)>\s*📄\s*Unduh Dokumen Renstra PDF\s*<\/a>/is',
                 '<span style="display:inline-block;background:#E2E8F0;color:#475569;font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;">Dokumen Renstra Belum Diunggah</span>',
                 $content
             );
         }
+        if (is_string($tmp)) {
+            $content = $tmp;
+        }
 
         if (!empty($jur['renop_url'])) {
-            $content = preg_replace(
+            $tmp = preg_replace(
                 '/<a\s+href=["\']#["\']([^>]*)>(\s*📄\s*Unduh Dokumen Renop PDF\s*)<\/a>/is',
                 '<a href="' . esc_url($jur['renop_url']) . '" target="_blank" rel="noopener noreferrer"$1>$2 &#8599;</a>',
                 $content
             );
         } else {
-            $content = preg_replace(
+            $tmp = preg_replace(
                 '/<a\s+href=["\']#["\']([^>]*)>\s*📄\s*Unduh Dokumen Renop PDF\s*<\/a>/is',
                 '<span style="display:inline-block;background:#E2E8F0;color:#475569;font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;">Dokumen Renop Belum Diunggah</span>',
                 $content
             );
+        }
+        if (is_string($tmp)) {
+            $content = $tmp;
         }
 
         if (!empty($jur['upm_portal_url'])) {
@@ -1330,4 +1337,4 @@ add_filter('the_content', function($content) {
     }
 
     return $content;
-}, 12);
+}, 9);

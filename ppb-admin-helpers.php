@@ -279,16 +279,17 @@ function ppb_save_dosen_directory_synced($dosen_list) {
 }
 
 if (!function_exists('ppb_replace_div_by_id')) {
-function ppb_replace_div_by_id($html, $id, $new_inner_html) {
+function ppb_replace_div_by_id($html, $id, $new_inner_html, $replace_outer = false) {
     $pattern = '/<div\b[^>]*\bid=(["\'])' . preg_quote($id, '/') . '\1[^>]*>/i';
     if (!preg_match($pattern, $html, $m, PREG_OFFSET_CAPTURE)) {
         return $html;
     }
 
-    $open_end = $m[0][1] + strlen($m[0][0]);
-    $len = strlen($html);
-    $depth = 1;
-    $pos = $open_end;
+    $open_start = $m[0][1];
+    $open_end   = $open_start + strlen($m[0][0]);
+    $len        = strlen($html);
+    $depth      = 1;
+    $pos        = $open_end;
 
     while ($depth > 0 && $pos < $len) {
         $next_open  = stripos($html, '<div', $pos);
@@ -307,6 +308,11 @@ function ppb_replace_div_by_id($html, $id, $new_inner_html) {
         } else {
             $depth--;
             if ($depth === 0) {
+                if ($replace_outer) {
+                    $close_gt = strpos($html, '>', $next_close);
+                    $close_end = ($close_gt !== false) ? ($close_gt + 1) : ($next_close + 6);
+                    return substr($html, 0, $open_start) . $new_inner_html . substr($html, $close_end);
+                }
                 return substr($html, 0, $open_end) . $new_inner_html . substr($html, $next_close);
             }
             $pos = $next_close + 5;
