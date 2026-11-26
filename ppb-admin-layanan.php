@@ -2048,7 +2048,7 @@ function ppb_shortcode_layanan_persuratan($atts = []) {
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <a href="<?php echo esc_url($sipadu_url); ?>" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:8px;text-decoration:none;">Ajukan Online &rarr;</a>
+                    <button type="button" onclick="if(window.ppbSelectJenisSurat)ppbSelectJenisSurat('aktif_kuliah');" style="flex:1;text-align:center;background:#0D3B22;color:#F5B82E;border:none;font-size:12.5px;font-weight:700;padding:9px 12px;border-radius:8px;cursor:pointer;">Ajukan Nomor Surat &rarr;</button>
                     <?php echo $render_tpl_btn($tpl_aktif); ?>
                 </div>
             </div>
@@ -2073,7 +2073,7 @@ function ppb_shortcode_layanan_persuratan($atts = []) {
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <a href="<?php echo esc_url($sipadu_url); ?>" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:8px;text-decoration:none;">Ajukan Online &rarr;</a>
+                    <button type="button" onclick="if(window.ppbSelectJenisSurat)ppbSelectJenisSurat('izin_penelitian');" style="flex:1;text-align:center;background:#0D3B22;color:#F5B82E;border:none;font-size:12.5px;font-weight:700;padding:9px 12px;border-radius:8px;cursor:pointer;">Ajukan Nomor Surat &rarr;</button>
                     <?php echo $render_tpl_btn($tpl_riset); ?>
                 </div>
             </div>
@@ -2098,7 +2098,7 @@ function ppb_shortcode_layanan_persuratan($atts = []) {
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <a href="<?php echo esc_url($sipadu_url); ?>" target="_blank" rel="noopener noreferrer" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:8px;text-decoration:none;">Ajukan Online &rarr;</a>
+                    <button type="button" onclick="if(window.ppbSelectJenisSurat)ppbSelectJenisSurat('pengantar_magang');" style="flex:1;text-align:center;background:#0D3B22;color:#F5B82E;border:none;font-size:12.5px;font-weight:700;padding:9px 12px;border-radius:8px;cursor:pointer;">Ajukan Nomor Surat &rarr;</button>
                     <?php echo $render_tpl_btn($tpl_magang); ?>
                 </div>
             </div>
@@ -2123,12 +2123,14 @@ function ppb_shortcode_layanan_persuratan($atts = []) {
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <a href="<?php echo esc_url(home_url('/lab-bk/inventaris/')); ?>" style="flex:1;text-align:center;background:#0D3B22;color:#ffffff;font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:8px;text-decoration:none;">Cek Inventaris &rarr;</a>
+                    <button type="button" onclick="if(window.ppbSelectJenisSurat)ppbSelectJenisSurat('bebas_lab');" style="flex:1;text-align:center;background:#0D3B22;color:#F5B82E;border:none;font-size:12.5px;font-weight:700;padding:9px 12px;border-radius:8px;cursor:pointer;">Ajukan Nomor Surat &rarr;</button>
                     <?php echo $render_tpl_btn($tpl_lab); ?>
                 </div>
             </div>
 
         </div>
+
+        <?php if (function_exists('ppb_render_nomor_surat_widget')) { echo ppb_render_nomor_surat_widget(); } ?>
 
         <!-- Alur 3 Langkah Pengajuan Persuratan -->
         <div style="background:#F0F6F2;border:1.5px solid #D4E3D8;border-radius:18px;padding:26px;margin-bottom:36px;">

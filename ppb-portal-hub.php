@@ -281,6 +281,12 @@ function ppb_get_portal_menu_hierarchy() {
                     'keywords' => 'template surat formulir permohonan izin penelitian skripsi',
                 ),
                 array(
+                    'label'    => '📨 Permintaan Nomor Surat',
+                    'url'      => admin_url('admin.php?page=ppb-nomor-surat'),
+                    'slug'     => 'ppb-nomor-surat',
+                    'keywords' => 'nomor surat persuratan registrasi surat keluar dosen mahasiswa tracking',
+                ),
+                array(
                     'label'    => '🔄 Alur SOP Layanan Akademik',
                     'url'      => admin_url('edit.php?post_type=ppb_alur_sop'),
                     'slug'     => 'edit.php?post_type=ppb_alur_sop',
@@ -551,6 +557,15 @@ function ppb_register_portal_hub_menu() {
         '🔄 Alur SOP Layanan',
         'edit_posts',
         'edit.php?post_type=ppb_alur_sop'
+    );
+
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Permintaan & Registrasi Nomor Surat',
+        '📨 Permintaan Nomor Surat',
+        'edit_posts',
+        'ppb-nomor-surat',
+        'ppb_render_nomor_surat_admin_page'
     );
 
     add_submenu_page(
@@ -1730,6 +1745,7 @@ function ppb_render_portal_hub_dashboard() {
                     <a href="<?php echo admin_url('admin.php?page=ppb-layanan-settings&tab=sarpras'); ?>" class="ppb-btn ppb-btn-secondary">🏛️ Sarpras</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_inventaris_lab'); ?>" class="ppb-btn ppb-btn-secondary">🔬 Alat Lab</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_template_dok'); ?>" class="ppb-btn ppb-btn-secondary">📄 Surat</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-nomor-surat'); ?>" class="ppb-btn ppb-btn-secondary">📨 Nomor Surat</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_alur_sop'); ?>" class="ppb-btn ppb-btn-secondary">🔄 SOP</a>
                 </div>
             </div>
