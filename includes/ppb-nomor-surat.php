@@ -301,47 +301,80 @@ if (!function_exists('ppb_surat_lookup_dosen_by_nip')) {
 function ppb_surat_lookup_dosen_by_nip($nip_input) {
     $norm = ppb_surat_normalize_id($nip_input);
     if (strlen($norm) < 8) {
-        return ['found' => false, 'name' => '', 'nip' => ''];
-    }
-    $q = new WP_Query([
-        'post_type'      => 'ppb_dosen',
-        'post_status'    => 'publish',
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-        'no_found_rows'  => true,
-    ]);
-    if (!empty($q->posts)) {
-        foreach ($q->posts as $did) {
-            $raw_nip = (string) get_post_meta($did, '_ppb_dosen_nip', true);
-            if ($raw_nip !== '' && ppb_surat_normalize_id($raw_nip) === $norm) {
-                return [
-                    'found' => true,
-                    'name'  => (string) get_the_title($did),
-                    'nip'   => $raw_nip,
-                ];
-            }
-        }
+        return ['found' => false, 'name' => '', 'nip' => '', 'email' => ''];
     }
 
-    // Fallback: cek juga pada dosen-data.json di theme aktif
+    $found_name  = '';
+    $found_nip   = '';
+    $found_email = '';
+
+    // 1. Cek di bk_dosen_data_cache dan dosen-data.json (memiliki data email dosen)
+    $sources = [];
+    $cached = get_option('bk_dosen_data_cache', []);
+    if (is_array($cached) && !empty($cached)) {
+        $sources[] = $cached;
+    }
     $json_path = function_exists('get_template_directory') ? (get_template_directory() . '/dosen-data.json') : '';
     if ($json_path !== '' && file_exists($json_path)) {
         $list = json_decode((string) file_get_contents($json_path), true);
-        if (is_array($list)) {
-            foreach ($list as $d) {
-                $raw_nip = (string) ($d['nip'] ?? '');
+        if (is_array($list) && !empty($list)) {
+            $sources[] = $list;
+        }
+    }
+    foreach ($sources as $list) {
+        foreach ($list as $d) {
+            if (!is_array($d)) continue;
+            $raw_nip = (string) ($d['nip'] ?? '');
+            if ($raw_nip !== '' && ppb_surat_normalize_id($raw_nip) === $norm) {
+                $found_nip = $raw_nip;
+                if ($found_name === '') {
+                    $found_name = (string) ($d['nama'] ?? ($d['nama_lengkap'] ?? ''));
+                }
+                if ($found_email === '' && !empty($d['email'])) {
+                    $found_email = sanitize_email((string) $d['email']);
+                }
+            }
+        }
+        if ($found_nip !== '' && $found_email !== '') {
+            break;
+        }
+    }
+
+    // 2. Cek juga di CPT ppb_dosen jika belum ketemu atau untuk melengkapi
+    if ($found_nip === '') {
+        $q = new WP_Query([
+            'post_type'      => 'ppb_dosen',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'no_found_rows'  => true,
+        ]);
+        if (!empty($q->posts)) {
+            foreach ($q->posts as $did) {
+                $raw_nip = (string) get_post_meta($did, '_ppb_dosen_nip', true);
                 if ($raw_nip !== '' && ppb_surat_normalize_id($raw_nip) === $norm) {
-                    return [
-                        'found' => true,
-                        'name'  => (string) ($d['nama'] ?? ($d['nama_lengkap'] ?? '')),
-                        'nip'   => $raw_nip,
-                    ];
+                    $found_nip  = $raw_nip;
+                    $found_name = (string) get_the_title($did);
+                    $meta_email = (string) (get_post_meta($did, '_ppb_dosen_email', true) ?: get_post_meta($did, '_dosen_email', true));
+                    if ($found_email === '' && $meta_email !== '') {
+                        $found_email = sanitize_email($meta_email);
+                    }
+                    break;
                 }
             }
         }
     }
 
-    return ['found' => false, 'name' => '', 'nip' => ''];
+    if ($found_nip !== '') {
+        return [
+            'found' => true,
+            'name'  => $found_name,
+            'nip'   => $found_nip,
+            'email' => $found_email,
+        ];
+    }
+
+    return ['found' => false, 'name' => '', 'nip' => '', 'email' => ''];
 }
 }
 
@@ -403,11 +436,8 @@ function ppb_ajax_submit_nomor_surat() {
         wp_send_json_error(['message' => 'Jenis surat tidak ditemukan atau sedang nonaktif.']);
     }
 
-    if ($nama === '' || $identitas === '' || $perihal === '') {
-        wp_send_json_error(['message' => 'Harap lengkapi Nama, NIM/NIP, dan Perihal/Tujuan surat.']);
-    }
-    if ($email !== '' && !is_email($email)) {
-        wp_send_json_error(['message' => 'Format email tidak valid.']);
+    if ($nama === '' || $identitas === '' || !is_email($email) || $perihal === '') {
+        wp_send_json_error(['message' => 'Harap lengkapi Nama, NIM/NIP, Email yang valid, dan Perihal/Tujuan surat.']);
     }
 
     $berkas_mode = $jenis['berkas_mode'] ?? 'optional';
@@ -726,8 +756,8 @@ function ppb_render_nomor_surat_widget($atts = []) {
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px;">
                     <div>
-                        <label for="ppb_ns_email" style="display:block;font-size:12.5px;font-weight:700;color:#0D3B22;margin-bottom:5px;">Email (Opsional)</label>
-                        <input type="email" id="ppb_ns_email" name="pemohon_email" placeholder="nama@unm.ac.id / gmail.com" style="width:100%;padding:10px 12px;border:1px solid #CBD5E1;border-radius:10px;font-size:13.5px;">
+                        <label for="ppb_ns_email" style="display:block;font-size:12.5px;font-weight:700;color:#0D3B22;margin-bottom:5px;">Email Aktif *</label>
+                        <input type="email" id="ppb_ns_email" name="pemohon_email" required placeholder="nama@unm.ac.id / gmail.com" style="width:100%;padding:10px 12px;border:1px solid #CBD5E1;border-radius:10px;font-size:13.5px;">
                     </div>
                     <div>
                         <label for="ppb_ns_wa" style="display:block;font-size:12.5px;font-weight:700;color:#0D3B22;margin-bottom:5px;">No. WhatsApp</label>
@@ -821,10 +851,12 @@ function ppb_render_nomor_surat_widget($atts = []) {
         roleInputs.forEach(function(r){ r.addEventListener('change', syncRoleUI); });
         syncRoleUI();
 
-        // Check NIP Dosen
-        checkNipBtn.addEventListener('click', function(){
+        // Check NIP Dosen (tombol & otomatis saat selesai isi NIP)
+        function runDosenNipLookup() {
+            var selected = root.querySelector('input[name="pemohon_peran"]:checked');
+            if (!selected || selected.value !== 'dosen') return;
             var nip = idInput.value.trim();
-            if (!nip) return;
+            if (nip.replace(/[^A-Za-z0-9]/g, '').length < 8) return;
             nipStatus.style.display = 'block';
             nipStatus.style.color = '#6B7280';
             nipStatus.textContent = 'Memeriksa NIP...';
@@ -836,14 +868,18 @@ function ppb_render_nomor_surat_widget($atts = []) {
                 if (res && res.success && res.data && res.data.found) {
                     nipStatus.style.color = '#059669';
                     nipStatus.textContent = '✓ Terverifikasi: ' + res.data.name;
-                    var namaEl = document.getElementById('ppb_ns_nama');
-                    if (namaEl && !namaEl.value.trim()) namaEl.value = res.data.name;
+                    var namaEl  = document.getElementById('ppb_ns_nama');
+                    var emailEl = document.getElementById('ppb_ns_email');
+                    if (namaEl && !namaEl.value.trim() && res.data.name) namaEl.value = res.data.name;
+                    if (emailEl && !emailEl.value.trim() && res.data.email) emailEl.value = res.data.email;
                 } else {
                     nipStatus.style.color = '#B45309';
                     nipStatus.textContent = 'NIP belum terdaftar di direktori Dosen.';
                 }
             }).catch(function(){ nipStatus.style.display = 'none'; });
-        });
+        }
+        checkNipBtn.addEventListener('click', runDosenNipLookup);
+        idInput.addEventListener('blur', runDosenNipLookup);
 
         // Jenis surat metadata sync
         var jenisSel    = document.getElementById('ppb_ns_jenis');
