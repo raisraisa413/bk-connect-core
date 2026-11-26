@@ -2,8 +2,6 @@
 /**
  * 7 Jurus BK Hebat - Universal Service Design Canvas
  * Shortcode: [ppb_7jurus_canvas] / [ppb_service_design_canvas]
- *
- * Original interactive concept & design by @ekachandraoktaviani
  */
 
 if (!defined('ABSPATH')) exit;
@@ -50,7 +48,7 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
     ob_start();
     ?>
     <div class="bk-7jurus-app">
-        <div class="min-h-screen flex flex-col justify-between antialiased">
+        <div class="flex flex-col antialiased">
 <!-- Top Navigation Header -->
     <header class="bg-navy text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -769,21 +767,11 @@ function ppb_render_7jurus_canvas_shortcode($atts = array()) {
 
     </main>
 
-    <!-- Mandatory Creator Credit Footer (Static & Permanent) -->
-    <footer class="bg-navy text-slate-300 border-t border-slate-800 py-6 mt-12 no-print">
+    <footer class="bg-navy text-slate-300 border-t border-slate-800 py-5 mt-8 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between text-xs">
-            <div class="mb-4 md:mb-0 text-center md:text-left">
+            <div class="text-center md:text-left">
                 <p class="font-bold text-white">7 JURUS BK HEBAT - UNIVERSAL SERVICE DESIGN CANVAS</p>
                 <p class="text-slate-400">From Student Needs to Student Growth.</p>
-            </div>
-            
-            <!-- Creator Badge with Active Instagram Link -->
-            <div class="flex items-center space-x-2 bg-slate-800/80 px-4 py-2 rounded-full border border-slate-700">
-                <span class="text-slate-400">Created by:</span>
-                <a href="https://www.instagram.com/ekachandraoktaviani/" target="_blank" rel="noopener noreferrer" class="font-bold text-gold hover:text-amber-300 flex items-center space-x-1 transition">
-                    <i data-lucide="instagram" class="w-4 h-4 text-pink-400"></i>
-                    <span>@ekachandraoktaviani</span>
-                </a>
             </div>
         </div>
     </footer>

@@ -603,7 +603,6 @@ const EXAMPLE_DATA = {
 
                         <div class="pt-4 border-t text-[9px] text-slate-400 flex justify-between">
                             <span>7 JURUS BK HEBAT - Universal Service Design Canvas</span>
-                            <span>Created by: @ekachandraoktaviani</span>
                         </div>
                     </div>
                 `;
@@ -620,7 +619,6 @@ const EXAMPLE_DATA = {
                             </div>
                             <div class="text-right text-[10px] text-slate-300">
                                 <p>Disusun oleh: ${this.teacherProfile.nama || '-'}</p>
-                                <p>Created by: @ekachandraoktaviani</p>
                             </div>
                         </div>
 

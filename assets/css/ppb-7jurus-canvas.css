@@ -17,11 +17,43 @@
     border-style: solid;
     border-color: #e5e7eb;
 }
+.bk-7jurus-app h1,
+.bk-7jurus-app h2,
+.bk-7jurus-app h3,
+.bk-7jurus-app h4,
+.bk-7jurus-app h5,
+.bk-7jurus-app h6,
+.bk-7jurus-app p,
+.bk-7jurus-app ul,
+.bk-7jurus-app ol,
+.bk-7jurus-app figure,
+.bk-7jurus-app blockquote {
+    margin: 0;
+}
+.bk-7jurus-app h1,
+.bk-7jurus-app h2,
+.bk-7jurus-app h3,
+.bk-7jurus-app h4,
+.bk-7jurus-app h5,
+.bk-7jurus-app h6 {
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+}
+.bk-7jurus-app button,
 .bk-7jurus-app input,
-.bk-7jurus-app textarea,
 .bk-7jurus-app select,
-.bk-7jurus-app button {
+.bk-7jurus-app textarea {
     font-family: inherit;
+    margin: 0;
+}
+.bk-7jurus-app table {
+    border-collapse: collapse;
+    margin: 0;
+}
+.bk-7jurus-app svg {
+    display: inline-block;
+    vertical-align: middle;
 }
 .bk-7jurus-app .canvas-card {
     background: #FFFFFF;
