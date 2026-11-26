@@ -585,13 +585,21 @@ function ppb_ajax_track_nomor_surat() {
     $query = isset($_POST['query']) ? trim(sanitize_text_field(wp_unslash($_POST['query']))) : '';
 
     if ($query === '') {
-        wp_send_json_error(['message' => 'Masukkan Kode Tracking (mis. BK-2026-XXXXXX) atau NIM/NIP Anda.']);
+        wp_send_json_error(['message' => 'Masukkan Kode Tracking (mis. BK-2026-XXXXXX), Nomor Surat, atau NIM/NIP.']);
     }
 
     $rows = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM {$table} WHERE tracking_code = %s ORDER BY batch_index ASC, id ASC",
         strtoupper($query)
     ), ARRAY_A);
+
+    if (empty($rows)) {
+        $norm_num = preg_replace('/\s+/', '', strtoupper($query));
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$table} WHERE REPLACE(UPPER(COALESCE(nomor_surat, '')), ' ', '') = %s ORDER BY batch_index ASC, id ASC",
+            $norm_num
+        ), ARRAY_A);
+    }
 
     if (empty($rows)) {
         $rows = $wpdb->get_results($wpdb->prepare(
@@ -601,7 +609,7 @@ function ppb_ajax_track_nomor_surat() {
     }
 
     if (empty($rows)) {
-        wp_send_json_error(['message' => 'Data pengajuan tidak ditemukan. Pastikan Kode Tracking atau NIM/NIP sudah benar.']);
+        wp_send_json_error(['message' => 'Data atau Nomor Surat tidak ditemukan di buku registrasi resmi.']);
     }
 
     $batches = [];
@@ -790,7 +798,7 @@ function ppb_render_nomor_surat_widget($atts = []) {
         <!-- TAB 2: TRACKING STATUS -->
         <div id="ppb-ns-panel-track" class="ppb-ns-panel" style="display:none;">
             <form id="ppb-ns-track-form" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
-                <input type="text" id="ppb_ns_track_q" placeholder="Masukkan Kode Tracking (mis. BK-2026-XXXXXX) atau NIM / NIP..." required style="flex:1;min-width:240px;padding:11px 14px;border:1px solid #CBD5E1;border-radius:10px;font-size:13.5px;">
+                <input type="text" id="ppb_ns_track_q" placeholder="Masukkan Kode Tracking (BK-2026-...), Nomor Surat (B/...), atau NIM / NIP..." required style="flex:1;min-width:240px;padding:11px 14px;border:1px solid #CBD5E1;border-radius:10px;font-size:13.5px;">
                 <button type="submit" style="background:#0D3B22;color:#F5B82E;border:none;padding:11px 22px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;">
                     🔍 Lacak Pengajuan
                 </button>
@@ -1031,10 +1039,12 @@ function ppb_render_nomor_surat_widget($atts = []) {
                 var out = '';
                 res.data.batches.forEach(function(b){
                     var stBadge = b.status === 'approved'
-                        ? '<span style="background:#D1FAE5;color:#065F46;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Disetujui / Terbit</span>'
-                        : (b.status === 'rejected'
-                            ? '<span style="background:#FEE2E2;color:#991B1B;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Ditolak</span>'
-                            : '<span style="background:#FEF3C7;color:#92400E;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Menunggu Verifikasi</span>');
+                        ? '<span style="background:#D1FAE5;color:#065F46;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">✓ Terdaftar / Valid</span>'
+                        : (b.status === 'frozen'
+                            ? '<span style="background:#E0F2FE;color:#075985;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">❄️ Dibekukan (Freeze)</span>'
+                            : (b.status === 'rejected'
+                                ? '<span style="background:#FEE2E2;color:#991B1B;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Ditolak</span>'
+                                : '<span style="background:#FEF3C7;color:#92400E;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">Menunggu Verifikasi</span>'));
                     var nums = b.items.map(function(it){ return it.nomor_surat; }).filter(Boolean);
                     out += '<div style="background:#FAF8F5;border:1px solid #D4E3D8;border-radius:12px;padding:16px;margin-bottom:12px;">';
                     out += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">';
@@ -1069,7 +1079,7 @@ function ppb_surat_build_admin_where($args = []) {
     $where  = ['1=1'];
     $params = [];
 
-    if (!empty($args['status']) && in_array($args['status'], ['pending', 'approved', 'rejected'], true)) {
+    if (!empty($args['status']) && in_array($args['status'], ['pending', 'approved', 'rejected', 'frozen'], true)) {
         $where[]  = 'status = %s';
         $params[] = $args['status'];
     }
@@ -1290,6 +1300,34 @@ function ppb_render_nomor_surat_admin_page() {
                 'updated_at'    => $now,
             ], ['tracking_code' => $tc, 'status' => 'pending']);
             $notice = sprintf('Pengajuan %s ditandai ditolak.', $tc);
+        } elseif ($act === 'freeze_row') {
+            $row_id = isset($_POST['row_id']) ? (int) $_POST['row_id'] : 0;
+            if ($row_id > 0) {
+                $wpdb->update($table, [
+                    'status'       => 'frozen',
+                    'processed_by' => $uid,
+                    'updated_at'   => $now,
+                ], ['id' => $row_id]);
+                $notice = 'Nomor surat berhasil dibekukan (Freeze).';
+            }
+        } elseif ($act === 'unfreeze_row') {
+            $row_id = isset($_POST['row_id']) ? (int) $_POST['row_id'] : 0;
+            if ($row_id > 0) {
+                $row_obj = $wpdb->get_row($wpdb->prepare("SELECT nomor_surat FROM {$table} WHERE id = %d", $row_id), ARRAY_A);
+                $restore_status = (!empty($row_obj['nomor_surat'])) ? 'approved' : 'pending';
+                $wpdb->update($table, [
+                    'status'       => $restore_status,
+                    'processed_by' => $uid,
+                    'updated_at'   => $now,
+                ], ['id' => $row_id]);
+                $notice = 'Status nomor surat berhasil diaktifkan kembali.';
+            }
+        } elseif ($act === 'delete_row') {
+            $row_id = isset($_POST['row_id']) ? (int) $_POST['row_id'] : 0;
+            if ($row_id > 0) {
+                $wpdb->delete($table, ['id' => $row_id]);
+                $notice = 'Data pengajuan nomor surat berhasil dihapus.';
+            }
         } elseif ($act === 'save_jenis') {
             $tab = 'jenis';
             $ids    = $_POST['j_id'] ?? [];
@@ -1411,6 +1449,7 @@ function ppb_render_nomor_surat_admin_page() {
                     <option value="">Semua Status</option>
                     <option value="pending" <?php selected($f_status, 'pending'); ?>>Menunggu Approval</option>
                     <option value="approved" <?php selected($f_status, 'approved'); ?>>Disetujui / Terbit</option>
+                    <option value="frozen" <?php selected($f_status, 'frozen'); ?>>Dibekukan (Freeze)</option>
                     <option value="rejected" <?php selected($f_status, 'rejected'); ?>>Ditolak</option>
                 </select>
                 <select name="peran">
@@ -1433,10 +1472,10 @@ function ppb_render_nomor_surat_admin_page() {
                     <tr>
                         <th style="width:130px;">Tracking &amp; Tgl</th>
                         <th style="width:190px;">Nomor Surat</th>
-                        <th style="width:190px;">Pemohon</th>
+                        <th style="width:205px;">Pemohon</th>
                         <th>Jenis &amp; Perihal</th>
                         <th style="width:105px;">Status</th>
-                        <th style="width:240px;">Aksi Admin</th>
+                        <th style="width:245px;">Aksi Admin</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1447,6 +1486,12 @@ function ppb_render_nomor_surat_admin_page() {
                     foreach ($rows as $r) :
                         $tc = $r['tracking_code'];
                         $is_pending = ($r['status'] === 'pending');
+                        $is_frozen  = ($r['status'] === 'frozen');
+                        $wa_raw     = trim((string) ($r['pemohon_wa'] ?? ''));
+                        $wa_digits  = preg_replace('/[^0-9]/', '', $wa_raw);
+                        if (strpos($wa_digits, '0') === 0) {
+                            $wa_digits = '62' . substr($wa_digits, 1);
+                        }
                 ?>
                     <tr>
                         <td>
@@ -1458,7 +1503,7 @@ function ppb_render_nomor_surat_admin_page() {
                         </td>
                         <td>
                             <?php if (!empty($r['nomor_surat'])) : ?>
-                                <strong style="font-family:monospace;font-size:13px;color:#0D3B22;"><?php echo esc_html($r['nomor_surat']); ?></strong>
+                                <strong style="font-family:monospace;font-size:13px;color:<?php echo $is_frozen ? '#075985;text-decoration:line-through' : '#0D3B22'; ?>;"><?php echo esc_html($r['nomor_surat']); ?></strong>
                             <?php else : ?>
                                 <span style="color:#9CA3AF;font-style:italic;">Belum terbit</span>
                             <?php endif; ?>
@@ -1467,7 +1512,12 @@ function ppb_render_nomor_surat_admin_page() {
                             <strong><?php echo esc_html($r['pemohon_nama']); ?></strong>
                             <span style="font-size:10.5px;background:#E8F0EA;color:#0D3B22;padding:1px 6px;border-radius:4px;font-weight:700;"><?php echo esc_html(strtoupper($r['pemohon_peran'])); ?></span>
                             <div style="font-size:11.5px;color:#4B5563;"><?php echo esc_html($r['pemohon_identitas']); ?> &bull; <?php echo esc_html(strtoupper($r['unit_jenjang'])); ?></div>
-                            <div style="font-size:11px;color:#6B7280;"><?php echo esc_html($r['pemohon_email']); ?></div>
+                            <?php if (!empty($r['pemohon_email'])) : ?>
+                                <div style="font-size:11px;"><a href="mailto:<?php echo esc_attr($r['pemohon_email']); ?>" style="color:#6B7280;text-decoration:none;"><?php echo esc_html($r['pemohon_email']); ?></a></div>
+                            <?php endif; ?>
+                            <?php if ($wa_digits !== '') : ?>
+                                <div style="font-size:11px;margin-top:2px;"><a href="<?php echo esc_url('https://wa.me/' . $wa_digits); ?>" target="_blank" rel="noopener noreferrer" style="color:#059669;font-weight:700;text-decoration:none;">💬 WA: <?php echo esc_html($wa_raw); ?> &#8599;</a></div>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <strong>[<?php echo esc_html($r['kode_hal']); ?>] <?php echo esc_html($r['jenis_surat_nama']); ?></strong>
@@ -1479,6 +1529,8 @@ function ppb_render_nomor_surat_admin_page() {
                         <td>
                             <?php if ($r['status'] === 'approved') : ?>
                                 <span style="background:#D1FAE5;color:#065F46;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">Terbit</span>
+                            <?php elseif ($r['status'] === 'frozen') : ?>
+                                <span style="background:#E0F2FE;color:#075985;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">❄️ Freeze</span>
                             <?php elseif ($r['status'] === 'rejected') : ?>
                                 <span style="background:#FEE2E2;color:#991B1B;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">Ditolak</span>
                             <?php else : ?>
@@ -1490,7 +1542,7 @@ function ppb_render_nomor_surat_admin_page() {
                                 $rendered_pending_batches[$tc] = true;
                                 $b_total = (int) $r['batch_total'];
                             ?>
-                                <form method="post" style="display:flex;flex-direction:column;gap:5px;">
+                                <form method="post" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px;">
                                     <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
                                     <input type="hidden" name="tracking_code" value="<?php echo esc_attr($tc); ?>">
                                     <input type="text" name="catatan_admin" placeholder="Catatan (opsional)" style="font-size:11.5px;">
@@ -1503,10 +1555,21 @@ function ppb_render_nomor_surat_admin_page() {
                                     </div>
                                 </form>
                             <?php elseif ($is_pending) : ?>
-                                <span style="font-size:11.5px;color:#6B7280;">Diproses bersama batch <code><?php echo esc_html($tc); ?></code></span>
-                            <?php else : ?>
-                                <span style="font-size:11.5px;color:#6B7280;"><?php echo esc_html($r['catatan_admin'] ?: 'Selesai'); ?></span>
+                                <div style="font-size:11.5px;color:#6B7280;margin-bottom:5px;">Batch <code><?php echo esc_html($tc); ?></code></div>
+                            <?php elseif (!empty($r['catatan_admin'])) : ?>
+                                <div style="font-size:11.5px;color:#6B7280;margin-bottom:5px;"><?php echo esc_html($r['catatan_admin']); ?></div>
                             <?php endif; ?>
+
+                            <form method="post" style="display:flex;gap:5px;flex-wrap:wrap;">
+                                <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
+                                <input type="hidden" name="row_id" value="<?php echo (int) $r['id']; ?>">
+                                <?php if ($is_frozen) : ?>
+                                    <button type="submit" name="ppb_surat_action" value="unfreeze_row" class="button button-small" style="color:#075985;">🔓 Aktifkan</button>
+                                <?php else : ?>
+                                    <button type="submit" name="ppb_surat_action" value="freeze_row" class="button button-small" style="color:#075985;">❄️ Freeze</button>
+                                <?php endif; ?>
+                                <button type="submit" name="ppb_surat_action" value="delete_row" class="button button-small" style="color:#991B1B;" onclick="return confirm('Yakin hapus data pengajuan nomor surat ini?');">🗑️ Hapus</button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; endif; ?>
