@@ -411,6 +411,7 @@ function ppb_get_lamdik_kriteria_defaults_for_unit($slug, $prodi_meta = array())
         $knum = $idx + 1;
         $it['label_tombol'] = 'Eviden Drive K' . $knum . ' (' . strtoupper($s) . ')';
         $it['drive_url']    = '';
+        $it['hide_drive']   = false;
         $it['eviden_links'] = array(
             array('label' => $it['label_tombol'], 'url' => ''),
         );
@@ -466,6 +467,7 @@ function ppb_get_lamdik_prodi_defaults($slug, $prodi_meta = array()) {
 
     return array(
         'general' => array(
+            'show_drive_links' => true,
             'folder_utama_url' => '',
             'led_url'          => '',
             'lkps_url'         => '',
@@ -632,6 +634,9 @@ function ppb_get_lamdik_settings() {
         $sp = isset($saved['prodi'][$slug]) && is_array($saved['prodi'][$slug]) ? $saved['prodi'][$slug] : array();
         if (!empty($sp['general']) && is_array($sp['general'])) {
             $merged['prodi'][$slug]['general'] = wp_parse_args($sp['general'], $def_p['general']);
+            $merged['prodi'][$slug]['general']['show_drive_links'] = array_key_exists('show_drive_links', $sp['general'])
+                ? !empty($sp['general']['show_drive_links'])
+                : true;
         }
         if (!empty($sp['sertifikat']) && is_array($sp['sertifikat'])) {
             $merged['prodi'][$slug]['sertifikat'] = wp_parse_args($sp['sertifikat'], $def_p['sertifikat']);
@@ -644,6 +649,7 @@ function ppb_get_lamdik_settings() {
                 $row['syarat_perlu']   = $def_k['syarat_perlu'] ?? '';
                 $row['dok_categories'] = $def_k['dok_categories'] ?? array();
                 $row['internal_links'] = $def_k['internal_links'] ?? array();
+                $row['hide_drive']     = !empty($sk['hide_drive']);
                 if ($needs_v3_upgrade && (empty($sk['judul']) || in_array(trim((string) $sk['judul']), $legacy_v1_titles, true))) {
                     $row['judul']       = $def_k['judul'];
                     $row['tag_ringkas'] = $def_k['tag_ringkas'];
@@ -694,6 +700,7 @@ function ppb_save_lamdik_settings($raw) {
 
         $rg = isset($rp['general']) && is_array($rp['general']) ? $rp['general'] : array();
         $out['prodi'][$slug]['general'] = array(
+            'show_drive_links' => !empty($rg['show_drive_links']),
             'folder_utama_url' => $clean_url($rg['folder_utama_url'] ?? ''),
             'led_url'          => $clean_url($rg['led_url'] ?? ''),
             'lkps_url'         => $clean_url($rg['lkps_url'] ?? ''),
@@ -713,6 +720,7 @@ function ppb_save_lamdik_settings($raw) {
                 'deskripsi'      => sanitize_textarea_field($rk['deskripsi'] ?? $def_k['deskripsi']) ?: $def_k['deskripsi'],
                 'tag_ringkas'    => sanitize_text_field($rk['tag_ringkas'] ?? $def_k['tag_ringkas']) ?: $def_k['tag_ringkas'],
                 'internal_links' => $def_k['internal_links'],
+                'hide_drive'     => !empty($rk['hide_drive']),
                 'label_tombol'   => $norm_ev['label_tombol'],
                 'drive_url'      => $norm_ev['drive_url'],
                 'eviden_links'   => $norm_ev['eviden_links'],
@@ -821,12 +829,16 @@ function ppb_render_lamdik_admin_page() {
                 🏛️ Level Jurusan PPB (Renstra &amp; UPM)
             </button>
             <?php foreach ($prodi_units as $slug => $pmeta) :
-                $pcfg = $settings['prodi'][$slug] ?? ppb_get_lamdik_prodi_defaults($slug, $pmeta);
-                $k_cnt = $count_filled_prodi($pcfg);
+                $pcfg     = $settings['prodi'][$slug] ?? ppb_get_lamdik_prodi_defaults($slug, $pmeta);
+                $k_cnt    = $count_filled_prodi($pcfg);
+                $is_pub_d = !array_key_exists('show_drive_links', $pcfg['general'] ?? array()) || !empty($pcfg['general']['show_drive_links']);
             ?>
                 <button type="button" class="ppb-lam-tab-btn <?php echo $active_tab === $slug ? 'is-active' : ''; ?>" data-lam-tab="<?php echo esc_attr($slug); ?>">
                     🎓 <?php echo esc_html($pmeta['tab_label'] ?: $pmeta['kode']); ?>
                     <span class="ppb-lam-tab-pill"><?php echo (int) $k_cnt; ?>/9</span>
+                    <?php if (!$is_pub_d) : ?>
+                        <span class="ppb-lam-tab-pill" style="background:#FEE2E2;color:#991B1B;">🔒 Privat</span>
+                    <?php endif; ?>
                 </button>
             <?php endforeach; ?>
         </div>
@@ -863,7 +875,8 @@ function ppb_render_lamdik_admin_page() {
                 $gen  = $pcfg['general'];
                 $krit = $pcfg['kriteria'];
                 $sd   = $pcfg['sertifikat'];
-                $is_preset = isset($status_opts[$sd['peringkat']]);
+                $is_preset   = isset($status_opts[$sd['peringkat']]);
+                $show_drives = !array_key_exists('show_drive_links', $gen) || !empty($gen['show_drive_links']);
             ?>
             <div class="ppb-lam-pane" data-lam-pane="<?php echo esc_attr($slug); ?>" style="display:<?php echo $active_tab === $slug ? 'block' : 'none'; ?>;">
                 <!-- 1. DOKUMEN INDUK PRODI -->
@@ -873,6 +886,19 @@ function ppb_render_lamdik_admin_page() {
                         <a href="<?php echo esc_url(home_url('/akreditasi/' . $slug . '/')); ?>" target="_blank" class="button">↗ Pratinjau /akreditasi/<?php echo esc_html($slug); ?>/</a>
                     </div>
                     <p class="ppb-lam-desc">Tautan Folder Utama Bukti Fisik, <strong>LED 3.0</strong>, <strong>DKPS 3.0</strong>, dan Matriks Penilaian khusus untuk jenjang <strong><?php echo esc_html($pmeta['kode']); ?></strong>.</p>
+
+                    <div style="background:<?php echo $show_drives ? '#F0FDF4' : '#FEF2F2'; ?>;border:1.5px solid <?php echo $show_drives ? '#86EFAC' : '#FECACA'; ?>;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
+                        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:0;">
+                            <input type="checkbox" name="prodi[<?php echo esc_attr($slug); ?>][general][show_drive_links]" value="1" <?php checked($show_drives, true); ?> style="margin-top:3px;width:18px;height:18px;accent-color:#0D3B22;" />
+                            <span>
+                                <strong style="display:block;font-size:13.5px;color:#0f172a;">Tampilkan Tautan Google Drive ke Publik &amp; Asesor (Mode Masa Akreditasi)</strong>
+                                <span style="display:block;font-size:12px;color:#475569;margin-top:2px;">Hapus centang jika prodi sedang tidak akan akreditasi agar seluruh URL Folder Induk Drive, LED 3.0, DKPS 3.0, Matriks, dan Eviden K1–K9 disembunyikan total dari HTML halaman publik. Tautan yang sudah diisi tetap tersimpan aman.</span>
+                            </span>
+                        </label>
+                        <span style="display:inline-block;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;<?php echo $show_drives ? 'background:#DCFCE7;color:#166534;' : 'background:#FEE2E2;color:#991B1B;'; ?>">
+                            <?php echo $show_drives ? '🟢 Publik (Tampil)' : '🔒 Disembunyikan dari Publik'; ?>
+                        </span>
+                    </div>
 
                     <div class="ppb-lam-grid2">
                         <div class="ppb-lam-field">
@@ -888,7 +914,7 @@ function ppb_render_lamdik_admin_page() {
                             <?php ppb_render_media_url_control(array('id' => 'lam_' . $slug . '_lkps', 'name' => 'prodi[' . $slug . '][general][lkps_url]', 'value' => $gen['lkps_url'], 'placeholder' => 'https://drive.google.com/file/d/... (Excel/PDF DKPS 3.0)')); ?>
                         </div>
                         <div class="ppb-lam-field">
-                            <label>⚖️ Matriks Penilaian &amp; Syarat Perlu 3.0 <?php echo esc_html($pmeta['kode']); ?></label>
+                            <label>⚖️ Matriks Penilaian 3.0 <?php echo esc_html($pmeta['kode']); ?></label>
                             <?php ppb_render_media_url_control(array('id' => 'lam_' . $slug . '_matriks', 'name' => 'prodi[' . $slug . '][general][matriks_url]', 'value' => $gen['matriks_url'], 'placeholder' => 'https://drive.google.com/file/d/...')); ?>
                         </div>
                         <div class="ppb-lam-field" style="grid-column:1 / -1;">
@@ -907,6 +933,7 @@ function ppb_render_lamdik_admin_page() {
                         $ev_links = !empty($kr['eviden_links']) && is_array($kr['eviden_links'])
                             ? $kr['eviden_links']
                             : array(array('label' => $kr['label_tombol'] ?? ('Eviden Drive K' . ($idx + 1)), 'url' => $kr['drive_url'] ?? ''));
+                        $is_k_hidden = !empty($kr['hide_drive']);
                     ?>
                         <div class="ppb-lam-krit-card" data-krit-wrap="<?php echo esc_attr($slug . '_' . $idx); ?>">
                             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
@@ -916,6 +943,10 @@ function ppb_render_lamdik_admin_page() {
                                     </span>
                                     <strong style="font-size:14.5px;color:#0f172a;"><?php echo esc_html($kr['judul']); ?></strong>
                                 </div>
+                                <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:999px;border:1px solid <?php echo $is_k_hidden ? '#FCA5A5' : '#cbd5e1'; ?>;background:<?php echo $is_k_hidden ? '#FEE2E2' : '#ffffff'; ?>;color:<?php echo $is_k_hidden ? '#991B1B' : '#475569'; ?>;">
+                                    <input type="checkbox" name="prodi[<?php echo esc_attr($slug); ?>][kriteria][<?php echo (int) $idx; ?>][hide_drive]" value="1" <?php checked($is_k_hidden, true); ?> />
+                                    🔒 Sembunyikan Drive K<?php echo (int) ($idx + 1); ?> dari publik
+                                </label>
                             </div>
 
                             <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;">
@@ -1171,47 +1202,55 @@ function ppb_render_lamdik_hub_html($atts = array()) {
             $gen    = $pcfg['general'];
             $krit   = $pcfg['kriteria'];
             $sert   = $pcfg['sertifikat'];
-            $dok_by_cat = ppb_lamdik_get_related_dokumen_by_unit($slug);
+            $drive_visible_prodi = !array_key_exists('show_drive_links', $gen) || !empty($gen['show_drive_links']);
 
             $krit_drive_map = array();
             $filled_krit    = 0;
-            foreach ($krit as $kidx => $kr_chk) {
-                $seen_urls = array();
-                $k_drives  = array();
-                foreach ($kr_chk['eviden_links'] ?? array() as $ev_chk) {
-                    $u = trim((string) ($ev_chk['url'] ?? ''));
-                    if ($u !== '' && !isset($seen_urls[$u])) {
-                        $seen_urls[$u] = true;
-                        $k_drives[] = array('label' => $ev_chk['label'] ?: ('Eviden Drive K' . ($kidx + 1)), 'url' => $u, 'source' => 'lamdik');
+            $quick_links    = array();
+
+            if ($drive_visible_prodi) {
+                $dok_by_cat = ppb_lamdik_get_related_dokumen_by_unit($slug);
+                foreach ($krit as $kidx => $kr_chk) {
+                    if (!empty($kr_chk['hide_drive'])) {
+                        $krit_drive_map[$kidx] = array();
+                        continue;
                     }
-                }
-                foreach ((array) ($kr_chk['dok_categories'] ?? array()) as $dcat) {
-                    foreach ((array) ($dok_by_cat[$dcat] ?? array()) as $d_row) {
-                        $du = $d_row['url'];
-                        if ($du !== '' && !isset($seen_urls[$du])) {
-                            $seen_urls[$du] = true;
-                            $k_drives[] = array('label' => $d_row['label'], 'url' => $du, 'source' => 'dokumen');
+                    $seen_urls = array();
+                    $k_drives  = array();
+                    foreach ($kr_chk['eviden_links'] ?? array() as $ev_chk) {
+                        $u = trim((string) ($ev_chk['url'] ?? ''));
+                        if ($u !== '' && !isset($seen_urls[$u])) {
+                            $seen_urls[$u] = true;
+                            $k_drives[] = array('label' => $ev_chk['label'] ?: ('Eviden Drive K' . ($kidx + 1)), 'url' => $u, 'source' => 'lamdik');
                         }
                     }
+                    foreach ((array) ($kr_chk['dok_categories'] ?? array()) as $dcat) {
+                        foreach ((array) ($dok_by_cat[$dcat] ?? array()) as $d_row) {
+                            $du = $d_row['url'];
+                            if ($du !== '' && !isset($seen_urls[$du])) {
+                                $seen_urls[$du] = true;
+                                $k_drives[] = array('label' => $d_row['label'], 'url' => $du, 'source' => 'dokumen');
+                            }
+                        }
+                    }
+                    $krit_drive_map[$kidx] = $k_drives;
+                    if (!empty($k_drives)) {
+                        $filled_krit++;
+                    }
                 }
-                $krit_drive_map[$kidx] = $k_drives;
-                if (!empty($k_drives)) {
-                    $filled_krit++;
-                }
-            }
 
-            $quick_links = array();
-            if (!empty($gen['folder_utama_url'])) {
-                $quick_links[] = array('label' => '🗂️ Folder Induk Drive ' . $pmeta['kode'], 'url' => $gen['folder_utama_url'], 'primary' => true);
-            }
-            if (!empty($gen['led_url'])) {
-                $quick_links[] = array('label' => '📘 Dokumen LED 3.0 ' . $pmeta['kode'], 'url' => $gen['led_url'], 'primary' => false);
-            }
-            if (!empty($gen['lkps_url'])) {
-                $quick_links[] = array('label' => '📊 Data Kinerja (DKPS 3.0) ' . $pmeta['kode'], 'url' => $gen['lkps_url'], 'primary' => false);
-            }
-            if (!empty($gen['matriks_url'])) {
-                $quick_links[] = array('label' => '⚖️ Matriks Penilaian 3.0 ' . $pmeta['kode'], 'url' => $gen['matriks_url'], 'primary' => false);
+                if (!empty($gen['folder_utama_url'])) {
+                    $quick_links[] = array('label' => '🗂️ Folder Induk Drive ' . $pmeta['kode'], 'url' => $gen['folder_utama_url'], 'primary' => true);
+                }
+                if (!empty($gen['led_url'])) {
+                    $quick_links[] = array('label' => '📘 Dokumen LED 3.0 ' . $pmeta['kode'], 'url' => $gen['led_url'], 'primary' => false);
+                }
+                if (!empty($gen['lkps_url'])) {
+                    $quick_links[] = array('label' => '📊 Data Kinerja (DKPS 3.0) ' . $pmeta['kode'], 'url' => $gen['lkps_url'], 'primary' => false);
+                }
+                if (!empty($gen['matriks_url'])) {
+                    $quick_links[] = array('label' => '⚖️ Matriks Penilaian 3.0 ' . $pmeta['kode'], 'url' => $gen['matriks_url'], 'primary' => false);
+                }
             }
             $acc_id         = 'bk-lamdik-accordion-' . $slug;
             $admin_edit_url = admin_url('admin.php?page=ppb-lamdik-settings&unit=' . rawurlencode($slug));
@@ -1235,32 +1274,50 @@ function ppb_render_lamdik_hub_html($atts = array()) {
                     <div style="font-size:12px;color:#059669;font-weight:600;"><?php echo esc_html($pmeta['beban'] ?: $pmeta['nama']); ?></div>
                 </div>
                 <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:18px 20px;box-shadow:0 4px 15px rgba(0,0,0,0.03);">
-                    <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;">Kesiapan Tautan Drive Asesor</div>
-                    <div style="font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:700;color:#D97706;margin:4px 0;"><?php echo (int) $filled_krit; ?> / 9</div>
-                    <div style="font-size:12px;color:#4B5563;">Kriteria punya bukti Drive / PDF</div>
+                    <?php if ($drive_visible_prodi) : ?>
+                        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;">Kesiapan Tautan Drive Asesor</div>
+                        <div style="font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:700;color:#D97706;margin:4px 0;"><?php echo (int) $filled_krit; ?> / 9</div>
+                        <div style="font-size:12px;color:#4B5563;">Kriteria punya bukti Drive / PDF</div>
+                    <?php else : ?>
+                        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;">Akses Berkas Eviden</div>
+                        <div style="font-family:'Fraunces',Georgia,serif;font-size:20px;font-weight:700;color:#0D3B22;margin:6px 0 4px;">Mode Tertutup</div>
+                        <div style="font-size:12px;color:#64748B;">Berkas Drive non-akreditasi disembunyikan</div>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <!-- Quick Access Drive Bar per Jenjang + Tautan Payung Jurusan -->
             <div style="background:#0D3B22;color:#fff;border-radius:16px;padding:18px 22px;margin:0 0 26px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 6px 20px rgba(13,59,34,0.14);">
                 <div>
-                    <div style="font-size:10.5px;font-weight:800;color:#F5B82E;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Portal Eviden Asesor IAPSK 3.0 · <?php echo esc_html($pmeta['nama']); ?></div>
-                    <strong style="font-size:15px;color:#fff;">Dokumen Induk (LED 3.0, DKPS 3.0 &amp; Folder Drive) + Payung Mutu Jurusan</strong>
+                    <div style="font-size:10.5px;font-weight:800;color:#F5B82E;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">
+                        <?php echo $drive_visible_prodi ? 'Portal Eviden Asesor IAPSK 3.0' : 'Arsip Dokumen Akreditasi IAPSK 3.0'; ?> · <?php echo esc_html($pmeta['nama']); ?>
+                    </div>
+                    <strong style="font-size:15px;color:#fff;">
+                        <?php echo $drive_visible_prodi
+                            ? 'Dokumen Induk (LED 3.0, DKPS 3.0 &amp; Folder Drive) + Payung Mutu Jurusan'
+                            : 'Sertifikat Resmi &amp; Payung Mutu Jurusan (Berkas Drive Dikelola Internal)'; ?>
+                    </strong>
                 </div>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                    <?php foreach ($quick_links as $ql) :
-                        $st = $ql['primary']
-                            ? 'background:#F5B82E;color:#0D3B22;border:none;font-weight:800;'
-                            : 'background:rgba(255,255,255,0.14);color:#fff;border:1px solid rgba(255,255,255,0.28);font-weight:600;';
-                    ?>
-                        <a href="<?php echo esc_url($ql['url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:12.5px;text-decoration:none;<?php echo $st; ?>"><?php echo esc_html($ql['label']); ?> &#8599;</a>
-                    <?php endforeach; ?>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                    <?php if ($drive_visible_prodi) : ?>
+                        <?php foreach ($quick_links as $ql) :
+                            $st = $ql['primary']
+                                ? 'background:#F5B82E;color:#0D3B22;border:none;font-weight:800;'
+                                : 'background:rgba(255,255,255,0.14);color:#fff;border:1px solid rgba(255,255,255,0.28);font-weight:600;';
+                        ?>
+                            <a href="<?php echo esc_url($ql['url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:12.5px;text-decoration:none;<?php echo $st; ?>"><?php echo esc_html($ql['label']); ?> &#8599;</a>
+                        <?php endforeach; ?>
+                    <?php else : ?>
+                        <span style="display:inline-flex;align-items:center;gap:5px;padding:8px 13px;border-radius:9px;font-size:12px;background:rgba(255,255,255,0.12);color:#FDE68A;border:1px solid rgba(253,230,138,0.35);font-weight:600;">🔒 Tautan Drive Eviden Disembunyikan</span>
+                    <?php endif; ?>
                     <?php if (!empty($sert['cert_url'])) : ?>
                         <a href="<?php echo esc_url($sert['cert_url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:12.5px;text-decoration:none;background:rgba(255,255,255,0.14);color:#fff;border:1px solid rgba(255,255,255,0.28);font-weight:600;">📄 Sertifikat <?php echo esc_html($pmeta['kode']); ?> &#8599;</a>
                     <?php endif; ?>
                     <a href="<?php echo esc_url(home_url('/akreditasi/upm/')); ?>" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:12.5px;text-decoration:none;background:rgba(245,184,46,0.16);color:#F5B82E;border:1px solid rgba(245,184,46,0.4);font-weight:700;">🏛️ Renstra &amp; UPM Jurusan &rarr;</a>
                     <?php if ($can_edit_admin) : ?>
-                        <a href="<?php echo esc_url($admin_edit_url); ?>" style="display:inline-flex;align-items:center;gap:5px;padding:8px 12px;border-radius:9px;font-size:12px;text-decoration:none;background:#ffffff;color:#0D3B22;font-weight:700;">✏️ Isi Link Drive (Admin)</a>
+                        <a href="<?php echo esc_url($admin_edit_url); ?>" style="display:inline-flex;align-items:center;gap:5px;padding:8px 12px;border-radius:9px;font-size:12px;text-decoration:none;background:#ffffff;color:#0D3B22;font-weight:700;">
+                            <?php echo $drive_visible_prodi ? '✏️ Isi / Sembunyikan Drive (Admin)' : '⚙️ Aktifkan Drive (Admin)'; ?>
+                        </a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1281,10 +1338,11 @@ function ppb_render_lamdik_hub_html($atts = array()) {
             <!-- Accordion 9 Kriteria -->
             <div class="bk-accordion" id="<?php echo esc_attr($acc_id); ?>">
                 <?php foreach ($krit as $idx => $kr) :
-                    $is_open      = ($idx === 0);
-                    $internal     = !empty($kr['internal_links']) && is_array($kr['internal_links']) ? $kr['internal_links'] : array();
-                    $k_drives     = $krit_drive_map[$idx] ?? array();
-                    $total_tautan = count($internal) + count($k_drives);
+                    $is_open            = ($idx === 0);
+                    $internal           = !empty($kr['internal_links']) && is_array($kr['internal_links']) ? $kr['internal_links'] : array();
+                    $krit_drive_visible = $drive_visible_prodi && empty($kr['hide_drive']);
+                    $k_drives           = $krit_drive_visible ? ($krit_drive_map[$idx] ?? array()) : array();
+                    $total_tautan       = count($internal) + ($krit_drive_visible ? count($k_drives) : 0);
                 ?>
                 <div class="bk-acc-item <?php echo $is_open ? 'is-open' : ''; ?>">
                     <button type="button" class="bk-acc-trigger" data-lamdik-idx="<?php echo (int) $idx; ?>" aria-expanded="<?php echo $is_open ? 'true' : 'false'; ?>">
@@ -1293,10 +1351,14 @@ function ppb_render_lamdik_hub_html($atts = array()) {
                             <span class="bk-acc-title"><?php echo esc_html($kr['judul']); ?></span>
                         </span>
                         <span style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;">
-                            <?php if (!empty($k_drives)) : ?>
-                                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:#0D3B22;background:#FEF3C7;border:1px solid #F5B82E;padding:3px 9px;border-radius:9999px;white-space:nowrap;">📂 <?php echo count($k_drives); ?> Drive</span>
-                            <?php else : ?>
-                                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#64748B;background:#F1F5F9;border:1px solid #E2E8F0;padding:3px 9px;border-radius:9999px;white-space:nowrap;">0 Drive</span>
+                            <?php if ($krit_drive_visible) : ?>
+                                <?php if (!empty($k_drives)) : ?>
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:#0D3B22;background:#FEF3C7;border:1px solid #F5B82E;padding:3px 9px;border-radius:9999px;white-space:nowrap;">📂 <?php echo count($k_drives); ?> Drive</span>
+                                <?php else : ?>
+                                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#64748B;background:#F1F5F9;border:1px solid #E2E8F0;padding:3px 9px;border-radius:9999px;white-space:nowrap;">0 Drive</span>
+                                <?php endif; ?>
+                            <?php elseif ($can_edit_admin) : ?>
+                                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#991B1B;background:#FEE2E2;border:1px solid #FCA5A5;padding:3px 9px;border-radius:9999px;white-space:nowrap;">🔒 Privat</span>
                             <?php endif; ?>
                             <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#475569;background:#F1F5F2;border:1px solid #D4E3D8;padding:3px 9px;border-radius:9999px;white-space:nowrap;"><?php echo (int) $total_tautan; ?> Tautan</span>
                             <svg class="bk-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -1305,29 +1367,36 @@ function ppb_render_lamdik_hub_html($atts = array()) {
                     <div class="bk-acc-panel" style="<?php echo $is_open ? 'display:block;' : 'display:none;'; ?>">
                         <p style="margin:0 0 12px;"><?php echo esc_html($kr['deskripsi'] ?? ''); ?></p>
 
-                        <!-- Kotak Eviden Google Drive Asesor -->
-                        <div style="background:#FAF8F5;border:1px solid #D4E3D8;border-radius:12px;padding:12px 14px;margin-bottom:14px;">
-                            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#0D3B22;margin-bottom:8px;">
-                                📂 Dokumen Eviden Google Drive &amp; Berkas Asesor (K<?php echo (int) ($idx + 1); ?>)
+                        <?php if ($krit_drive_visible) : ?>
+                            <!-- Kotak Eviden Google Drive Asesor -->
+                            <div style="background:#FAF8F5;border:1px solid #D4E3D8;border-radius:12px;padding:12px 14px;margin-bottom:14px;">
+                                <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#0D3B22;margin-bottom:8px;">
+                                    📂 Dokumen Eviden Google Drive &amp; Berkas Asesor (K<?php echo (int) ($idx + 1); ?>)
+                                </div>
+                                <?php if (!empty($k_drives)) : ?>
+                                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                        <?php foreach ($k_drives as $kd) : ?>
+                                            <a href="<?php echo esc_url($kd['url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:5px;background:#F5B82E;color:#0D3B22;font-size:12.5px;font-weight:800;padding:8px 14px;border-radius:8px;text-decoration:none;box-shadow:0 2px 6px rgba(13,59,34,0.08);">📂 <?php echo esc_html($kd['label']); ?> &#8599;</a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else : ?>
+                                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:12px;color:#475569;">
+                                        <span>Belum ada tautan Drive/PDF khusus untuk Kriteria <?php echo (int) ($idx + 1); ?>.</span>
+                                        <?php if (!empty($gen['folder_utama_url'])) : ?>
+                                            <a href="<?php echo esc_url($gen['folder_utama_url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;text-decoration:none;">🗂️ Buka Folder Induk Drive <?php echo esc_html($pmeta['kode']); ?> &#8599;</a>
+                                        <?php endif; ?>
+                                        <?php if ($can_edit_admin) : ?>
+                                            <a href="<?php echo esc_url($admin_edit_url); ?>" style="font-weight:700;color:#0D3B22;text-decoration:underline;">+ Isi Link Drive K<?php echo (int) ($idx + 1); ?> di WP-Admin</a>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <?php if (!empty($k_drives)) : ?>
-                                <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                                    <?php foreach ($k_drives as $kd) : ?>
-                                        <a href="<?php echo esc_url($kd['url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:5px;background:#F5B82E;color:#0D3B22;font-size:12.5px;font-weight:800;padding:8px 14px;border-radius:8px;text-decoration:none;box-shadow:0 2px 6px rgba(13,59,34,0.08);">📂 <?php echo esc_html($kd['label']); ?> &#8599;</a>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php else : ?>
-                                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:12px;color:#475569;">
-                                    <span>Belum ada tautan Drive/PDF khusus untuk Kriteria <?php echo (int) ($idx + 1); ?>.</span>
-                                    <?php if (!empty($gen['folder_utama_url'])) : ?>
-                                        <a href="<?php echo esc_url($gen['folder_utama_url']); ?>" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;background:#0D3B22;color:#F5B82E;font-size:12px;font-weight:700;padding:6px 12px;border-radius:7px;text-decoration:none;">🗂️ Buka Folder Induk Drive <?php echo esc_html($pmeta['kode']); ?> &#8599;</a>
-                                    <?php endif; ?>
-                                    <?php if ($can_edit_admin) : ?>
-                                        <a href="<?php echo esc_url($admin_edit_url); ?>" style="font-weight:700;color:#0D3B22;text-decoration:underline;">+ Isi Link Drive K<?php echo (int) ($idx + 1); ?> di WP-Admin</a>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
+                        <?php elseif ($can_edit_admin) : ?>
+                            <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:12px;color:#991B1B;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
+                                <span>🔒 Tautan Google Drive Kriteria <?php echo (int) ($idx + 1); ?> sedang disembunyikan dari pengunjung publik.</span>
+                                <a href="<?php echo esc_url($admin_edit_url); ?>" style="font-weight:700;color:#991B1B;text-decoration:underline;">Atur di WP-Admin</a>
+                            </div>
+                        <?php endif; ?>
 
                         <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
                             <span class="bk-tag bk-tag-sage"><?php echo esc_html($kr['tag_ringkas'] ?? '✓ Eviden IAPSK 3.0'); ?></span>
@@ -1555,9 +1624,11 @@ add_filter('the_content', function($content) {
     // 3d. /profil/visi-misi/ -> Perbaiki link sertifikat lama S1/S2/S3
     if (strpos($content, 'sertifikat-akreditasi-s1.pdf') !== false || strpos($content, 'sertifikat-akreditasi-s2.pdf') !== false || strpos($content, 'sertifikat-akreditasi-s3.pdf') !== false) {
         foreach (array('s1', 's2', 's3') as $deg) {
-            $sd = $prodi_map[$deg]['sertifikat'] ?? array();
-            $fallback_page = !empty($prodi_map[$deg]['general']['folder_utama_url'])
-                ? $prodi_map[$deg]['general']['folder_utama_url']
+            $sd  = $prodi_map[$deg]['sertifikat'] ?? array();
+            $gen = $prodi_map[$deg]['general'] ?? array();
+            $drv_ok = !array_key_exists('show_drive_links', $gen) || !empty($gen['show_drive_links']);
+            $fallback_page = ($drv_ok && !empty($gen['folder_utama_url']))
+                ? $gen['folder_utama_url']
                 : home_url('/akreditasi/' . $deg . '/');
             $target_url = !empty($sd['cert_url'])
                 ? $sd['cert_url']
