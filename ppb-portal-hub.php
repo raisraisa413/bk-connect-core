@@ -771,6 +771,7 @@ add_action('admin_head', function() {
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="page=ppb-elibrary-manager"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="post_type=ppb_dokumen"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="page=ppb-survei-manager"],
+        #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="page=ppb-master-mahasiswa"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="post_type=ppb_prestasi"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="post_type=ppb_karya"],
         #toplevel_page_ppb-portal-hub .wp-submenu > li > a[href*="post_type=ppb_inventaris_lab"],
