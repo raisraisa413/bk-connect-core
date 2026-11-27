@@ -203,9 +203,15 @@ function ppb_get_portal_menu_hierarchy() {
             'icon'       => '🏆',
             'slug'       => 'ppb-kemahasiswaan-settings',
             'url'        => admin_url('admin.php?page=ppb-kemahasiswaan-settings'),
-            'match_pages'=> array('ppb-kemahasiswaan-settings'),
+            'match_pages'=> array('ppb-kemahasiswaan-settings', 'ppb-master-mahasiswa'),
             'match_cpts' => array('ppb_prestasi', 'ppb_karya'),
             'children'   => array(
+                array(
+                    'label'    => '🎓 Master Data Mahasiswa (NIM)',
+                    'url'      => admin_url('admin.php?page=ppb-master-mahasiswa'),
+                    'slug'     => 'ppb-master-mahasiswa',
+                    'keywords' => 'master data mahasiswa nim angkatan aktif cuti lulus import excel',
+                ),
                 array(
                     'label'    => '📈 Statistik Maba & Tracer Study',
                     'url'      => admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=statistik'),
@@ -557,6 +563,15 @@ function ppb_register_portal_hub_menu() {
         '🔄 Alur SOP Layanan',
         'edit_posts',
         'edit.php?post_type=ppb_alur_sop'
+    );
+
+    add_submenu_page(
+        'ppb-portal-hub',
+        'Master Data Mahasiswa (NIM)',
+        '🎓 Master Mahasiswa',
+        'edit_posts',
+        'ppb-master-mahasiswa',
+        'ppb_render_master_mahasiswa_admin_page'
     );
 
     add_submenu_page(
@@ -1720,7 +1735,8 @@ function ppb_render_portal_hub_dashboard() {
                     </div>
                 </div>
                 <div class="ppb-card-btns">
-                    <a href="<?php echo admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=statistik'); ?>" class="ppb-btn ppb-btn-primary">📈 Maba &amp; Tracer</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-master-mahasiswa'); ?>" class="ppb-btn ppb-btn-primary">🎓 Master Mahasiswa</a>
+                    <a href="<?php echo admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=statistik'); ?>" class="ppb-btn ppb-btn-secondary">📈 Maba &amp; Tracer</a>
                     <a href="<?php echo admin_url('admin.php?page=ppb-kemahasiswaan-settings&tab=mbkm'); ?>" class="ppb-btn ppb-btn-secondary">🤝 MBKM</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_prestasi'); ?>" class="ppb-btn ppb-btn-secondary">🏅 Prestasi</a>
                     <a href="<?php echo admin_url('edit.php?post_type=ppb_karya'); ?>" class="ppb-btn ppb-btn-secondary">🎨 Karya</a>
