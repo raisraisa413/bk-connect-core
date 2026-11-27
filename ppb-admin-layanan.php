@@ -1426,7 +1426,7 @@ function ppb_render_layanan_settings_page() {
     }
 
     $active_tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'umum';
-    if (!in_array($active_tab, ['umum', 'lab_kegiatan', 'sarpras'], true)) {
+    if (!in_array($active_tab, ['umum', 'lab_bidang', 'lab_kegiatan', 'sarpras'], true)) {
         $active_tab = 'umum';
     }
 
