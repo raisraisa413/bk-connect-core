@@ -1366,9 +1366,59 @@ function ppb_register_layanan_settings_menu() {
 // Handled by ppb-portal-hub
 // add_action('admin_menu', 'ppb_register_layanan_settings_menu');
 
+if (!function_exists('ppb_register_admin_lab_role')) {
+function ppb_register_admin_lab_role() {
+    $admin_role = get_role('administrator');
+    if ($admin_role && !$admin_role->has_cap('ppb_manage_lab')) {
+        $admin_role->add_cap('ppb_manage_lab');
+    }
+    if (!get_role('ppb_admin_lab')) {
+        add_role('ppb_admin_lab', 'Admin Laboratorium BK', [
+            'read'           => true,
+            'upload_files'   => true,
+            'ppb_manage_lab' => true,
+        ]);
+    }
+}
+}
+add_action('init', 'ppb_register_admin_lab_role');
+
+if (!function_exists('ppb_register_dedicated_lab_admin_menu')) {
+function ppb_register_dedicated_lab_admin_menu() {
+    // Hanya tampilkan menu khusus ini jika user bukan Administrator penuh (atau tetap sediakan akses cepat Lab BK)
+    if (!current_user_can('ppb_manage_lab')) {
+        return;
+    }
+    if (!current_user_can('manage_options')) {
+        add_menu_page(
+            'Portal Admin Lab BK',
+            '🧪 Admin Lab BK',
+            'ppb_manage_lab',
+            'ppb-lab-admin',
+            'ppb_render_dedicated_lab_admin_page',
+            'dashicons-welcome-learn-more',
+            26
+        );
+    }
+}
+}
+add_action('admin_menu', 'ppb_register_dedicated_lab_admin_menu');
+
+if (!function_exists('ppb_render_dedicated_lab_admin_page')) {
+function ppb_render_dedicated_lab_admin_page() {
+    if (!current_user_can('ppb_manage_lab')) {
+        wp_die('Anda tidak memiliki izin mengakses Portal Admin Lab BK.');
+    }
+    $_GET['tab'] = isset($_GET['tab']) && in_array($_GET['tab'], ['lab_bidang', 'lab_kegiatan'], true)
+        ? $_GET['tab']
+        : 'lab_bidang';
+    ppb_render_layanan_settings_page();
+}
+}
+
 if (!function_exists('ppb_render_layanan_settings_page')) {
 function ppb_render_layanan_settings_page() {
-    if (!current_user_can('edit_posts')) {
+    if (!current_user_can('edit_posts') && !current_user_can('ppb_manage_lab')) {
         wp_die('Anda tidak memiliki izin mengakses halaman ini.');
     }
     if (function_exists('ppb_admin_enqueue_media_assets')) {
@@ -1638,28 +1688,39 @@ function ppb_render_layanan_settings_page() {
     $survei_url       = get_option('ppb_layanan_survei_url', home_url('/survei/'));
     $inv_count        = wp_count_posts('ppb_inventaris_lab')->publish ?? 0;
 
-    $tabs = [
+    $is_full_admin = current_user_can('manage_options');
+    $current_admin_page = $is_full_admin ? 'ppb-layanan-settings' : 'ppb-lab-admin';
+    $tabs = $is_full_admin ? [
         'umum'         => '⚙️ Hotline, SOP & Impor CPT Lab',
         'lab_bidang'   => '🏷️ 5 Bidang Lab BK',
         'lab_kegiatan' => '🧪 Kegiatan & Lomba Lab BK',
         'sarpras'      => '🏛️ Sarana & Prasarana (Ruangan & Foto)',
+    ] : [
+        'lab_bidang'   => '🏷️ 5 Bidang Lab BK',
+        'lab_kegiatan' => '🧪 Kegiatan & Lomba Lab BK',
     ];
+    if (!$is_full_admin && !isset($tabs[$active_tab])) {
+        $active_tab = 'lab_bidang';
+    }
     ?>
     <div class="wrap" style="max-width:1120px;margin:20px auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e293b;">
         <div style="background:linear-gradient(135deg,#0D3B22 0%,#185333 100%);color:#fff;border-radius:16px;padding:24px 28px;margin-bottom:18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;">
             <div>
-                <h1 style="margin:0 0 6px;color:#fff;font-size:23px;font-weight:800;">📁 Pengaturan Pusat Layanan, Lab BK &amp; Sarana Prasarana</h1>
-                <p style="margin:0;color:rgba(255,255,255,0.85);font-size:13px;">Kelola hotline &amp; SIPADU, kegiatan/lomba Lab BK, inventaris alat tes, serta dokumentasi ruang &amp; foto Sarana Prasarana secara terpusat.</p>
+                <h1 style="margin:0 0 6px;color:#fff;font-size:23px;font-weight:800;">📁 <?php echo $is_full_admin ? 'Pengaturan Pusat Layanan, Lab BK &amp; Sarana Prasarana' : 'Portal Admin Laboratorium BK'; ?></h1>
+                <p style="margin:0;color:rgba(255,255,255,0.85);font-size:13px;">Kelola 5 bidang Lab BK, pendaftar layanan, kegiatan &amp; lomba, serta inventaris alat tes laboratorium.</p>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <a href="<?php echo esc_url(admin_url('edit.php?post_type=ppb_inventaris_lab')); ?>" class="button" style="background:#F5B82E;color:#0D3B22;border:none;font-weight:700;border-radius:8px;">🧪 Kelola CPT Inventaris (<?php echo (int) $inv_count; ?>)</a>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-portal-hub')); ?>" class="button" style="border-radius:8px;">← Pusat Kendali</a>
+                <a href="<?php echo esc_url(home_url('/lab-bk/')); ?>" target="_blank" class="button" style="border-radius:8px;">↗ Lihat Web Lab BK</a>
+                <?php if ($is_full_admin) : ?>
+                    <a href="<?php echo esc_url(admin_url('edit.php?post_type=ppb_inventaris_lab')); ?>" class="button" style="background:#F5B82E;color:#0D3B22;border:none;font-weight:700;border-radius:8px;">🧪 Kelola CPT Inventaris (<?php echo (int) $inv_count; ?>)</a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-portal-hub')); ?>" class="button" style="border-radius:8px;">← Pusat Kendali</a>
+                <?php endif; ?>
             </div>
         </div>
 
         <nav class="nav-tab-wrapper" style="margin-bottom:20px;">
             <?php foreach ($tabs as $tk => $tl) : ?>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-layanan-settings&tab=' . $tk)); ?>" class="nav-tab <?php echo $active_tab === $tk ? 'nav-tab-active' : ''; ?>" style="<?php echo $active_tab === $tk ? 'background:#0D3B22;color:#fff;border-color:#0D3B22;' : ''; ?>font-weight:700;">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=' . $current_admin_page . '&tab=' . $tk)); ?>" class="nav-tab <?php echo $active_tab === $tk ? 'nav-tab-active' : ''; ?>" style="<?php echo $active_tab === $tk ? 'background:#0D3B22;color:#fff;border-color:#0D3B22;' : ''; ?>font-weight:700;">
                     <?php echo esc_html($tl); ?>
                 </a>
             <?php endforeach; ?>
@@ -1764,7 +1825,7 @@ function ppb_render_layanan_settings_page() {
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #e2e8f0;">
                     <?php foreach ($all_bidang as $b_key => $b_info) :
                         $is_cur = ($b_key === $selected_bidang);
-                        $sub_url = add_query_arg(['page' => 'ppb-layanan-settings', 'tab' => 'lab_bidang', 'bidang' => $b_key], admin_url('admin.php'));
+                        $sub_url = add_query_arg(['page' => $current_admin_page, 'tab' => 'lab_bidang', 'bidang' => $b_key], admin_url('admin.php'));
                     ?>
                         <a href="<?php echo esc_url($sub_url); ?>" class="button" style="<?php echo $is_cur ? 'background:#0D3B22;color:#fff;border-color:#0D3B22;font-weight:700;' : 'background:#f8fafc;color:#1e293b;'; ?>">
                             <?php echo esc_html($b_info['icon'] . ' ' . $b_info['nama']); ?>
