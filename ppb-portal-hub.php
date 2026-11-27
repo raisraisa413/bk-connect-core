@@ -1882,6 +1882,7 @@ function ppb_get_admin_managed_shortcode_map() {
         'ppb_inventaris_lab'     => array('label' => 'Inventaris Alat & Tes Lab BK',  'url' => admin_url('edit.php?post_type=ppb_inventaris_lab')),
         'ppb_layanan_persuratan' => array('label' => 'Template Surat & Alur SOP',     'url' => admin_url('edit.php?post_type=ppb_template_dok')),
         'ppb_lab_portals'        => array('label' => 'Layanan & Portal Lab BK',       'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=umum')),
+        'ppb_lab_bidang'         => array('label' => '5 Bidang Lab BK',               'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=lab_bidang')),
         'ppb_lab_kegiatan'       => array('label' => 'Kegiatan Lab BK',               'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=lab_kegiatan')),
         'ppb_lab_lomba'          => array('label' => 'Lomba & Event Lab BK',          'url' => admin_url('admin.php?page=ppb-layanan-settings&tab=lab_kegiatan')),
         'ppb_elibrary'           => array('label' => 'E-Library & Modul Praktikum',   'url' => admin_url('admin.php?page=ppb-elibrary-manager')),

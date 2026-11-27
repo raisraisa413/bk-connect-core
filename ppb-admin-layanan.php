@@ -1554,6 +1554,82 @@ function ppb_render_layanan_settings_page() {
         $notice = '<div class="notice notice-warning is-dismissible"><p>Data Sarana &amp; Prasarana dikembalikan ke 3 ruang bawaan.</p></div>';
     }
 
+    // Tab 4: Simpan 5 Bidang Lab BK & Kelola Pendaftar
+    if (isset($_POST['ppb_save_lab_bidang']) && check_admin_referer('ppb_lab_bidang_nonce_action', 'ppb_lab_bidang_nonce')) {
+        $active_tab = 'lab_bidang';
+        $b_slug = sanitize_key($_POST['bidang_slug'] ?? 'konseling');
+        $all_bidang = function_exists('ppb_get_lab_bidang_data') ? ppb_get_lab_bidang_data() : [];
+        if (isset($all_bidang[$b_slug])) {
+            $raw_b = isset($_POST['bidang']) && is_array($_POST['bidang']) ? wp_unslash($_POST['bidang']) : [];
+            $clean_programs = [];
+            if (!empty($raw_b['program']) && is_array($raw_b['program'])) {
+                foreach ($raw_b['program'] as $pr) {
+                    if (!empty($pr['delete']) || empty(trim((string) ($pr['judul'] ?? '')))) continue;
+                    $clean_programs[] = [
+                        'judul'     => sanitize_text_field($pr['judul']),
+                        'kategori'  => sanitize_text_field($pr['kategori'] ?? 'Layanan'),
+                        'deskripsi' => sanitize_textarea_field($pr['deskripsi'] ?? ''),
+                        'sasaran'   => sanitize_text_field($pr['sasaran'] ?? 'Mahasiswa BK & Sivitas'),
+                        'jadwal'    => sanitize_text_field($pr['jadwal'] ?? ''),
+                        'status'    => sanitize_text_field($pr['status'] ?? 'Aktif'),
+                        'cta_label' => sanitize_text_field($pr['cta_label'] ?? 'Ajukan / Daftar'),
+                        'cta_url'   => esc_url_raw(trim((string) ($pr['cta_url'] ?? ''))),
+                    ];
+                }
+            }
+            if (!empty($_POST['new_program']['judul'])) {
+                $np = wp_unslash($_POST['new_program']);
+                $clean_programs[] = [
+                    'judul'     => sanitize_text_field($np['judul']),
+                    'kategori'  => sanitize_text_field($np['kategori'] ?? 'Layanan'),
+                    'deskripsi' => sanitize_textarea_field($np['deskripsi'] ?? ''),
+                    'sasaran'   => sanitize_text_field($np['sasaran'] ?? 'Mahasiswa BK & Sivitas'),
+                    'jadwal'    => sanitize_text_field($np['jadwal'] ?? ''),
+                    'status'    => sanitize_text_field($np['status'] ?? 'Aktif'),
+                    'cta_label' => sanitize_text_field($np['cta_label'] ?? 'Ajukan / Daftar'),
+                    'cta_url'   => esc_url_raw(trim((string) ($np['cta_url'] ?? ''))),
+                ];
+            }
+            $sop_lines = array_values(array_filter(array_map('trim', explode("\n", str_replace("\r", "", (string) ($raw_b['sop_text'] ?? ''))))));
+            $all_bidang[$b_slug] = array_merge($all_bidang[$b_slug], [
+                'nama'        => sanitize_text_field($raw_b['nama'] ?? $all_bidang[$b_slug]['nama']),
+                'tagline'     => sanitize_text_field($raw_b['tagline'] ?? $all_bidang[$b_slug]['tagline']),
+                'deskripsi'   => sanitize_textarea_field($raw_b['deskripsi'] ?? $all_bidang[$b_slug]['deskripsi']),
+                'koordinator' => sanitize_text_field($raw_b['koordinator'] ?? $all_bidang[$b_slug]['koordinator']),
+                'asisten'     => sanitize_text_field($raw_b['asisten'] ?? ($all_bidang[$b_slug]['asisten'] ?? '')),
+                'jadwal'      => sanitize_text_field($raw_b['jadwal'] ?? $all_bidang[$b_slug]['jadwal']),
+                'lokasi'      => sanitize_text_field($raw_b['lokasi'] ?? $all_bidang[$b_slug]['lokasi']),
+                'program'     => $clean_programs,
+                'sop_alur'    => $sop_lines,
+            ]);
+            update_option('ppb_lab_bidang_data', $all_bidang, false);
+            $notice = '<div class="notice notice-success is-dismissible"><p><strong>🏷️ Data ' . esc_html($all_bidang[$b_slug]['nama']) . ' berhasil disimpan!</strong></p></div>';
+        }
+    }
+    if (isset($_POST['ppb_reset_lab_bidang']) && check_admin_referer('ppb_lab_bidang_nonce_action', 'ppb_lab_bidang_nonce')) {
+        $active_tab = 'lab_bidang';
+        delete_option('ppb_lab_bidang_data');
+        $notice = '<div class="notice notice-warning is-dismissible"><p>Seluruh data 5 Bidang Lab BK dikembalikan ke data bawaan.</p></div>';
+    }
+    if (isset($_POST['ppb_update_lab_pendaftaran']) && check_admin_referer('ppb_lab_pendaftaran_nonce_action', 'ppb_lab_pendaftaran_nonce')) {
+        $active_tab = 'lab_bidang';
+        $pendaftar = get_option('ppb_lab_pendaftaran_list', []);
+        if (is_array($pendaftar)) {
+            $statuses = isset($_POST['reg_status']) && is_array($_POST['reg_status']) ? wp_unslash($_POST['reg_status']) : [];
+            $deletes  = isset($_POST['reg_delete']) && is_array($_POST['reg_delete']) ? wp_unslash($_POST['reg_delete']) : [];
+            $updated = [];
+            foreach ($pendaftar as $idx => $item) {
+                if (!empty($deletes[$idx])) continue;
+                if (isset($statuses[$idx])) {
+                    $item['status'] = sanitize_text_field($statuses[$idx]);
+                }
+                $updated[] = $item;
+            }
+            update_option('ppb_lab_pendaftaran_list', array_values($updated), false);
+            $notice = '<div class="notice notice-success is-dismissible"><p><strong>📋 Status pendaftaran layanan Lab BK berhasil diperbarui!</strong></p></div>';
+        }
+    }
+
     $wa_hotline       = get_option('ppb_layanan_wa_hotline', '6281242338988');
     $jam_operasional  = get_option('ppb_layanan_jam_operasional', 'Senin – Jumat, 08.00 – 16.00 WITA');
     $lokasi_lab       = get_option('ppb_layanan_lokasi_lab', 'Gedung Laboratorium BK, FIP UNM Kampus Gunungsari Makassar');
@@ -1564,6 +1640,7 @@ function ppb_render_layanan_settings_page() {
 
     $tabs = [
         'umum'         => '⚙️ Hotline, SOP & Impor CPT Lab',
+        'lab_bidang'   => '🏷️ 5 Bidang Lab BK',
         'lab_kegiatan' => '🧪 Kegiatan & Lomba Lab BK',
         'sarpras'      => '🏛️ Sarana & Prasarana (Ruangan & Foto)',
     ];
@@ -1664,6 +1741,176 @@ function ppb_render_layanan_settings_page() {
                     </div>
                 </div>
             </div>
+
+        <?php elseif ($active_tab === 'lab_bidang') :
+            $all_bidang = function_exists('ppb_get_lab_bidang_data') ? ppb_get_lab_bidang_data() : [];
+            $selected_bidang = sanitize_key($_REQUEST['bidang_slug'] ?? ($_GET['bidang'] ?? 'konseling'));
+            if (!isset($all_bidang[$selected_bidang])) {
+                $selected_bidang = 'konseling';
+            }
+            $cur_b = $all_bidang[$selected_bidang];
+            $pendaftar_list = get_option('ppb_lab_pendaftaran_list', []);
+            if (!is_array($pendaftar_list)) $pendaftar_list = [];
+        ?>
+            <div style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;margin-bottom:22px;">
+                <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;">
+                    <div>
+                        <h2 style="margin:0;color:#0D3B22;font-size:18px;">🏷️ Kelola 5 Bidang Laboratorium BK (Shortcode <code>[ppb_lab_bidang]</code>)</h2>
+                        <span style="font-size:12px;color:#64748b;">Pilih salah satu bidang untuk mengubah koordinator, jadwal, daftar layanan/klub non-akademik, dan alur SOP.</span>
+                    </div>
+                    <a href="<?php echo esc_url(home_url('/lab-bk/bidang-' . $selected_bidang . '/')); ?>" target="_blank" class="button">↗ Lihat Halaman Publik</a>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #e2e8f0;">
+                    <?php foreach ($all_bidang as $b_key => $b_info) :
+                        $is_cur = ($b_key === $selected_bidang);
+                        $sub_url = add_query_arg(['page' => 'ppb-layanan-settings', 'tab' => 'lab_bidang', 'bidang' => $b_key], admin_url('admin.php'));
+                    ?>
+                        <a href="<?php echo esc_url($sub_url); ?>" class="button" style="<?php echo $is_cur ? 'background:#0D3B22;color:#fff;border-color:#0D3B22;font-weight:700;' : 'background:#f8fafc;color:#1e293b;'; ?>">
+                            <?php echo esc_html($b_info['icon'] . ' ' . $b_info['nama']); ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+
+                <form method="post">
+                    <?php wp_nonce_field('ppb_lab_bidang_nonce_action', 'ppb_lab_bidang_nonce'); ?>
+                    <input type="hidden" name="bidang_slug" value="<?php echo esc_attr($selected_bidang); ?>">
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Nama Bidang</label>
+                            <input type="text" name="bidang[nama]" value="<?php echo esc_attr($cur_b['nama']); ?>" class="widefat" required>
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Tagline Singkat</label>
+                            <input type="text" name="bidang[tagline]" value="<?php echo esc_attr($cur_b['tagline']); ?>" class="widefat">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Deskripsi &amp; Fokus Bidang</label>
+                        <textarea name="bidang[deskripsi]" rows="2" class="widefat"><?php echo esc_textarea($cur_b['deskripsi']); ?></textarea>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Dosen Koordinator</label>
+                            <input type="text" name="bidang[koordinator]" value="<?php echo esc_attr($cur_b['koordinator']); ?>" class="widefat">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Koordinator Asisten / Peer</label>
+                            <input type="text" name="bidang[asisten]" value="<?php echo esc_attr($cur_b['asisten'] ?? ''); ?>" class="widefat">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Jadwal Layanan</label>
+                            <input type="text" name="bidang[jadwal]" value="<?php echo esc_attr($cur_b['jadwal']); ?>" class="widefat">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Lokasi Ruang</label>
+                            <input type="text" name="bidang[lokasi]" value="<?php echo esc_attr($cur_b['lokasi']); ?>" class="widefat">
+                        </div>
+                    </div>
+
+                    <h3 style="margin:0 0 10px;font-size:15px;color:#0D3B22;">Daftar Layanan / Program Kerja / Klub Bidang</h3>
+                    <div style="display:grid;gap:12px;margin-bottom:16px;">
+                        <?php foreach (($cur_b['program'] ?? []) as $pidx => $pr) : ?>
+                            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;background:#f8fafc;">
+                                <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 90px;gap:8px;margin-bottom:8px;">
+                                    <input type="text" name="bidang[program][<?php echo $pidx; ?>][judul]" value="<?php echo esc_attr($pr['judul'] ?? ''); ?>" placeholder="Judul Layanan / Program / Klub" class="widefat">
+                                    <input type="text" name="bidang[program][<?php echo $pidx; ?>][kategori]" value="<?php echo esc_attr($pr['kategori'] ?? ''); ?>" placeholder="Kategori" class="widefat">
+                                    <input type="text" name="bidang[program][<?php echo $pidx; ?>][status]" value="<?php echo esc_attr($pr['status'] ?? 'Aktif'); ?>" placeholder="Status (Aktif/Buka)" class="widefat">
+                                    <label style="color:#dc2626;font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" name="bidang[program][<?php echo $pidx; ?>][delete]" value="1"> Hapus</label>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:8px;margin-bottom:8px;">
+                                    <input type="text" name="bidang[program][<?php echo $pidx; ?>][sasaran]" value="<?php echo esc_attr($pr['sasaran'] ?? ''); ?>" placeholder="Sasaran peserta" class="widefat">
+                                    <input type="text" name="bidang[program][<?php echo $pidx; ?>][jadwal]" value="<?php echo esc_attr($pr['jadwal'] ?? ''); ?>" placeholder="Jadwal rutin" class="widefat">
+                                    <input type="text" name="bidang[program][<?php echo $pidx; ?>][cta_label]" value="<?php echo esc_attr($pr['cta_label'] ?? ''); ?>" placeholder="Label tombol CTA" class="widefat">
+                                    <input type="text" name="bidang[program][<?php echo $pidx; ?>][cta_url]" value="<?php echo esc_attr($pr['cta_url'] ?? ''); ?>" placeholder="URL (kosongkan = modal form)" class="widefat">
+                                </div>
+                                <textarea name="bidang[program][<?php echo $pidx; ?>][deskripsi]" rows="2" class="widefat" placeholder="Deskripsi singkat layanan/program..."><?php echo esc_textarea($pr['deskripsi'] ?? ''); ?></textarea>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div style="background:#f0fdf4;border:1.5px dashed #16a34a;border-radius:10px;padding:14px;margin-bottom:18px;">
+                        <strong style="display:block;color:#0D3B22;margin-bottom:8px;">➕ Tambah Layanan / Program / Klub Baru ke Bidang Ini</strong>
+                        <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px;margin-bottom:8px;">
+                            <input type="text" name="new_program[judul]" placeholder="Judul Layanan / Program / Klub baru..." class="widefat">
+                            <input type="text" name="new_program[kategori]" placeholder="Kategori (mis. Layanan / Klub)" class="widefat">
+                            <input type="text" name="new_program[status]" placeholder="Status (mis. Pendaftaran Buka)" class="widefat">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:8px;margin-bottom:8px;">
+                            <input type="text" name="new_program[sasaran]" placeholder="Sasaran (mis. Mahasiswa BK)" class="widefat">
+                            <input type="text" name="new_program[jadwal]" placeholder="Jadwal" class="widefat">
+                            <input type="text" name="new_program[cta_label]" placeholder="Label Tombol (mis. Daftar Sekarang)" class="widefat">
+                            <input type="text" name="new_program[cta_url]" placeholder="URL (kosongkan = buka modal daftar)" class="widefat">
+                        </div>
+                        <textarea name="new_program[deskripsi]" rows="2" class="widefat" placeholder="Deskripsi singkat..."></textarea>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <label style="font-size:12px;font-weight:700;color:#0D3B22;display:block;margin-bottom:4px;">Alur / SOP Layanan (1 langkah per baris)</label>
+                        <textarea name="bidang[sop_text]" rows="4" class="widefat"><?php echo esc_textarea(implode("\n", (array) ($cur_b['sop_alur'] ?? []))); ?></textarea>
+                    </div>
+
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="submit" name="ppb_save_lab_bidang" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan <?php echo esc_html($cur_b['nama']); ?></button>
+                        <button type="submit" name="ppb_reset_lab_bidang" class="button" onclick="return confirm('Reset semua 5 Bidang Lab BK ke data bawaan?');">↺ Reset Semua ke Default</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Daftar Pengajuan / Pendaftaran Layanan Lab BK -->
+            <form method="post" style="background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:22px;">
+                <?php wp_nonce_field('ppb_lab_pendaftaran_nonce_action', 'ppb_lab_pendaftaran_nonce'); ?>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+                    <div>
+                        <h2 style="margin:0;color:#0D3B22;font-size:18px;">📋 Daftar Pengajuan &amp; Pendaftaran Layanan Lab BK (<?php echo count($pendaftar_list); ?>)</h2>
+                        <span style="font-size:12px;color:#64748b;">Data pendaftar dari form terintegrasi di halaman 5 bidang Laboratorium BK.</span>
+                    </div>
+                    <?php if (!empty($pendaftar_list)) : ?>
+                        <button type="submit" name="ppb_update_lab_pendaftaran" class="button button-primary" style="background:#0D3B22;border-color:#0D3B22;">💾 Simpan Status Pendaftar</button>
+                    <?php endif; ?>
+                </div>
+                <?php if (empty($pendaftar_list)) : ?>
+                    <p style="color:#64748b;font-size:13px;margin:0;">Belum ada pengajuan atau pendaftaran masuk melalui formulir website.</p>
+                <?php else : ?>
+                    <div style="overflow-x:auto;">
+                        <table class="widefat striped" style="font-size:12.5px;">
+                            <thead>
+                                <tr>
+                                    <th>Waktu</th>
+                                    <th>Bidang &amp; Program</th>
+                                    <th>Nama &amp; NIM</th>
+                                    <th>Kontak (WA/Email)</th>
+                                    <th>Catatan</th>
+                                    <th>Status</th>
+                                    <th>Hapus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($pendaftar_list as $ridx => $reg) : ?>
+                                    <tr>
+                                        <td><?php echo esc_html($reg['waktu'] ?? ''); ?></td>
+                                        <td><strong><?php echo esc_html($reg['bidang'] ?? ''); ?></strong><br><span style="color:#64748b;"><?php echo esc_html($reg['program'] ?? ''); ?></span></td>
+                                        <td><strong><?php echo esc_html($reg['nama'] ?? ''); ?></strong><br><span style="color:#64748b;">NIM: <?php echo esc_html($reg['nim'] ?? '-'); ?></span></td>
+                                        <td><?php echo esc_html($reg['kontak'] ?? ''); ?></td>
+                                        <td><?php echo esc_html($reg['catatan'] ?? '-'); ?></td>
+                                        <td>
+                                            <select name="reg_status[<?php echo (int) $ridx; ?>]">
+                                                <?php foreach (['Menunggu', 'Diproses', 'Selesai'] as $st) : ?>
+                                                    <option value="<?php echo esc_attr($st); ?>" <?php selected($reg['status'] ?? 'Menunggu', $st); ?>><?php echo esc_html($st); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                        <td><input type="checkbox" name="reg_delete[<?php echo (int) $ridx; ?>]" value="1"></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </form>
 
         <?php elseif ($active_tab === 'lab_kegiatan') :
             $kegiatan_list = ppb_get_lab_kegiatan_list();
@@ -2273,34 +2520,34 @@ function ppb_shortcode_lab_portals($atts = []) {
     ?>
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin:30px 0;">
         
-        <!-- Portal 1: BK Connect -->
+        <!-- Portal 1: Portal 5 Bidang Lab BK -->
         <div style="background:linear-gradient(135deg, #0D3B22 0%, #155734 100%);color:#ffffff;border-radius:18px;padding:24px;box-shadow:0 8px 24px rgba(13,59,34,0.15);position:relative;">
-            <div style="display:inline-block;background:rgba(245,184,46,0.2);color:#F5B82E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-bottom:10px;">Portal Digital</div>
-            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#ffffff;margin:0 0 6px;">BK Connect Suite</h3>
+            <div style="display:inline-block;background:rgba(245,184,46,0.2);color:#F5B82E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-bottom:10px;">Portal Terpadu</div>
+            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#ffffff;margin:0 0 6px;">5 Bidang Laboratorium BK</h3>
             <p style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 18px;">
-                Sistem informasi terintegrasi untuk asesmen psikologis digital, bimbingan akademik, dan manajemen konseling mahasiswa.
+                Jelajahi layanan Bidang Konseling, Asesmen, Training &amp; Development, Media, dan Ekstrakurikuler mahasiswa BK FIP UNM.
             </p>
-            <a href="https://bk-connect-fipunm.vercel.app/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#F5B82E;color:#0D3B22;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;text-decoration:none;">
-                <span>Masuk BK Connect</span> &rarr;
+            <a href="<?php echo esc_url(home_url('/lab-bk/')); ?>" style="display:inline-flex;align-items:center;gap:6px;background:#F5B82E;color:#0D3B22;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;text-decoration:none;">
+                <span>Jelajahi 5 Bidang</span> &rarr;
             </a>
         </div>
 
-        <!-- Portal 2: Peer Support Network -->
+        <!-- Portal 2: Pendaftaran Konseling & Peer Support -->
         <div style="background:linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);color:#ffffff;border-radius:18px;padding:24px;box-shadow:0 8px 24px rgba(30,58,138,0.15);position:relative;">
             <div style="display:inline-block;background:rgba(255,255,255,0.2);color:#ffffff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-bottom:10px;">Konseling Sebaya</div>
-            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#ffffff;margin:0 0 6px;">Peersupport BK UNM</h3>
+            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#ffffff;margin:0 0 6px;">Pendaftaran Konseling</h3>
             <p style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 18px;">
-                Ruang aman konseling sebaya mahasiswa BK UNM untuk konsultasi kesehatan mental, adaptasi kampus, dan persahabatan positif.
+                Ruang aman konseling sebaya dan pendampingan mahasiswa BK UNM untuk konsultasi kesehatan mental dan adaptasi kampus.
             </p>
-            <a href="https://peersupport-bk.unm.ac.id/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#ffffff;color:#1E3A8A;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;text-decoration:none;">
-                <span>Akses Peersupport</span> &rarr;
+            <a href="https://labbk8.wixsite.com/peersupport" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#ffffff;color:#1E3A8A;font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;text-decoration:none;">
+                <span>Daftar Konseling</span> &rarr;
             </a>
         </div>
 
         <!-- Portal 3: Web Laboratorium BK -->
         <div style="background:linear-gradient(135deg, #7C2D12 0%, #B45309 100%);color:#ffffff;border-radius:18px;padding:24px;box-shadow:0 8px 24px rgba(124,45,18,0.15);position:relative;">
-            <div style="display:inline-block;background:rgba(255,255,255,0.2);color:#ffffff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-bottom:10px;">Sub-Portal Lab</div>
-            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#ffffff;margin:0 0 6px;">Web Lab BK &amp; Alat</h3>
+            <div style="display:inline-block;background:rgba(255,255,255,0.2);color:#ffffff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;margin-bottom:10px;">Inventaris Lab</div>
+            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#ffffff;margin:0 0 6px;">Web Lab BK &amp; Alat Tes</h3>
             <p style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.5;margin:0 0 18px;">
                 Katalog digital alat tes psikologi, jadwal pemakaian ruang konseling individual/kelompok, dan panduan praktikum.
             </p>
@@ -3618,5 +3865,596 @@ function ppb_sarpras_sync_content($content) {
 }
 }
 add_filter('the_content', 'ppb_sarpras_sync_content', 12);
+
+/* ========================================================================== */
+/* 9. MODUL 5 BIDANG LABORATORIUM BK (CRUD, SHORTCODE, & PENDAFTARAN)         */
+/* ========================================================================== */
+if (!function_exists('ppb_get_lab_bidang_defaults')) {
+function ppb_get_lab_bidang_defaults() {
+    return [
+        'konseling' => [
+            'slug'        => 'konseling',
+            'icon'        => '💬',
+            'nama'        => 'Bidang Bimbingan & Konseling',
+            'tagline'     => 'Ruang aman konseling sebaya dan pendampingan profesional yang rahasia & etis.',
+            'deskripsi'   => 'Menyelenggarakan layanan konseling individual, konseling kelompok, dan layanan konseling sebaya (Peer Support) bagi mahasiswa BK maupun sivitas akademika FIP UNM dengan menjunjung tinggi kode etik kerahasiaan konselor.',
+            'koordinator' => 'Qawiyyan Fitri, M.Pd',
+            'asisten'     => 'Tim Konselor Sebaya & Asisten Bidang Konseling',
+            'jadwal'      => 'Senin – Jumat, 08.00 – 16.00 WITA',
+            'lokasi'      => 'Ruang Konseling Kedap Suara & One-Way Mirror, Gedung Lab BK FIP UNM',
+            'program'     => [
+                [
+                    'judul'     => 'Konseling Sebaya (Peer Support)',
+                    'kategori'  => 'Layanan Utama',
+                    'deskripsi' => 'Sesi cerita dan pendampingan awal bersama konselor sebaya mahasiswa BK yang terlatih, nyaman, bebas penghakiman, dan 100% rahasia.',
+                    'sasaran'   => 'Mahasiswa BK & Sivitas UNM',
+                    'jadwal'    => 'Senin – Jumat (Sesuai Janji Temu)',
+                    'status'    => 'Layanan Aktif',
+                    'cta_label' => 'Daftar Konseling ↗',
+                    'cta_url'   => 'https://labbk8.wixsite.com/peersupport',
+                ],
+                [
+                    'judul'     => 'Konseling Individual & Kelompok Profesional',
+                    'kategori'  => 'Layanan Dosen',
+                    'deskripsi' => 'Pendampingan konseling lanjutan untuk isu akademik, karir, pribadi, maupun sosial bersama dosen pembina dan praktisi BK.',
+                    'sasaran'   => 'Mahasiswa & Masyarakat Umum',
+                    'jadwal'    => 'Senin – Jumat, 09.00 – 15.00 WITA',
+                    'status'    => 'Layanan Aktif',
+                    'cta_label' => 'Daftar Konseling ↗',
+                    'cta_url'   => 'https://labbk8.wixsite.com/peersupport',
+                ],
+                [
+                    'judul'     => 'Praktikum & Observasi Ruang One-Way Mirror',
+                    'kategori'  => 'Praktikum Akademik',
+                    'deskripsi' => 'Reservasi penggunaan ruang konseling kedap suara dan ruang observasi one-way mirror untuk keperluan praktikum mata kuliah keterampilan konseling.',
+                    'sasaran'   => 'Mahasiswa & Dosen Pengampu MK',
+                    'jadwal'    => 'Sesuai Jadwal Perkuliahan / Reservasi',
+                    'status'    => 'Reservasi Buka',
+                    'cta_label' => 'Ajukan Reservasi Ruang',
+                    'cta_url'   => '',
+                ],
+            ],
+            'sop_alur'    => [
+                'Akses laman pendaftaran konseling melalui tombol Daftar Konseling atau pilih layanan praktikum ruang.',
+                'Isi identitas singkat, pilih jenis layanan (konseling sebaya/individual/kelompok), dan tentukan preferensi waktu.',
+                'Tim Bidang Konseling mengonfirmasi jadwal dan ruang/kanal sesi secara privat.',
+                'Seluruh catatan dan proses sesi dilindungi kode etik kerahasiaan profesi BK.',
+            ],
+            'links'       => [
+                ['label' => 'Pendaftaran Konseling (Peersupport) ↗', 'url' => 'https://labbk8.wixsite.com/peersupport', 'external' => true],
+                ['label' => 'Perlindungan Mahasiswa & Pengaduan', 'url' => home_url('/layanan/perlindungan-mahasiswa/'), 'external' => false],
+                ['label' => 'Lihat Kegiatan Lab BK', 'url' => home_url('/laboratorium/kegiatan/'), 'external' => false],
+            ],
+        ],
+        'asesmen' => [
+            'slug'        => 'asesmen',
+            'icon'        => '🧠',
+            'nama'        => 'Bidang Asesmen',
+            'tagline'     => 'Asesmen psikologis, pemetaan potensi, serta pengelolaan instrumen tes dan non-tes terstandar.',
+            'deskripsi'   => 'Mengelola bank alat tes psikologi dan non-tes, menyelenggarakan layanan administrasi serta skoring asesmen minat-bakat dan kondisi diri mahasiswa, serta melayani peminjaman instrumen praktikum laboratorium.',
+            'koordinator' => 'Nurfaidah Ardis, M.Psi., Psikolog',
+            'asisten'     => 'Tim Asisten Bidang Asesmen & Inventaris Lab',
+            'jadwal'      => 'Senin – Jumat, 08.00 – 16.00 WITA',
+            'lokasi'      => 'Ruang Asesmen & Bank Alat Tes, Gedung Lab BK FIP UNM',
+            'program'     => [
+                [
+                    'judul'     => 'Layanan Asesmen Psikologis & Pemetaan Potensi',
+                    'kategori'  => 'Asesmen Mandiri / Kelompok',
+                    'deskripsi' => 'Layanan asesmen kecemasan akademik, stres, kepribadian, dan pemetaan minat-bakat beserta umpan balik hasil secara rahasia.',
+                    'sasaran'   => 'Mahasiswa BK & Mitra Sekolah',
+                    'jadwal'    => 'Senin – Jumat (Sesuai Jadwal)',
+                    'status'    => 'Layanan Aktif',
+                    'cta_label' => 'Ajukan Layanan Asesmen',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Workshop Interpretasi Alat Tes Grafis (DAP, BAUM, HTP)',
+                    'kategori'  => 'Pendampingan Teknis',
+                    'deskripsi' => 'Pelatihan teknis administrasi, skoring, dan interpretasi tes grafis serta inventori psikologis bagi mahasiswa dan asisten laboratorium.',
+                    'sasaran'   => 'Mahasiswa Semester 3–7 & Asisten',
+                    'jadwal'    => 'Berkala Per Semester',
+                    'status'    => 'Terjadwal',
+                    'cta_label' => 'Daftar Workshop Asesmen',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Peminjaman Alat Tes & Surat Bebas Laboratorium',
+                    'kategori'  => 'Inventaris & Persuratan',
+                    'deskripsi' => 'Peminjaman instrumen tes psikologi (IST, EPPS, RMIB, Grafis, Inventori) untuk praktikum/skripsi serta verifikasi bebas pinjaman lab untuk yudisium.',
+                    'sasaran'   => 'Mahasiswa BK & Peneliti',
+                    'jadwal'    => 'Senin – Jumat, 08.30 – 15.30 WITA',
+                    'status'    => 'Aktif',
+                    'cta_label' => 'Buka Katalog Alat Tes →',
+                    'cta_url'   => '/lab-bk/inventaris/',
+                ],
+            ],
+            'sop_alur'    => [
+                'Cek ketersediaan instrumen tes atau jadwal layanan asesmen pada katalog Inventaris Alat Tes Lab BK.',
+                'Ajukan permohonan peminjaman alat atau layanan asesmen melalui formulir terpadu atau loket persuratan.',
+                'Tunjukkan KTM/surat pengantar dosen pengampu saat pengambilan instrumen di Ruang Asesmen.',
+                'Kembalikan alat tes tepat waktu dalam kondisi lengkap untuk menjaga kelayakan syarat Surat Bebas Laboratorium.',
+            ],
+            'links'       => [
+                ['label' => 'Katalog Inventaris & Alat Tes Lab', 'url' => home_url('/lab-bk/inventaris/'), 'external' => false],
+                ['label' => 'Persuratan & Surat Bebas Lab', 'url' => home_url('/layanan/persuratan/'), 'external' => false],
+                ['label' => 'E-Library Instrumen & Pedoman', 'url' => home_url('/e-library/'), 'external' => false],
+            ],
+        ],
+        'training' => [
+            'slug'        => 'training',
+            'icon'        => '🚀',
+            'nama'        => 'Bidang Training & Development',
+            'tagline'     => 'Pelatihan kompetensi konselor, pengembangan diri, dan pembinaan Peer Collaborator.',
+            'deskripsi'   => 'Merancang dan melaksanakan program pelatihan terstruktur (microcounseling, soft skills, Self Development Camp), penyediaan modul pelatihan, serta rekrutmen dan pembinaan Peer Collaborator Laboratorium BK.',
+            'koordinator' => 'Abid Raisardhi',
+            'asisten'     => 'Tim Asisten Bidang Training & Development',
+            'jadwal'      => 'Senin – Jumat (Pelatihan Terjadwal & Akhir Pekan)',
+            'lokasi'      => 'Ruang Seminar / Kelas Microcounseling Lab BK FIP UNM',
+            'program'     => [
+                [
+                    'judul'     => 'Self Development Camp & Pelatihan Soft Skills',
+                    'kategori'  => 'Pengembangan Diri',
+                    'deskripsi' => 'Program intensif penggalian potensi diri, manajemen emosi, kepemimpinan, dan penyusunan rencana pengembangan pribadi mahasiswa.',
+                    'sasaran'   => 'Mahasiswa BK FIP UNM',
+                    'jadwal'    => 'Sesuai Kalender Kegiatan Lab',
+                    'status'    => 'Pendaftaran Buka',
+                    'cta_label' => 'Daftar Pelatihan',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Rekrutmen & Pembinaan Peer Collaborator Lab BK',
+                    'kategori'  => 'Kaderisasi Asisten',
+                    'deskripsi' => 'Kesempatan mahasiswa BK untuk bergabung menjadi asisten dan peer collaborator guna memperoleh pengalaman praktik layanan laboratorium secara nyata.',
+                    'sasaran'   => 'Mahasiswa BK Aktif (Min. Sem. 3)',
+                    'jadwal'    => 'Batch Rekrutmen Tahunan / Semester',
+                    'status'    => 'Info Rekrutmen',
+                    'cta_label' => 'Daftar Peer Collaborator',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Klinik Microcounseling & Modul Pelatihan Terstruktur',
+                    'kategori'  => 'Peningkatan Kompetensi',
+                    'deskripsi' => 'Latihan terstruktur keterampilan dasar komunikasi konseling dan akses modul pelatihan interaktif bersama fasilitator lab.',
+                    'sasaran'   => 'Mahasiswa Praktikan PPL & MK Konseling',
+                    'jadwal'    => 'Mingguan / Sesuai Permintaan Kelas',
+                    'status'    => 'Aktif',
+                    'cta_label' => 'Buka Modul di E-Library →',
+                    'cta_url'   => '/e-library/',
+                ],
+            ],
+            'sop_alur'    => [
+                'Pilih program pelatihan atau batch rekrutmen Peer Collaborator yang sedang dibuka.',
+                'Lengkapi formulir pendaftaran langsung pada laman ini beserta motivasi/kebutuhan pelatihan.',
+                'Panitia Bidang Training & Development mengirimkan konfirmasi peserta, jadwal, dan modul pra-pelatihan.',
+                'Peserta mengikuti sesi pelatihan/pendampingan hingga memperoleh sertifikat atau penugasan praktik.',
+            ],
+            'links'       => [
+                ['label' => 'Agenda Kegiatan & Praktikum Lab', 'url' => home_url('/laboratorium/kegiatan/'), 'external' => false],
+                ['label' => 'E-Library & Modul Pelatihan', 'url' => home_url('/e-library/'), 'external' => false],
+                ['label' => '7 Jurus BK Service Canvas', 'url' => home_url('/layanan/7jurusbk/'), 'external' => false],
+            ],
+        ],
+        'media' => [
+            'slug'        => 'media',
+            'icon'        => '🎙️',
+            'nama'        => 'Bidang Media',
+            'tagline'     => 'Produksi podcast, konten edukasi kesehatan mental, dan publikasi digital Lab BK.',
+            'deskripsi'   => 'Mengelola Studio Podcast & Media Lab BK, memproduksi konten edukasi audio-visual (podcast, reels, infografis), mendokumentasikan kegiatan laboratorium, serta menyelenggarakan pelatihan kreator konten edukatif bagi mahasiswa.',
+            'koordinator' => 'Dwi Endrasto Wibowo, M.Pd',
+            'asisten'     => 'Tim Kreatif & Produksi Media Lab BK',
+            'jadwal'      => 'Senin – Jumat, 09.00 – 16.00 WITA',
+            'lokasi'      => 'Studio Podcast & Media Kreatif, Gedung Lab BK FIP UNM',
+            'program'     => [
+                [
+                    'judul'     => 'Studio Podcast & Produksi Audio-Visual BK',
+                    'kategori'  => 'Fasilitas Studio',
+                    'deskripsi' => 'Produksi episode podcast warta kesehatan mental, wawancara pakar/dosen, serta rekaman materi video edukasi Bimbingan dan Konseling.',
+                    'sasaran'   => 'Dosen, Asisten Lab & Mahasiswa BK',
+                    'jadwal'    => 'Senin – Jumat (Booking Studio)',
+                    'status'    => 'Aktif',
+                    'cta_label' => 'Ajukan Booking Studio',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Workshop Content Creator BK: Podcast & Reels',
+                    'kategori'  => 'Pelatihan Kreatif',
+                    'deskripsi' => 'Pelatihan penulisan skrip edukasi kesehatan mental, teknik perekaman audio-video, dan penyuntingan konten media sosial yang etis.',
+                    'sasaran'   => 'Mahasiswa BK & Peer Collaborator',
+                    'jadwal'    => 'Terjadwal Per Semester',
+                    'status'    => 'Pendaftaran Buka',
+                    'cta_label' => 'Daftar Workshop Media',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Publikasi Kampanye Edukasi & Media Praktikum',
+                    'kategori'  => 'Publikasi Digital',
+                    'deskripsi' => 'Pengembangan poster, infografis, modul media BK interaktif, serta publikasi berita dan dokumentasi kegiatan melalui kanal resmi @labbk.unm.',
+                    'sasaran'   => 'Sivitas Akademika & Publik',
+                    'jadwal'    => 'Berkelanjutan',
+                    'status'    => 'Aktif',
+                    'cta_label' => 'Ajukan Kolaborasi Konten',
+                    'cta_url'   => '',
+                ],
+            ],
+            'sop_alur'    => [
+                'Ajukan permohonan peminjaman studio podcast atau kolaborasi publikasi media melalui formulir bidang.',
+                'Sertakan konsep singkat/topik konten (dipastikan sesuai etika profesi BK dan bebas konten sensitif tanpa pendampingan).',
+                'Tim Bidang Media menjadwalkan sesi produksi dan pendampingan teknis di Studio Lab BK.',
+                'Hasil karya dikurasi bersama Dosen Koordinator sebelum dipublikasikan di kanal resmi jurusan & lab.',
+            ],
+            'links'       => [
+                ['label' => 'Berita & Publikasi Jurusan', 'url' => home_url('/berita/'), 'external' => false],
+                ['label' => 'E-Library Media & Modul BK', 'url' => home_url('/e-library/'), 'external' => false],
+                ['label' => 'Kegiatan Lab BK', 'url' => home_url('/laboratorium/kegiatan/'), 'external' => false],
+            ],
+        ],
+        'ekstrakurikuler' => [
+            'slug'        => 'ekstrakurikuler',
+            'icon'        => '🎨',
+            'nama'        => 'Bidang Ekstrakurikuler',
+            'tagline'     => 'Wadah pengembangan minat, bakat, dan keterampilan non-akademik mahasiswa BK.',
+            'deskripsi'   => 'Mewadahi dan membina keterampilan non-akademik mahasiswa Bimbingan dan Konseling di luar perkuliahan melalui komunitas/klub minat-bakat (seni, public speaking, olahraga, desain kreatif) serta menyiapkan delegasi lomba non-akademik.',
+            'koordinator' => 'Maslina, M.Pd',
+            'asisten'     => 'Tim Koordinator Minat Bakat & Komunitas Mahasiswa',
+            'jadwal'      => 'Rutin Mingguan (Sore / Akhir Pekan sesuai Klub)',
+            'lokasi'      => 'Area Kampus FIP UNM Gunungsari & Ruang Aktivitas Mahasiswa',
+            'program'     => [
+                [
+                    'judul'     => 'Pekan Seni & Bakat Mahasiswa BK (Musik, Tari & Teater)',
+                    'kategori'  => 'Seni & Budaya',
+                    'deskripsi' => 'Wadah ekspresi seni musik akustik, tari kreasi, dan teater/psikodrama mahasiswa BK sekaligus panggung apresiasi kreativitas kampus.',
+                    'sasaran'   => 'Seluruh Mahasiswa BK FIP UNM',
+                    'jadwal'    => 'Latihan Mingguan & Panggung Terbuka',
+                    'status'    => 'Pendaftaran Buka',
+                    'cta_label' => 'Gabung Komunitas Seni',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Klub Public Speaking, MC & Debat Mahasiswa',
+                    'kategori'  => 'Keterampilan Komunikasi',
+                    'deskripsi' => 'Melatih kepercayaan diri berbicara di depan umum, keprotokoleran MC acara kampus, moderasi diskusi, dan keterampilan persuasi.',
+                    'sasaran'   => 'Mahasiswa BK Angkatan Aktif',
+                    'jadwal'    => 'Setiap Kamis, 15.30 WITA',
+                    'status'    => 'Aktif',
+                    'cta_label' => 'Daftar Klub Public Speaking',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Klub Olahraga & Kebugaran Mahasiswa BK',
+                    'kategori'  => 'Olahraga & Kesehatan',
+                    'deskripsi' => 'Kegiatan olahraga bersama (bulutangkis, futsal, voli, dan fun run) untuk menjaga kesehatan fisik, sportivitas, dan solidaritas antar-angkatan.',
+                    'sasaran'   => 'Mahasiswa BK FIP UNM',
+                    'jadwal'    => 'Jumat Sore / Akhir Pekan',
+                    'status'    => 'Aktif',
+                    'cta_label' => 'Gabung Klub Olahraga',
+                    'cta_url'   => '',
+                ],
+                [
+                    'judul'     => 'Pembinaan & Delegasi Lomba Non-Akademik',
+                    'kategori'  => 'Kompetisi & Prestasi',
+                    'deskripsi' => 'Pendampingan tim dan individu mahasiswa BK yang mengikuti kompetisi seni, kreativitas media, esai populer, dan lomba minat bakat tingkat regional/nasional.',
+                    'sasaran'   => 'Tim / Delegasi Mahasiswa BK',
+                    'jadwal'    => 'Berkala Sesuai Kalender Lomba',
+                    'status'    => 'Buka Informasi',
+                    'cta_label' => 'Lihat Info Lomba Non-Akademik →',
+                    'cta_url'   => '/laboratorium/lomba/',
+                ],
+            ],
+            'sop_alur'    => [
+                'Pilih klub atau wadah keterampilan non-akademik yang sesuai dengan minat dan bakatmu.',
+                'Daftarkan diri melalui tombol Gabung / Daftar pada klub yang diminati di laman ini.',
+                'Koordinator asisten bidang akan mengundangmu ke jadwal latihan rutin dan grup koordinasi klub.',
+                'Anggota aktif berkesempatan tampil di Pekan Seni & Bakat serta didelegasikan pada lomba non-akademik.',
+            ],
+            'links'       => [
+                ['label' => 'Info Lomba Non-Akademik Lab BK', 'url' => home_url('/laboratorium/lomba/'), 'external' => false],
+                ['label' => 'Prestasi Mahasiswa Prodi BK', 'url' => home_url('/kemahasiswaan/prestasi/'), 'external' => false],
+                ['label' => 'Agenda Kegiatan Lab BK', 'url' => home_url('/laboratorium/kegiatan/'), 'external' => false],
+            ],
+        ],
+    ];
+}
+}
+
+if (!function_exists('ppb_get_lab_bidang_data')) {
+function ppb_get_lab_bidang_data($slug = '') {
+    $defaults = ppb_get_lab_bidang_defaults();
+    $saved    = get_option('ppb_lab_bidang_data', []);
+    if (is_array($saved) && !empty($saved)) {
+        foreach ($defaults as $key => $def) {
+            if (!empty($saved[$key]) && is_array($saved[$key])) {
+                $defaults[$key] = array_merge($def, $saved[$key]);
+            }
+        }
+    }
+    if ($slug !== '') {
+        $key = sanitize_key($slug);
+        return $defaults[$key] ?? null;
+    }
+    return $defaults;
+}
+}
+
+if (!function_exists('ppb_shortcode_lab_bidang')) {
+function ppb_shortcode_lab_bidang($atts = []) {
+    $atts = shortcode_atts(['bidang' => 'konseling'], $atts, 'ppb_lab_bidang');
+    $slug = sanitize_key($atts['bidang']);
+    $data = ppb_get_lab_bidang_data($slug);
+    if (!$data) {
+        return '<div class="bk-callout"><p>Bidang laboratorium tidak ditemukan.</p></div>';
+    }
+
+    $ajax_url = admin_url('admin-ajax.php');
+    $nonce    = wp_create_nonce('ppb_lab_pendaftaran_public_nonce');
+    $modal_id = 'ppb-lab-reg-modal-' . esc_attr($slug);
+
+    ob_start();
+    ?>
+    <div class="ppb-lab-bidang-wrap" data-bidang="<?php echo esc_attr($slug); ?>">
+        <!-- Info Ringkas Bidang & Koordinator -->
+        <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:18px;padding:26px;margin-bottom:28px;box-shadow:0 6px 20px rgba(13,59,34,0.05);">
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:18px;">
+                <div style="flex:1 1 420px;">
+                    <span style="display:inline-block;background:#E8F0EA;color:#0D3B22;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px;">
+                        <?php echo esc_html($data['icon'] . ' ' . $data['nama']); ?>
+                    </span>
+                    <h2 style="font-family:'Fraunces',Georgia,serif;font-size:26px;color:#0D3B22;margin:0 0 8px;line-height:1.25;">
+                        <?php echo esc_html($data['tagline']); ?>
+                    </h2>
+                    <p style="font-size:14.5px;color:#374151;line-height:1.7;margin:0;">
+                        <?php echo esc_html($data['deskripsi']); ?>
+                    </p>
+                </div>
+                <div style="flex:0 1 320px;background:#FAF8F5;border:1px solid #E2E8F0;border-radius:14px;padding:18px;width:100%;">
+                    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Informasi Pengelola Bidang</div>
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:11.5px;color:#64748b;">Dosen Koordinator</div>
+                        <div style="font-size:14px;font-weight:700;color:#0D3B22;"><?php echo esc_html($data['koordinator']); ?></div>
+                    </div>
+                    <?php if (!empty($data['asisten'])) : ?>
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:11.5px;color:#64748b;">Tim Pelaksana</div>
+                        <div style="font-size:13px;font-weight:600;color:#1F2937;"><?php echo esc_html($data['asisten']); ?></div>
+                    </div>
+                    <?php endif; ?>
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:11.5px;color:#64748b;">Jam Layanan</div>
+                        <div style="font-size:13px;font-weight:600;color:#1F2937;">🕒 <?php echo esc_html($data['jadwal']); ?></div>
+                    </div>
+                    <div>
+                        <div style="font-size:11.5px;color:#64748b;">Lokasi</div>
+                        <div style="font-size:13px;font-weight:600;color:#1F2937;">📍 <?php echo esc_html($data['lokasi']); ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <?php if (!empty($data['links'])) : ?>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid #E8F0EA;">
+                    <?php foreach ($data['links'] as $lk) :
+                        $is_ext = !empty($lk['external']);
+                    ?>
+                        <a href="<?php echo esc_url($lk['url']); ?>"<?php echo $is_ext ? ' target="_blank" rel="noopener noreferrer"' : ''; ?> style="display:inline-flex;align-items:center;gap:6px;background:#F3F7F4;color:#0D3B22;border:1px solid #C6DBC9;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:9px;text-decoration:none;">
+                            <?php echo esc_html($lk['label']); ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Daftar Layanan / Program / Klub -->
+        <div style="margin-bottom:32px;">
+            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:22px;color:#0D3B22;margin:0 0 16px;">
+                Layanan, Program Kerja &amp; Wadah Kegiatan
+            </h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(310px, 1fr));gap:20px;">
+                <?php foreach (($data['program'] ?? []) as $pr) :
+                    $cta_url   = trim((string) ($pr['cta_url'] ?? ''));
+                    $cta_label = !empty($pr['cta_label']) ? $pr['cta_label'] : 'Ajukan / Daftar';
+                    $is_ext    = $cta_url !== '' && preg_match('/^https?:\/\//i', $cta_url) && strpos($cta_url, home_url()) === false;
+                    $href_final = $cta_url;
+                    if ($cta_url !== '' && strpos($cta_url, '/') === 0) {
+                        $href_final = home_url($cta_url);
+                    }
+                ?>
+                    <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:16px;padding:22px;box-shadow:0 4px 15px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
+                        <div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+                                <span style="font-size:11px;font-weight:700;background:#E8F0EA;color:#0D3B22;padding:3px 10px;border-radius:6px;"><?php echo esc_html($pr['kategori'] ?? 'Layanan'); ?></span>
+                                <span style="font-size:11px;font-weight:700;background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:6px;"><?php echo esc_html($pr['status'] ?? 'Aktif'); ?></span>
+                            </div>
+                            <h4 style="font-size:17px;font-weight:700;color:#0D3B22;margin:0 0 8px;line-height:1.35;"><?php echo esc_html($pr['judul'] ?? ''); ?></h4>
+                            <p style="font-size:13.5px;color:#4B5563;line-height:1.6;margin:0 0 14px;"><?php echo esc_html($pr['deskripsi'] ?? ''); ?></p>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:#475569;margin-bottom:12px;display:grid;gap:4px;">
+                                <?php if (!empty($pr['sasaran'])) : ?>
+                                    <div>👥 <strong>Sasaran:</strong> <?php echo esc_html($pr['sasaran']); ?></div>
+                                <?php endif; ?>
+                                <?php if (!empty($pr['jadwal'])) : ?>
+                                    <div>🗓️ <strong>Jadwal:</strong> <?php echo esc_html($pr['jadwal']); ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($cta_url !== '') : ?>
+                                <a href="<?php echo esc_url($href_final); ?>"<?php echo $is_ext ? ' target="_blank" rel="noopener noreferrer"' : ''; ?> style="display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#0D3B22;color:#ffffff;font-size:13px;font-weight:700;padding:10px 16px;border-radius:10px;text-decoration:none;">
+                                    <?php echo esc_html($cta_label); ?>
+                                </a>
+                            <?php else : ?>
+                                <button type="button"
+                                    class="ppb-open-lab-reg"
+                                    data-modal="<?php echo $modal_id; ?>"
+                                    data-bidang="<?php echo esc_attr($data['nama']); ?>"
+                                    data-program="<?php echo esc_attr($pr['judul'] ?? ''); ?>"
+                                    style="display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#0D3B22;color:#ffffff;border:none;cursor:pointer;font-size:13px;font-weight:700;padding:10px 16px;border-radius:10px;">
+                                    <?php echo esc_html($cta_label); ?>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- Alur / SOP Layanan -->
+        <?php if (!empty($data['sop_alur'])) : ?>
+        <div style="background:#ffffff;border:1px solid #D4E3D8;border-radius:18px;padding:24px;margin-bottom:24px;">
+            <h3 style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#0D3B22;margin:0 0 14px;">
+                Alur &amp; Prosedur Layanan
+            </h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;">
+                <?php foreach ($data['sop_alur'] as $sidx => $step) : ?>
+                    <div style="background:#FAF8F5;border:1px solid #E2E8F0;border-radius:12px;padding:16px;">
+                        <div style="width:28px;height:28px;border-radius:99px;background:#0D3B22;color:#F5B82E;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+                            <?php echo (int) ($sidx + 1); ?>
+                        </div>
+                        <p style="font-size:13px;color:#374151;line-height:1.55;margin:0;"><?php echo esc_html($step); ?></p>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Modal Form Pendaftaran Terpadu -->
+        <div id="<?php echo $modal_id; ?>" class="ppb-lab-reg-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.65);align-items:center;justify-content:center;padding:16px;">
+            <div style="background:#ffffff;border-radius:18px;max-width:500px;width:100%;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,0.25);position:relative;">
+                <button type="button" class="ppb-close-lab-reg" aria-label="Tutup formulir" style="position:absolute;top:14px;right:14px;background:#F1F5F9;border:none;width:32px;height:32px;border-radius:99px;font-size:18px;cursor:pointer;color:#475569;">&times;</button>
+                <div style="font-size:11px;font-weight:700;color:#0D3B22;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Formulir Terpadu Lab BK</div>
+                <h3 class="ppb-reg-title" style="font-family:'Fraunces',Georgia,serif;font-size:20px;color:#0D3B22;margin:0 0 14px;">Pendaftaran Layanan</h3>
+                <form class="ppb-lab-reg-form">
+                    <input type="hidden" name="action" value="ppb_submit_lab_pendaftaran">
+                    <input type="hidden" name="nonce" value="<?php echo esc_attr($nonce); ?>">
+                    <input type="hidden" name="bidang" class="ppb-reg-bidang-inp" value="<?php echo esc_attr($data['nama']); ?>">
+                    <input type="hidden" name="program" class="ppb-reg-program-inp" value="">
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px;">Nama Lengkap *</label>
+                        <input type="text" name="nama" required placeholder="Masukkan nama lengkap" style="width:100%;padding:9px 12px;border:1px solid #CBD5E1;border-radius:8px;font-size:13.5px;">
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px;">NIM / Status *</label>
+                            <input type="text" name="nim" required placeholder="Contoh: 23040450..." style="width:100%;padding:9px 12px;border:1px solid #CBD5E1;border-radius:8px;font-size:13.5px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px;">No. WhatsApp / Email *</label>
+                            <input type="text" name="kontak" required placeholder="08xxxx / email" style="width:100%;padding:9px 12px;border:1px solid #CBD5E1;border-radius:8px;font-size:13.5px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px;">Catatan / Kebutuhan / Pilihan Jadwal</label>
+                        <textarea name="catatan" rows="3" placeholder="Tuliskan kebutuhan layanan, alat, atau minat klub..." style="width:100%;padding:9px 12px;border:1px solid #CBD5E1;border-radius:8px;font-size:13.5px;"></textarea>
+                    </div>
+                    <div class="ppb-reg-msg" style="display:none;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;"></div>
+                    <button type="submit" class="ppb-reg-submit" style="width:100%;background:#0D3B22;color:#ffffff;border:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;">
+                        Kirim Pendaftaran / Pengajuan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        if (window.__ppbLabBidangBound) return;
+        window.__ppbLabBidangBound = true;
+        var ajaxUrl = <?php echo wp_json_encode($ajax_url); ?>;
+
+        document.addEventListener('click', function(e) {
+            var openBtn = e.target.closest('.ppb-open-lab-reg');
+            if (openBtn) {
+                var modal = document.getElementById(openBtn.getAttribute('data-modal'));
+                if (!modal) return;
+                modal.querySelector('.ppb-reg-title').textContent = openBtn.getAttribute('data-program') || 'Pendaftaran Layanan';
+                modal.querySelector('.ppb-reg-bidang-inp').value = openBtn.getAttribute('data-bidang') || '';
+                modal.querySelector('.ppb-reg-program-inp').value = openBtn.getAttribute('data-program') || '';
+                var msg = modal.querySelector('.ppb-reg-msg');
+                msg.style.display = 'none';
+                modal.style.display = 'flex';
+                return;
+            }
+            if (e.target.closest('.ppb-close-lab-reg') || e.target.classList.contains('ppb-lab-reg-modal')) {
+                var m = e.target.closest('.ppb-lab-reg-modal') || e.target;
+                m.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('submit', function(e) {
+            var form = e.target.closest('.ppb-lab-reg-form');
+            if (!form) return;
+            e.preventDefault();
+            var btn = form.querySelector('.ppb-reg-submit');
+            var msg = form.querySelector('.ppb-reg-msg');
+            btn.disabled = true;
+            btn.textContent = 'Mengirim...';
+            var fd = new FormData(form);
+            fetch(ajaxUrl, { method: 'POST', body: fd })
+                .then(function(r){ return r.json(); })
+                .then(function(res){
+                    msg.style.display = 'block';
+                    if (res && res.success) {
+                        msg.style.background = '#DCFCE7';
+                        msg.style.color = '#166534';
+                        msg.textContent = (res.data && res.data.message) ? res.data.message : 'Pendaftaran berhasil dikirim!';
+                        form.reset();
+                    } else {
+                        msg.style.background = '#FEE2E2';
+                        msg.style.color = '#991B1B';
+                        msg.textContent = (res && res.data && res.data.message) ? res.data.message : 'Gagal mengirim pendaftaran.';
+                    }
+                })
+                .catch(function(){
+                    msg.style.display = 'block';
+                    msg.style.background = '#FEE2E2';
+                    msg.style.color = '#991B1B';
+                    msg.textContent = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+                })
+                .finally(function(){
+                    btn.disabled = false;
+                    btn.textContent = 'Kirim Pendaftaran / Pengajuan';
+                });
+        });
+    })();
+    </script>
+    <?php
+    return ob_get_clean();
+}
+}
+add_shortcode('ppb_lab_bidang', 'ppb_shortcode_lab_bidang');
+
+if (!function_exists('ppb_ajax_submit_lab_pendaftaran')) {
+function ppb_ajax_submit_lab_pendaftaran() {
+    if (!check_ajax_referer('ppb_lab_pendaftaran_public_nonce', 'nonce', false)) {
+        wp_send_json_error(['message' => 'Sesi formulir tidak valid. Silakan muat ulang halaman.']);
+    }
+    $nama    = sanitize_text_field(wp_unslash($_POST['nama'] ?? ''));
+    $nim     = sanitize_text_field(wp_unslash($_POST['nim'] ?? ''));
+    $kontak  = sanitize_text_field(wp_unslash($_POST['kontak'] ?? ''));
+    $bidang  = sanitize_text_field(wp_unslash($_POST['bidang'] ?? ''));
+    $program = sanitize_text_field(wp_unslash($_POST['program'] ?? ''));
+    $catatan = sanitize_textarea_field(wp_unslash($_POST['catatan'] ?? ''));
+
+    if ($nama === '' || $nim === '' || $kontak === '') {
+        wp_send_json_error(['message' => 'Nama, NIM/Status, dan Kontak wajib diisi.']);
+    }
+
+    $list = get_option('ppb_lab_pendaftaran_list', []);
+    if (!is_array($list)) $list = [];
+    array_unshift($list, [
+        'waktu'   => current_time('Y-m-d H:i'),
+        'bidang'  => $bidang,
+        'program' => $program,
+        'nama'    => $nama,
+        'nim'     => $nim,
+        'kontak'  => $kontak,
+        'catatan' => $catatan,
+        'status'  => 'Menunggu',
+    ]);
+    update_option('ppb_lab_pendaftaran_list', array_slice($list, 0, 200), false);
+
+    wp_send_json_success(['message' => 'Terima kasih! Pengajuan Anda untuk ' . $program . ' telah diterima oleh tim Laboratorium BK.']);
+}
+}
+add_action('wp_ajax_ppb_submit_lab_pendaftaran', 'ppb_ajax_submit_lab_pendaftaran');
+add_action('wp_ajax_nopriv_ppb_submit_lab_pendaftaran', 'ppb_ajax_submit_lab_pendaftaran');
+
 
 
