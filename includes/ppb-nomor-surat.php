@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PPB_SURAT_DB_VERSION', '1.0.2');
+define('PPB_SURAT_DB_VERSION', '1.0.3');
 
 /* ========================================================================== */
 /* 1. DATABASE TABLE & DEFAULTS                                               */
@@ -22,14 +22,22 @@ function ppb_surat_table_name() {
 }
 }
 
+if (!function_exists('ppb_surat_mhs_table_name')) {
+function ppb_surat_mhs_table_name() {
+    global $wpdb;
+    return $wpdb->prefix . 'ppb_mahasiswa';
+}
+}
+
 if (!function_exists('ppb_surat_maybe_install_table')) {
 function ppb_surat_maybe_install_table() {
     if (get_option('ppb_surat_db_version') === PPB_SURAT_DB_VERSION) {
         return;
     }
     global $wpdb;
-    $table = ppb_surat_table_name();
-    $charset = $wpdb->get_charset_collate();
+    $table     = ppb_surat_table_name();
+    $mhs_table = ppb_surat_mhs_table_name();
+    $charset   = $wpdb->get_charset_collate();
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     $sql = "CREATE TABLE {$table} (
@@ -67,7 +75,21 @@ function ppb_surat_maybe_install_table() {
         KEY idx_identitas (pemohon_identitas)
     ) {$charset};";
 
+    $sql_mhs = "CREATE TABLE {$mhs_table} (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        nim VARCHAR(32) NOT NULL,
+        nama VARCHAR(191) NOT NULL,
+        jenjang VARCHAR(16) NOT NULL DEFAULT 's1',
+        angkatan SMALLINT UNSIGNED NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'aktif',
+        updated_at DATETIME NOT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY uniq_nim (nim),
+        KEY idx_status_jenjang (status, jenjang)
+    ) {$charset};";
+
     dbDelta($sql);
+    dbDelta($sql_mhs);
     update_option('ppb_surat_db_version', PPB_SURAT_DB_VERSION, false);
 }
 }
@@ -76,22 +98,29 @@ add_action('init', 'ppb_surat_maybe_install_table', 5);
 if (!function_exists('ppb_surat_get_settings')) {
 function ppb_surat_get_settings() {
     $defaults = [
-        'prefix'             => 'B',
-        'kode_unit'          => 'UN36.1',
-        'pad_digits'         => 3,
-        'max_batch_dosen'    => 50,
-        'validate_dosen_nip' => 1,
-        'admin_notify_email' => get_option('admin_email', ''),
-        'offsets'            => [],
+        'prefix'                 => 'B',
+        'kode_unit'              => 'UN36.1',
+        'pad_digits'             => 3,
+        'max_batch_dosen'        => 50,
+        'validate_dosen_nip'     => 1,
+        'require_registered_nim' => 1,
+        'require_active_student' => 1,
+        'mhs_quota_limit'        => 1,
+        'mhs_quota_days'         => 30,
+        'offsets'                => [],
     ];
     $saved = get_option('ppb_surat_settings', []);
     if (!is_array($saved)) {
         $saved = [];
     }
     $merged = array_merge($defaults, $saved);
-    $merged['pad_digits'] = max(1, min(6, (int) $merged['pad_digits']));
-    $merged['max_batch_dosen'] = max(2, min(200, (int) $merged['max_batch_dosen']));
-    $merged['validate_dosen_nip'] = !empty($merged['validate_dosen_nip']) ? 1 : 0;
+    $merged['pad_digits']             = max(1, min(6, (int) $merged['pad_digits']));
+    $merged['max_batch_dosen']        = max(2, min(200, (int) $merged['max_batch_dosen']));
+    $merged['validate_dosen_nip']     = !empty($merged['validate_dosen_nip']) ? 1 : 0;
+    $merged['require_registered_nim'] = !empty($merged['require_registered_nim']) ? 1 : 0;
+    $merged['require_active_student'] = !empty($merged['require_active_student']) ? 1 : 0;
+    $merged['mhs_quota_limit']        = max(0, min(50, (int) $merged['mhs_quota_limit']));
+    $merged['mhs_quota_days']         = max(1, min(365, (int) $merged['mhs_quota_days']));
     if (!is_array($merged['offsets'])) {
         $merged['offsets'] = [];
     }
@@ -406,6 +435,32 @@ function ppb_surat_append_audit($existing_log, $entry_text) {
 }
 }
 
+if (!function_exists('ppb_surat_lookup_mahasiswa_by_nim')) {
+function ppb_surat_lookup_mahasiswa_by_nim($nim_input) {
+    global $wpdb;
+    $norm = ppb_surat_normalize_id($nim_input);
+    if (strlen($norm) < 6) {
+        return ['found' => false, 'nim' => '', 'nama' => '', 'jenjang' => 's1', 'status' => ''];
+    }
+    $mhs_table = ppb_surat_mhs_table_name();
+    $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $mhs_table));
+    if ($exists !== $mhs_table) {
+        return ['found' => false, 'nim' => '', 'nama' => '', 'jenjang' => 's1', 'status' => ''];
+    }
+    $row = $wpdb->get_row($wpdb->prepare("SELECT nim, nama, jenjang, status FROM {$mhs_table} WHERE nim = %s LIMIT 1", $norm), ARRAY_A);
+    if (!$row) {
+        return ['found' => false, 'nim' => '', 'nama' => '', 'jenjang' => 's1', 'status' => ''];
+    }
+    return [
+        'found'   => true,
+        'nim'     => (string) $row['nim'],
+        'nama'    => (string) $row['nama'],
+        'jenjang' => (string) ($row['jenjang'] ?: 's1'),
+        'status'  => (string) ($row['status'] ?: 'aktif'),
+    ];
+}
+}
+
 /* ========================================================================== */
 /* 4. FRONTEND AJAX HANDLERS                                                  */
 /* ========================================================================== */
@@ -420,6 +475,18 @@ function ppb_ajax_check_dosen_nip() {
 }
 add_action('wp_ajax_ppb_check_dosen_nip', 'ppb_ajax_check_dosen_nip');
 add_action('wp_ajax_nopriv_ppb_check_dosen_nip', 'ppb_ajax_check_dosen_nip');
+
+if (!function_exists('ppb_ajax_check_mahasiswa_nim')) {
+function ppb_ajax_check_mahasiswa_nim() {
+    check_ajax_referer('ppb_nomor_surat_nonce', 'nonce');
+    ppb_surat_maybe_install_table();
+    $nim = isset($_POST['nim']) ? sanitize_text_field(wp_unslash($_POST['nim'])) : '';
+    $res = ppb_surat_lookup_mahasiswa_by_nim($nim);
+    wp_send_json_success($res);
+}
+}
+add_action('wp_ajax_ppb_check_mahasiswa_nim', 'ppb_ajax_check_mahasiswa_nim');
+add_action('wp_ajax_nopriv_ppb_check_mahasiswa_nim', 'ppb_ajax_check_mahasiswa_nim');
 
 if (!function_exists('ppb_ajax_submit_nomor_surat')) {
 function ppb_ajax_submit_nomor_surat() {
@@ -485,6 +552,30 @@ function ppb_ajax_submit_nomor_surat() {
 
     if ($peran !== 'dosen') {
         $jumlah = 1;
+        $mhs_check = ppb_surat_lookup_mahasiswa_by_nim($identitas);
+        if (!empty($settings['require_registered_nim']) && !$mhs_check['found']) {
+            wp_send_json_error(['message' => 'NIM tidak terdaftar pada Master Data Mahasiswa Jurusan PPB/BK. Hubungi Tata Usaha jika Anda mahasiswa baru yang belum terdata.']);
+        }
+        if ($mhs_check['found']) {
+            $identitas = $mhs_check['nim'];
+            if (!empty($settings['require_active_student']) && strtolower((string) $mhs_check['status']) !== 'aktif') {
+                wp_send_json_error(['message' => sprintf('Pengajuan ditolak karena status mahasiswa tercatat "%s" (hanya mahasiswa Aktif yang dapat mengajukan).', strtoupper($mhs_check['status']))]);
+            }
+        }
+        $quota_limit = (int) ($settings['mhs_quota_limit'] ?? 1);
+        $quota_days  = max(1, (int) ($settings['mhs_quota_days'] ?? 30));
+        if ($quota_limit > 0) {
+            $used_quota = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$table} WHERE REPLACE(REPLACE(pemohon_identitas,' ',''),'-','') = %s AND jenis_surat_id = %s AND status IN ('pending','approved','frozen') AND created_at >= DATE_SUB(%s, INTERVAL %d DAY)",
+                $norm_id,
+                $jenis_id,
+                $now,
+                $quota_days
+            ));
+            if ($used_quota >= $quota_limit) {
+                wp_send_json_error(['message' => sprintf('Batas kuota tercapai: NIM %s hanya dapat mengajukan "%s" maksimal %d kali dalam %d hari.', $identitas, $jenis['nama'], $quota_limit, $quota_days)]);
+            }
+        }
     } else {
         $max_batch = (int) $settings['max_batch_dosen'];
         if ($jumlah < 1 || $jumlah > $max_batch) {
@@ -891,10 +982,11 @@ function ppb_render_nomor_surat_widget($atts = []) {
                 lbl.style.color       = act ? '#0D3B22' : '#374151';
             });
             batchBox.style.display    = isDosen ? 'block' : 'none';
-            checkNipBtn.style.display = isDosen ? 'inline-block' : 'none';
+            checkNipBtn.style.display = 'inline-block';
+            checkNipBtn.textContent   = isDosen ? 'Cek NIP' : 'Cek NIM';
+            nipStatus.style.display   = 'none';
             if (!isDosen) {
                 jumlahInput.value = 1;
-                nipStatus.style.display = 'none';
             }
             idLabel.textContent = isDosen ? 'NIP / NIDN Dosen *' : 'NIM Mahasiswa *';
             idInput.placeholder = isDosen ? 'Contoh: 19720817 200212 1 001' : 'Contoh: 220404501001';
@@ -902,35 +994,47 @@ function ppb_render_nomor_surat_widget($atts = []) {
         roleInputs.forEach(function(r){ r.addEventListener('change', syncRoleUI); });
         syncRoleUI();
 
-        // Check NIP Dosen (tombol & otomatis saat selesai isi NIP)
-        function runDosenNipLookup() {
+        // Check NIP Dosen / NIM Mahasiswa (tombol & otomatis saat selesai isi)
+        function runIdentitasLookup() {
             var selected = root.querySelector('input[name="pemohon_peran"]:checked');
-            if (!selected || selected.value !== 'dosen') return;
-            var nip = idInput.value.trim();
-            if (nip.replace(/[^A-Za-z0-9]/g, '').length < 8) return;
+            var isDosen  = selected && selected.value === 'dosen';
+            var val = idInput.value.trim();
+            var normLen = val.replace(/[^A-Za-z0-9]/g, '').length;
+            if (normLen < (isDosen ? 8 : 6)) return;
             nipStatus.style.display = 'block';
             nipStatus.style.color = '#6B7280';
-            nipStatus.textContent = 'Memeriksa NIP...';
+            nipStatus.textContent = isDosen ? 'Memeriksa NIP...' : 'Memeriksa NIM...';
             var fd = new FormData();
-            fd.append('action', 'ppb_check_dosen_nip');
+            fd.append('action', isDosen ? 'ppb_check_dosen_nip' : 'ppb_check_mahasiswa_nim');
             fd.append('nonce', nonce);
-            fd.append('nip', nip);
+            fd.append(isDosen ? 'nip' : 'nim', val);
             fetch(ajaxUrl, { method: 'POST', body: fd }).then(function(r){ return r.json(); }).then(function(res){
                 if (res && res.success && res.data && res.data.found) {
-                    nipStatus.style.color = '#059669';
-                    nipStatus.textContent = '✓ Terverifikasi: ' + res.data.name;
                     var namaEl  = document.getElementById('ppb_ns_nama');
                     var emailEl = document.getElementById('ppb_ns_email');
-                    if (namaEl && !namaEl.value.trim() && res.data.name) namaEl.value = res.data.name;
-                    if (emailEl && !emailEl.value.trim() && res.data.email) emailEl.value = res.data.email;
+                    var unitEl  = document.getElementById('ppb_ns_unit');
+                    if (isDosen) {
+                        nipStatus.style.color = '#059669';
+                        nipStatus.textContent = '✓ Terverifikasi: ' + res.data.name;
+                        if (namaEl && !namaEl.value.trim() && res.data.name) namaEl.value = res.data.name;
+                        if (emailEl && !emailEl.value.trim() && res.data.email) emailEl.value = res.data.email;
+                    } else {
+                        var st = (res.data.status || 'aktif').toLowerCase();
+                        nipStatus.style.color = (st === 'aktif') ? '#059669' : '#DC2626';
+                        nipStatus.textContent = (st === 'aktif')
+                            ? ('✓ Terdata: ' + res.data.nama + ' (' + (res.data.jenjang || 'S1').toUpperCase() + ' - Aktif)')
+                            : ('⚠️ Status: ' + res.data.nama + ' (' + st.toUpperCase() + ')');
+                        if (namaEl && !namaEl.value.trim() && res.data.nama) namaEl.value = res.data.nama;
+                        if (unitEl && res.data.jenjang) unitEl.value = res.data.jenjang;
+                    }
                 } else {
                     nipStatus.style.color = '#B45309';
-                    nipStatus.textContent = 'NIP belum terdaftar di direktori Dosen.';
+                    nipStatus.textContent = isDosen ? 'NIP belum terdaftar di direktori Dosen.' : 'NIM belum terdaftar di Master Data Mahasiswa.';
                 }
             }).catch(function(){ nipStatus.style.display = 'none'; });
         }
-        checkNipBtn.addEventListener('click', runDosenNipLookup);
-        idInput.addEventListener('blur', runDosenNipLookup);
+        checkNipBtn.addEventListener('click', runIdentitasLookup);
+        idInput.addEventListener('blur', runIdentitasLookup);
 
         // Jenis surat metadata sync
         var jenisSel    = document.getElementById('ppb_ns_jenis');
@@ -1215,6 +1319,61 @@ function ppb_surat_handle_admin_export() {
     if (!is_admin() || !isset($_GET['page']) || $_GET['page'] !== 'ppb-nomor-surat') {
         return;
     }
+    if (!empty($_GET['ppb_mhs_export'])) {
+        if (!current_user_can('edit_posts')) {
+            wp_die('Tidak memiliki izin export.');
+        }
+        check_admin_referer('ppb_mhs_export_nonce');
+        ppb_surat_maybe_install_table();
+
+        global $wpdb;
+        $mhs_table = ppb_surat_mhs_table_name();
+        $mode      = sanitize_key(wp_unslash($_GET['ppb_mhs_export']));
+        $headers   = ['NIM', 'Nama Lengkap', 'Jenjang', 'Angkatan', 'Status'];
+        $rows_out  = [];
+
+        if ($mode === 'template') {
+            $rows_out[] = ['220404501001', 'Contoh Mahasiswa S1', 'S1', '2022', 'Aktif'];
+            $rows_out[] = ['230404502002', 'Contoh Mahasiswa S2', 'S2', '2023', 'Aktif'];
+            $fname = 'Template-Import-Mahasiswa';
+        } else {
+            $m_rows = $wpdb->get_results("SELECT nim, nama, jenjang, angkatan, status FROM {$mhs_table} ORDER BY angkatan DESC, nim ASC", ARRAY_A);
+            foreach ($m_rows as $mr) {
+                $rows_out[] = [
+                    (string) $mr['nim'],
+                    (string) $mr['nama'],
+                    strtoupper((string) $mr['jenjang']),
+                    $mr['angkatan'] ? (int) $mr['angkatan'] : '',
+                    ucfirst((string) $mr['status']),
+                ];
+            }
+            $fname = 'Master-Data-Mahasiswa-' . current_time('Y-m-d');
+        }
+
+        if (function_exists('ppb_io_xlsx_build')) {
+            $bytes = ppb_io_xlsx_build([
+                ['name' => 'Data Mahasiswa', 'rows' => array_merge([$headers], $rows_out)],
+            ]);
+            nocache_headers();
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . $fname . '.xlsx"');
+            header('Content-Length: ' . strlen($bytes));
+            echo $bytes;
+            exit;
+        }
+        nocache_headers();
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $fname . '.csv"');
+        $out = fopen('php://output', 'w');
+        fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, $headers);
+        foreach ($rows_out as $dr) {
+            fputcsv($out, $dr);
+        }
+        fclose($out);
+        exit;
+    }
+
     if (empty($_GET['ppb_surat_export'])) {
         return;
     }
@@ -1318,7 +1477,7 @@ function ppb_render_nomor_surat_admin_page() {
     $table    = ppb_surat_table_name();
     $settings = ppb_surat_get_settings();
     $tab      = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'registrasi';
-    if (!in_array($tab, ['registrasi', 'jenis', 'pengaturan'], true)) {
+    if (!in_array($tab, ['registrasi', 'mahasiswa', 'jenis', 'pengaturan'], true)) {
         $tab = 'registrasi';
     }
 
@@ -1594,22 +1753,123 @@ function ppb_render_nomor_surat_admin_page() {
                 update_option('ppb_surat_jenis_list', $new_list, false);
                 $notice = 'Daftar Master Jenis Surat berhasil disimpan.';
             }
+        } elseif ($act === 'save_mhs_single') {
+            $tab       = 'mahasiswa';
+            $mhs_table = ppb_surat_mhs_table_name();
+            $m_nim     = ppb_surat_normalize_id(isset($_POST['m_nim']) ? wp_unslash($_POST['m_nim']) : '');
+            $m_nama    = isset($_POST['m_nama']) ? sanitize_text_field(wp_unslash($_POST['m_nama'])) : '';
+            $m_jenjang = isset($_POST['m_jenjang']) ? sanitize_key(wp_unslash($_POST['m_jenjang'])) : 's1';
+            $m_angk    = isset($_POST['m_angkatan']) && $_POST['m_angkatan'] !== '' ? (int) $_POST['m_angkatan'] : null;
+            $m_status  = isset($_POST['m_status']) ? sanitize_key(wp_unslash($_POST['m_status'])) : 'aktif';
+            if (!in_array($m_jenjang, ['s1', 's2', 's3'], true)) $m_jenjang = 's1';
+            if (!in_array($m_status, ['aktif', 'cuti', 'lulus', 'nonaktif'], true)) $m_status = 'aktif';
+
+            if ($m_nim === '' || $m_nama === '') {
+                $notice = 'NIM dan Nama Lengkap mahasiswa wajib diisi.';
+                $notice_type = 'error';
+            } else {
+                $wpdb->replace($mhs_table, [
+                    'nim'        => $m_nim,
+                    'nama'       => $m_nama,
+                    'jenjang'    => $m_jenjang,
+                    'angkatan'   => $m_angk,
+                    'status'     => $m_status,
+                    'updated_at' => $now,
+                ]);
+                $notice = sprintf('Data mahasiswa %s (%s) berhasil disimpan.', $m_nama, $m_nim);
+            }
+        } elseif ($act === 'delete_mhs_row') {
+            $tab       = 'mahasiswa';
+            $mhs_table = ppb_surat_mhs_table_name();
+            $m_id      = isset($_POST['m_id']) ? (int) $_POST['m_id'] : 0;
+            if ($m_id > 0) {
+                $wpdb->delete($mhs_table, ['id' => $m_id]);
+                $notice = 'Data mahasiswa berhasil dihapus.';
+            }
+        } elseif ($act === 'import_mhs_excel') {
+            $tab       = 'mahasiswa';
+            $mhs_table = ppb_surat_mhs_table_name();
+            if (empty($_FILES['mhs_excel_file']['tmp_name'])) {
+                $notice = 'Pilih file Excel (.xlsx) atau CSV terlebih dahulu.';
+                $notice_type = 'error';
+            } else {
+                $fname = strtolower((string) ($_FILES['mhs_excel_file']['name'] ?? ''));
+                $bytes = (string) file_get_contents($_FILES['mhs_excel_file']['tmp_name']);
+                $parsed_rows = [];
+
+                if (substr($fname, -5) === '.xlsx' && function_exists('ppb_io_xlsx_parse')) {
+                    $parsed = ppb_io_xlsx_parse($bytes);
+                    if (!empty($parsed) && is_array($parsed)) {
+                        $first_sheet = reset($parsed);
+                        if (is_array($first_sheet) && isset($first_sheet['rows'])) {
+                            $parsed_rows = $first_sheet['rows'];
+                        } elseif (is_array($first_sheet)) {
+                            $parsed_rows = $first_sheet;
+                        }
+                    }
+                } else {
+                    $fp = fopen($_FILES['mhs_excel_file']['tmp_name'], 'r');
+                    if ($fp) {
+                        while (($r = fgetcsv($fp)) !== false) {
+                            $parsed_rows[] = $r;
+                        }
+                        fclose($fp);
+                    }
+                }
+
+                $cnt_ok = 0;
+                foreach ($parsed_rows as $idx => $r) {
+                    if (!is_array($r) || count($r) < 2) continue;
+                    $c0 = trim((string) ($r[0] ?? ''));
+                    if ($idx === 0 && stripos($c0, 'nim') !== false) continue;
+                    $nim_val = ppb_surat_normalize_id($c0);
+                    $nm_val  = trim(sanitize_text_field((string) ($r[1] ?? '')));
+                    if ($nim_val === '' || $nm_val === '') continue;
+
+                    $j_raw = strtolower(trim((string) ($r[2] ?? 's1')));
+                    $j_val = in_array($j_raw, ['s1', 's2', 's3'], true) ? $j_raw : (strpos($j_raw, '2') !== false ? 's2' : (strpos($j_raw, '3') !== false ? 's3' : 's1'));
+                    $a_val = isset($r[3]) && trim((string) $r[3]) !== '' ? (int) $r[3] : null;
+                    $s_raw = strtolower(trim((string) ($r[4] ?? 'aktif')));
+                    $s_val = in_array($s_raw, ['aktif', 'cuti', 'lulus', 'nonaktif'], true) ? $s_raw : 'aktif';
+
+                    $wpdb->replace($mhs_table, [
+                        'nim'        => $nim_val,
+                        'nama'       => $nm_val,
+                        'jenjang'    => $j_val,
+                        'angkatan'   => $a_val,
+                        'status'     => $s_val,
+                        'updated_at' => $now,
+                    ]);
+                    $cnt_ok++;
+                }
+
+                if ($cnt_ok > 0) {
+                    $notice = sprintf('Impor selesai: %d data mahasiswa berhasil ditambahkan/diperbarui.', $cnt_ok);
+                } else {
+                    $notice = 'Tidak ada baris mahasiswa yang valid ditemukan di file. Pastikan kolom berurutan: NIM, Nama Lengkap, Jenjang, Angkatan, Status.';
+                    $notice_type = 'error';
+                }
+            }
         } elseif ($act === 'save_settings') {
             $tab = 'pengaturan';
             $cur_year = (int) current_time('Y');
             $new_set = [
-                'prefix'             => sanitize_text_field(wp_unslash($_POST['prefix'] ?? 'B')) ?: 'B',
-                'kode_unit'          => sanitize_text_field(wp_unslash($_POST['kode_unit'] ?? 'UN36.1')) ?: 'UN36.1',
-                'pad_digits'         => max(1, min(6, (int) ($_POST['pad_digits'] ?? 3))),
-                'max_batch_dosen'    => max(2, min(200, (int) ($_POST['max_batch_dosen'] ?? 50))),
-                'validate_dosen_nip' => isset($_POST['validate_dosen_nip']) ? 1 : 0,
-                'offsets'            => $settings['offsets'],
+                'prefix'                 => sanitize_text_field(wp_unslash($_POST['prefix'] ?? 'B')) ?: 'B',
+                'kode_unit'              => sanitize_text_field(wp_unslash($_POST['kode_unit'] ?? 'UN36.1')) ?: 'UN36.1',
+                'pad_digits'             => max(1, min(6, (int) ($_POST['pad_digits'] ?? 3))),
+                'max_batch_dosen'        => max(2, min(200, (int) ($_POST['max_batch_dosen'] ?? 50))),
+                'validate_dosen_nip'     => isset($_POST['validate_dosen_nip']) ? 1 : 0,
+                'require_registered_nim' => isset($_POST['require_registered_nim']) ? 1 : 0,
+                'require_active_student' => isset($_POST['require_active_student']) ? 1 : 0,
+                'mhs_quota_limit'        => max(0, min(50, (int) ($_POST['mhs_quota_limit'] ?? 1))),
+                'mhs_quota_days'         => max(1, min(365, (int) ($_POST['mhs_quota_days'] ?? 30))),
+                'offsets'                => $settings['offsets'],
             ];
             $offset_val = isset($_POST['offset_current_year']) ? max(0, (int) $_POST['offset_current_year']) : 0;
             $new_set['offsets'][(string) $cur_year] = $offset_val;
             update_option('ppb_surat_settings', $new_set, false);
             $settings = ppb_surat_get_settings();
-            $notice = 'Pengaturan penomoran & notifikasi berhasil disimpan.';
+            $notice = 'Pengaturan penomoran & validasi mahasiswa berhasil disimpan.';
         }
     }
 
@@ -1694,6 +1954,7 @@ function ppb_render_nomor_surat_admin_page() {
 
         <h2 class="nav-tab-wrapper" style="margin-bottom:18px;">
             <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-nomor-surat&tab=registrasi')); ?>" class="nav-tab <?php echo $tab === 'registrasi' ? 'nav-tab-active' : ''; ?>">📋 Antrean &amp; Buku Registrasi</a>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-nomor-surat&tab=mahasiswa')); ?>" class="nav-tab <?php echo $tab === 'mahasiswa' ? 'nav-tab-active' : ''; ?>">🎓 Master Mahasiswa</a>
             <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-nomor-surat&tab=jenis')); ?>" class="nav-tab <?php echo $tab === 'jenis' ? 'nav-tab-active' : ''; ?>">🗂️ Master Jenis Surat</a>
             <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-nomor-surat&tab=pengaturan')); ?>" class="nav-tab <?php echo $tab === 'pengaturan' ? 'nav-tab-active' : ''; ?>">⚙️ Pengaturan Penomoran</a>
         </h2>
@@ -1945,6 +2206,136 @@ function ppb_render_nomor_surat_admin_page() {
                 </tbody>
             </table>
 
+        <?php elseif ($tab === 'mahasiswa') :
+            $mhs_table   = ppb_surat_mhs_table_name();
+            $m_jenjang   = isset($_GET['m_jenjang']) ? sanitize_key(wp_unslash($_GET['m_jenjang'])) : '';
+            $m_status    = isset($_GET['m_status']) ? sanitize_key(wp_unslash($_GET['m_status'])) : '';
+            $m_search    = isset($_GET['m_s']) ? sanitize_text_field(wp_unslash($_GET['m_s'])) : '';
+            $m_where     = ['1=1'];
+            $m_params    = [];
+            if (in_array($m_jenjang, ['s1', 's2', 's3'], true)) {
+                $m_where[]  = 'jenjang = %s';
+                $m_params[] = $m_jenjang;
+            }
+            if (in_array($m_status, ['aktif', 'cuti', 'lulus', 'nonaktif'], true)) {
+                $m_where[]  = 'status = %s';
+                $m_params[] = $m_status;
+            }
+            if ($m_search !== '') {
+                $mlike      = '%' . $wpdb->esc_like($m_search) . '%';
+                $m_where[]  = '(nim LIKE %s OR nama LIKE %s)';
+                $m_params[] = $mlike;
+                $m_params[] = $mlike;
+            }
+            $m_sql_where = empty($m_params) ? implode(' AND ', $m_where) : $wpdb->prepare(implode(' AND ', $m_where), $m_params);
+            $m_total_all = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$mhs_table}");
+            $m_total_act = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$mhs_table} WHERE status = 'aktif'");
+            $m_rows      = $wpdb->get_results("SELECT * FROM {$mhs_table} WHERE {$m_sql_where} ORDER BY angkatan DESC, nim ASC LIMIT 300", ARRAY_A);
+            $m_exp_url   = wp_nonce_url(admin_url('admin.php?page=ppb-nomor-surat'), 'ppb_mhs_export_nonce');
+        ?>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:18px;">
+                <!-- Import Excel -->
+                <div style="background:#fff;border:1px solid #D4E3D8;border-radius:12px;padding:16px;">
+                    <h3 style="margin:0 0 8px;color:#0D3B22;font-size:15px;">📥 Import Massal Data Mahasiswa (.xlsx / .csv)</h3>
+                    <p style="font-size:12px;color:#4B5563;margin:0 0 10px;">Total terdata: <strong><?php echo $m_total_all; ?></strong> mahasiswa (<strong><?php echo $m_total_act; ?></strong> Aktif). Kolom berurutan: <code>NIM | Nama Lengkap | Jenjang | Angkatan | Status</code>.</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                        <a href="<?php echo esc_url(add_query_arg('ppb_mhs_export', 'template', $m_exp_url)); ?>" class="button">⬇️ Unduh Template .xlsx</a>
+                        <a href="<?php echo esc_url(add_query_arg('ppb_mhs_export', 'xlsx', $m_exp_url)); ?>" class="button">📤 Export Semua (.xlsx)</a>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
+                        <input type="hidden" name="ppb_surat_action" value="import_mhs_excel">
+                        <input type="file" name="mhs_excel_file" accept=".xlsx,.csv" required style="flex:1;min-width:180px;">
+                        <button type="submit" class="button button-primary">⬆️ Upload &amp; Import</button>
+                    </form>
+                </div>
+
+                <!-- Tambah / Edit Satuan -->
+                <div style="background:#fff;border:1px solid #D4E3D8;border-radius:12px;padding:16px;">
+                    <h3 style="margin:0 0 8px;color:#0D3B22;font-size:15px;">➕ Tambah / Perbarui 1 Mahasiswa</h3>
+                    <form method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
+                        <input type="hidden" name="ppb_surat_action" value="save_mhs_single">
+                        <input type="text" name="m_nim" required placeholder="NIM *" style="width:100%;">
+                        <input type="text" name="m_nama" required placeholder="Nama Lengkap *" style="width:100%;">
+                        <select name="m_jenjang" style="width:100%;">
+                            <option value="s1">S1</option>
+                            <option value="s2">S2</option>
+                            <option value="s3">S3</option>
+                        </select>
+                        <input type="number" name="m_angkatan" placeholder="Angkatan (mis. 2023)" style="width:100%;">
+                        <select name="m_status" style="width:100%;">
+                            <option value="aktif">Aktif</option>
+                            <option value="cuti">Cuti</option>
+                            <option value="lulus">Lulus</option>
+                            <option value="nonaktif">Nonaktif</option>
+                        </select>
+                        <button type="submit" class="button button-primary">💾 Simpan</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Filter Mahasiswa -->
+            <form method="get" style="background:#fff;border:1px solid #D4E3D8;border-radius:10px;padding:12px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <input type="hidden" name="page" value="ppb-nomor-surat">
+                <input type="hidden" name="tab" value="mahasiswa">
+                <select name="m_jenjang">
+                    <option value="">Semua Jenjang</option>
+                    <option value="s1" <?php selected($m_jenjang, 's1'); ?>>S1</option>
+                    <option value="s2" <?php selected($m_jenjang, 's2'); ?>>S2</option>
+                    <option value="s3" <?php selected($m_jenjang, 's3'); ?>>S3</option>
+                </select>
+                <select name="m_status">
+                    <option value="">Semua Status</option>
+                    <option value="aktif" <?php selected($m_status, 'aktif'); ?>>Aktif</option>
+                    <option value="cuti" <?php selected($m_status, 'cuti'); ?>>Cuti</option>
+                    <option value="lulus" <?php selected($m_status, 'lulus'); ?>>Lulus</option>
+                    <option value="nonaktif" <?php selected($m_status, 'nonaktif'); ?>>Nonaktif</option>
+                </select>
+                <input type="search" name="m_s" value="<?php echo esc_attr($m_search); ?>" placeholder="Cari NIM atau Nama Mahasiswa..." style="flex:1;min-width:220px;">
+                <button type="submit" class="button button-primary">Filter</button>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=ppb-nomor-surat&tab=mahasiswa')); ?>" class="button">Reset</a>
+            </form>
+
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th style="width:150px;">NIM</th>
+                        <th>Nama Lengkap</th>
+                        <th style="width:90px;">Jenjang</th>
+                        <th style="width:95px;">Angkatan</th>
+                        <th style="width:105px;">Status</th>
+                        <th style="width:110px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($m_rows)) : ?>
+                    <tr><td colspan="6" style="text-align:center;padding:24px;color:#6B7280;">Belum ada data mahasiswa. Silakan impor melalui Excel (.xlsx/.csv) atau tambah manual di atas.</td></tr>
+                <?php else : foreach ($m_rows as $mr) : ?>
+                    <tr>
+                        <td><code><?php echo esc_html($mr['nim']); ?></code></td>
+                        <td><strong><?php echo esc_html($mr['nama']); ?></strong></td>
+                        <td><?php echo esc_html(strtoupper($mr['jenjang'])); ?></td>
+                        <td><?php echo $mr['angkatan'] ? (int) $mr['angkatan'] : '-'; ?></td>
+                        <td>
+                            <?php if ($mr['status'] === 'aktif') : ?>
+                                <span style="background:#D1FAE5;color:#065F46;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">Aktif</span>
+                            <?php else : ?>
+                                <span style="background:#F3F4F6;color:#4B5563;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;"><?php echo esc_html(ucfirst($mr['status'])); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <form method="post" style="display:inline;">
+                                <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
+                                <input type="hidden" name="m_id" value="<?php echo (int) $mr['id']; ?>">
+                                <button type="submit" name="ppb_surat_action" value="delete_mhs_row" class="button button-small" style="color:#991B1B;" onclick="return confirm('Hapus mahasiswa <?php echo esc_js($mr['nim']); ?>?');">🗑️ Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+
         <?php elseif ($tab === 'jenis') :
             $jenis_list = ppb_surat_get_jenis_list(false);
         ?>
@@ -2015,7 +2406,7 @@ function ppb_render_nomor_surat_admin_page() {
         <?php else :
             $cur_offset = isset($settings['offsets'][(string) $cur_year]) ? (int) $settings['offsets'][(string) $cur_year] : 0;
         ?>
-            <form method="post" style="background:#fff;border:1px solid #D4E3D8;border-radius:12px;padding:20px;max-width:720px;">
+            <form method="post" style="background:#fff;border:1px solid #D4E3D8;border-radius:12px;padding:20px;max-width:760px;">
                 <?php wp_nonce_field('ppb_surat_admin_action', 'ppb_surat_admin_nonce'); ?>
                 <input type="hidden" name="ppb_surat_action" value="save_settings">
                 <table class="form-table">
@@ -2041,6 +2432,21 @@ function ppb_render_nomor_surat_admin_page() {
                     <tr>
                         <th>Validasi NIP Dosen</th>
                         <td><label><input type="checkbox" name="validate_dosen_nip" value="1" <?php checked(!empty($settings['validate_dosen_nip'])); ?>> Wajibkan NIP cocok dengan direktori Dosen (<code>ppb_dosen</code>) saat meminta &gt;1 nomor sekaligus</label></td>
+                    </tr>
+                    <tr>
+                        <th>Validasi NIM Mahasiswa</th>
+                        <td>
+                            <label style="display:block;margin-bottom:6px;"><input type="checkbox" name="require_registered_nim" value="1" <?php checked(!empty($settings['require_registered_nim'])); ?>> Wajibkan NIM terdaftar di <strong>Master Mahasiswa</strong> (matikan sementara jika ada maba belum diimpor)</label>
+                            <label style="display:block;"><input type="checkbox" name="require_active_student" value="1" <?php checked(!empty($settings['require_active_student'])); ?>> Hanya izinkan mahasiswa berstatus <strong>Aktif</strong> (tolak Cuti / Lulus / Nonaktif)</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Kuota Pengajuan per NIM</th>
+                        <td>
+                            Maksimal <input type="number" name="mhs_quota_limit" min="0" max="50" value="<?php echo (int) $settings['mhs_quota_limit']; ?>" style="width:65px;"> kali
+                            untuk jenis surat yang sama dalam <input type="number" name="mhs_quota_days" min="1" max="365" value="<?php echo (int) $settings['mhs_quota_days']; ?>" style="width:70px;"> hari terakhir
+                            <p class="description">Isi <code>0</code> untuk menonaktifkan pembatasan kuota. Pengajuan yang berstatus <em>Ditolak</em> atau dihapus tidak mengurangi kuota.</p>
+                        </td>
                     </tr>
                 </table>
                 <button type="submit" class="button button-primary">💾 Simpan Pengaturan</button>
